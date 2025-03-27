@@ -23,6 +23,10 @@ try {
     $stmt = $databaseConnection->query("SELECT COUNT(*) as total FROM sistema_imoveis_categorias");
     $totalCategorias = $stmt->fetch()['total'];
     
+    // Count total clients
+    $stmt = $databaseConnection->query("SELECT COUNT(*) as total FROM sistema_clientes");
+    $totalClientes = $stmt->fetch()['total'];
+    
     // Get latest properties
     $stmt = $databaseConnection->query(
         "SELECT i.id, i.titulo, i.para, i.valor, i.data, c.categoria 
@@ -40,6 +44,7 @@ try {
     $totalImoveis = 0;
     $imoveisPorTipo = [];
     $totalCategorias = 0;
+    $totalClientes = 0;
     $ultimosImoveis = [];
 }
 
@@ -81,6 +86,16 @@ foreach ($imoveisPorTipo as $tipo) {
         </div>
         
         <div class="stat-card">
+            <div class="stat-card__icon stat-card__icon--orange">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-card__content">
+                <h3 class="stat-card__title">Clientes</h3>
+                <p class="stat-card__value"><?= $totalClientes ?></p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
             <div class="stat-card__icon stat-card__icon--green">
                 <i class="fas fa-money-bill-wave"></i>
             </div>
@@ -91,7 +106,7 @@ foreach ($imoveisPorTipo as $tipo) {
         </div>
         
         <div class="stat-card">
-            <div class="stat-card__icon stat-card__icon--orange">
+            <div class="stat-card__icon stat-card__icon--red">
                 <i class="fas fa-key"></i>
             </div>
             <div class="stat-card__content">
@@ -106,24 +121,29 @@ foreach ($imoveisPorTipo as $tipo) {
         <h2 class="dashboard__section-title">Ações Rápidas</h2>
         
         <div class="quick-actions">
-            <a href="<?= BASE_URL ?>/admin/imoveis/adicionar" class="quick-action">
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Create" class="quick-action">
                 <i class="fas fa-plus-circle"></i>
                 <span>Adicionar Imóvel</span>
             </a>
             
-            <a href="<?= BASE_URL ?>/admin/categorias/adicionar" class="quick-action">
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Category_Create" class="quick-action">
                 <i class="fas fa-folder-plus"></i>
                 <span>Adicionar Categoria</span>
             </a>
             
-            <a href="<?= BASE_URL ?>/admin/imoveis" class="quick-action">
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Create" class="quick-action">
+                <i class="fas fa-user-plus"></i>
+                <span>Adicionar Cliente</span>
+            </a>
+            
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin" class="quick-action">
                 <i class="fas fa-list"></i>
                 <span>Listar Imóveis</span>
             </a>
             
-            <a href="<?= BASE_URL ?>/admin/categorias" class="quick-action">
-                <i class="fas fa-tag"></i>
-                <span>Listar Categorias</span>
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Admin" class="quick-action">
+                <i class="fas fa-users"></i>
+                <span>Listar Clientes</span>
             </a>
         </div>
     </div>
@@ -135,7 +155,7 @@ foreach ($imoveisPorTipo as $tipo) {
         <?php if (empty($ultimosImoveis)): ?>
             <div class="empty-state">
                 <p>Nenhum imóvel cadastrado ainda.</p>
-                <a href="<?= BASE_URL ?>/admin/imoveis/adicionar" class="primary-button">
+                <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Create" class="primary-button">
                     Adicionar Imóvel
                 </a>
             </div>
@@ -150,7 +170,7 @@ foreach ($imoveisPorTipo as $tipo) {
                             <th>Tipo</th>
                             <th>Valor</th>
                             <th>Data</th>
-                            <th>Ações</th>
+                            <th width="150">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -167,7 +187,7 @@ foreach ($imoveisPorTipo as $tipo) {
                                 <td><?= formatCurrency($imovel['valor']) ?></td>
                                 <td><?= formatDate($imovel['data']) ?></td>
                                 <td class="actions">
-                                    <a href="<?= BASE_URL ?>/admin/imoveis/editar?id=<?= $imovel['id'] ?>" class="action-button action-button--edit" title="Editar">
+                                    <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Update&id=<?= $imovel['id'] ?>" class="action-button action-button--edit" title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <a href="<?= BASE_URL ?>/imovel/<?= $imovel['id'] ?>" class="action-button action-button--view" title="Visualizar" target="_blank">
@@ -181,7 +201,7 @@ foreach ($imoveisPorTipo as $tipo) {
             </div>
             
             <div class="dashboard__see-all">
-                <a href="<?= BASE_URL ?>/admin/imoveis" class="see-all-link">
+                <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin" class="see-all-link">
                     Ver todos os imóveis <i class="fas fa-arrow-right"></i>
                 </a>
             </div>

@@ -41,7 +41,7 @@ if (isset($_SESSION['alert_message'])) {
     <!-- Page Header with Add Button -->
     <div class="admin-page__header">
         <h2 class="admin-page__title">Gerenciar Categorias</h2>
-        <a href="<?= BASE_URL ?>/admin/categorias/adicionar" class="primary-button">
+        <a href="<?= BASE_URL ?>/admin/index.php?page=Category_Create" class="primary-button">
             <i class="fas fa-plus"></i> Nova Categoria
         </a>
     </div>
@@ -51,7 +51,7 @@ if (isset($_SESSION['alert_message'])) {
         <?php if (empty($categorias)): ?>
             <div class="empty-state">
                 <p>Nenhuma categoria cadastrada ainda.</p>
-                <a href="<?= BASE_URL ?>/admin/categorias/adicionar" class="primary-button">
+                <a href="<?= BASE_URL ?>/admin/index.php?page=Category_Create" class="primary-button">
                     Adicionar Categoria
                 </a>
             </div>
@@ -73,10 +73,10 @@ if (isset($_SESSION['alert_message'])) {
                                 <td><?= htmlspecialchars($categoria['tipo']) ?></td>
                                 <td><?= htmlspecialchars($categoria['categoria']) ?></td>
                                 <td class="actions">
-                                    <a href="<?= BASE_URL ?>/admin/categorias/editar?id=<?= $categoria['id'] ?>" class="action-button action-button--edit" title="Editar">
+                                    <a href="<?= BASE_URL ?>/admin/index.php?page=Category_Update&id=<?= $categoria['id'] ?>" class="action-button action-button--edit" title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <a href="<?= BASE_URL ?>/admin/categorias/excluir?id=<?= $categoria['id'] ?>" class="action-button action-button--delete delete-button" title="Excluir">
+                                    <a href="<?= BASE_URL ?>/admin/index.php?page=Category_Delete&id=<?= $categoria['id'] ?>" class="action-button action-button--delete delete-button" title="Excluir">
                                         <i class="fas fa-trash"></i>
                                     </a>
                                 </td>

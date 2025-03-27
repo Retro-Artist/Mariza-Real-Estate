@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['alert_message'] = 'Categoria adicionada com sucesso!';
                 $_SESSION['alert_type'] = 'success';
                 
-                header('Location: ' . BASE_URL . '/admin/categorias');
+                header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
                 exit;
             }
         } catch (PDOException $e) {
@@ -61,13 +61,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Page Header -->
     <div class="admin-page__header">
         <h2 class="admin-page__title">Adicionar Nova Categoria</h2>
-        <a href="<?= BASE_URL ?>/admin/categorias" class="cancel-button">
+        <a href="<?= BASE_URL ?>/admin/index.php?page=Category_Admin" class="cancel-button">
             <i class="fas fa-arrow-left"></i> Voltar
         </a>
     </div>
     
     <!-- Category Form -->
-    <form method="POST" action="" class="admin-form">
+    <form method="POST" action="<?= BASE_URL ?>/admin/index.php?page=Category_Create" class="admin-form">
         <?php if (!empty($error)): ?>
             <div class="alert-message alert-message--error">
                 <?= htmlspecialchars($error) ?>
@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         
         <div class="form-actions">
-            <a href="<?= BASE_URL ?>/admin/categorias" class="cancel-button">Cancelar</a>
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Category_Admin" class="cancel-button">Cancelar</a>
             <button type="submit" class="primary-button">
                 <i class="fas fa-save"></i> Salvar Categoria
             </button>

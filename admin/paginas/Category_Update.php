@@ -9,7 +9,7 @@ if (!isset($_SESSION['admin_id'])) {
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     $_SESSION['alert_message'] = 'ID da categoria não especificado.';
     $_SESSION['alert_type'] = 'error';
-    header('Location: ' . BASE_URL . '/admin/categorias');
+    header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
     exit;
 }
 
@@ -33,7 +33,7 @@ try {
     if (!$categoryData) {
         $_SESSION['alert_message'] = 'Categoria não encontrada.';
         $_SESSION['alert_type'] = 'error';
-        header('Location: ' . BASE_URL . '/admin/categorias');
+        header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
         exit;
     }
     
@@ -45,7 +45,7 @@ try {
     logError("Error fetching category data: " . $e->getMessage());
     $_SESSION['alert_message'] = 'Erro ao buscar dados da categoria.';
     $_SESSION['alert_type'] = 'error';
-    header('Location: ' . BASE_URL . '/admin/categorias');
+    header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
     exit;
 }
 
@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['alert_message'] = 'Categoria atualizada com sucesso!';
                 $_SESSION['alert_type'] = 'success';
                 
-                header('Location: ' . BASE_URL . '/admin/categorias');
+                header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
                 exit;
             }
         } catch (PDOException $e) {
@@ -103,13 +103,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Page Header -->
     <div class="admin-page__header">
         <h2 class="admin-page__title">Editar Categoria</h2>
-        <a href="<?= BASE_URL ?>/admin/categorias" class="cancel-button">
+        <a href="<?= BASE_URL ?>/admin/index.php?page=Category_Admin" class="cancel-button">
             <i class="fas fa-arrow-left"></i> Voltar
         </a>
     </div>
     
     <!-- Category Form -->
-    <form method="POST" action="" class="admin-form">
+    <form method="POST" action="<?= BASE_URL ?>/admin/index.php?page=Category_Update&id=<?= $category_id ?>" class="admin-form">
         <?php if (!empty($error)): ?>
             <div class="alert-message alert-message--error">
                 <?= htmlspecialchars($error) ?>
@@ -138,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         
         <div class="form-actions">
-            <a href="<?= BASE_URL ?>/admin/categorias" class="cancel-button">Cancelar</a>
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Category_Admin" class="cancel-button">Cancelar</a>
             <button type="submit" class="primary-button">
                 <i class="fas fa-save"></i> Salvar Alterações
             </button>

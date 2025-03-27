@@ -14,35 +14,8 @@ if (!isset($_SESSION['admin_id']) && basename($_SERVER['PHP_SELF']) != 'Admin_Lo
     exit;
 }
 
-// Get the requested page and parse URL segments
-$request_uri = $_SERVER['REQUEST_URI'];
-$base_path = parse_url(BASE_URL, PHP_URL_PATH) ?: '';
-$base_path = rtrim($base_path, '/'); // Remove trailing slash if any
-
-// Build admin path with or without base path
-$admin_path = $base_path . '/admin';
-
-// Remove admin path from request URI to get the relative path
-if (strpos($request_uri, $admin_path) === 0) {
-    $path = substr($request_uri, strlen($admin_path));
-} else {
-    $path = $request_uri;
-}
-
-// Remove query string if any
-$uri_parts = explode('?', $path);
-$path = trim($uri_parts[0], '/');
-
-// If path is empty, set default page
-if (empty($path)) {
-    $path = 'dashboard';
-}
-
-$path_segments = explode('/', $path);
-
-// Determine the page and its parameters
-$page = !empty($path_segments[0]) ? $path_segments[0] : 'dashboard';
-$param = isset($path_segments[1]) ? $path_segments[1] : null;
+// Get the requested page from URL or set default
+$page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
 
 // Include header
 include 'Admin_Header.php';
@@ -52,28 +25,49 @@ switch ($page) {
     case 'dashboard':
         include 'paginas/Admin_Dashboard.php';
         break;
-    case 'categorias':
-        if ($param == 'adicionar') {
-            include 'paginas/Category_Create.php';
-        } elseif ($param == 'editar' && isset($_GET['id'])) {
-            include 'paginas/Category_Update.php';
-        } elseif ($param == 'excluir' && isset($_GET['id'])) {
-            include 'paginas/Category_Delete.php';
-        } else {
-            include 'paginas/Category_Admin.php';
-        }
+        
+    // Category pages
+    case 'Category_Admin':
+        include 'paginas/Category_Admin.php';
         break;
-    case 'imoveis':
-        if ($param == 'adicionar') {
-            include 'paginas/Property_Create.php';
-        } elseif ($param == 'editar' && isset($_GET['id'])) {
-            include 'paginas/Property_Update.php';
-        } elseif ($param == 'excluir' && isset($_GET['id'])) {
-            include 'paginas/Property_Delete.php';
-        } else {
-            include 'paginas/Property_Admin.php';
-        }
+    case 'Category_Create':
+        include 'paginas/Category_Create.php';
         break;
+    case 'Category_Update':
+        include 'paginas/Category_Update.php';
+        break;
+    case 'Category_Delete':
+        include 'paginas/Category_Delete.php';
+        break;
+        
+    // Property pages
+    case 'Property_Admin':
+        include 'paginas/Property_Admin.php';
+        break;
+    case 'Property_Create':
+        include 'paginas/Property_Create.php';
+        break;
+    case 'Property_Update':
+        include 'paginas/Property_Update.php';
+        break;
+    case 'Property_Delete':
+        include 'paginas/Property_Delete.php';
+        break;
+        
+    // Client pages
+    case 'Client_Admin':
+        include 'paginas/Client_Admin.php';
+        break;
+    case 'Client_Create':
+        include 'paginas/Client_Create.php';
+        break;
+    case 'Client_Update':
+        include 'paginas/Client_Update.php';
+        break;
+    case 'Client_Delete':
+        include 'paginas/Client_Delete.php';
+        break;
+        
     default:
         include 'paginas/Admin_Dashboard.php';
         break;

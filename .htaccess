@@ -1,8 +1,8 @@
 RewriteEngine On
 RewriteBase /
 
-# Special case for admin directory - checks if URI starts with admin/
-RewriteCond %{REQUEST_URI} ^/admin(/.*)?$
+# Special case for admin directory 
+RewriteCond %{REQUEST_URI} ^/admin(/.*)?$ [NC]
 RewriteRule ^admin(/.*)?$ admin/index.php [L,QSA]
 
 # Se o arquivo ou diretório não existir, continuar com as regras

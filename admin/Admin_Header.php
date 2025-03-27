@@ -43,23 +43,30 @@ $current_page = isset($page) ? $page : 'dashboard';
             <nav class="admin-sidebar__nav">
                 <ul class="admin-sidebar__menu">
                     <li class="admin-sidebar__item <?= $current_page === 'dashboard' ? 'active' : '' ?>">
-                        <a href="<?= BASE_URL ?>/admin/" class="admin-sidebar__link">
+                        <a href="<?= BASE_URL ?>/admin/index.php?page=dashboard" class="admin-sidebar__link">
                             <i class="fas fa-tachometer-alt"></i>
                             <span>Dashboard</span>
                         </a>
                     </li>
                     
-                    <li class="admin-sidebar__item <?= $current_page === 'imoveis' ? 'active' : '' ?>">
-                        <a href="<?= BASE_URL ?>/admin/imoveis" class="admin-sidebar__link">
+                    <li class="admin-sidebar__item <?= strpos($current_page, 'Property_') === 0 ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin" class="admin-sidebar__link">
                             <i class="fas fa-home"></i>
                             <span>Imóveis</span>
                         </a>
                     </li>
                     
-                    <li class="admin-sidebar__item <?= $current_page === 'categorias' ? 'active' : '' ?>">
-                        <a href="<?= BASE_URL ?>/admin/categorias" class="admin-sidebar__link">
+                    <li class="admin-sidebar__item <?= strpos($current_page, 'Category_') === 0 ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>/admin/index.php?page=Category_Admin" class="admin-sidebar__link">
                             <i class="fas fa-tags"></i>
                             <span>Categorias</span>
+                        </a>
+                    </li>
+                    
+                    <li class="admin-sidebar__item <?= strpos($current_page, 'Client_') === 0 ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Admin" class="admin-sidebar__link">
+                            <i class="fas fa-users"></i>
+                            <span>Clientes</span>
                         </a>
                     </li>
                     
@@ -86,11 +93,41 @@ $current_page = isset($page) ? $page : 'dashboard';
                             case 'dashboard':
                                 echo 'Dashboard';
                                 break;
-                            case 'imoveis':
-                                echo isset($param) ? ucfirst($param) . ' Imóvel' : 'Gerenciar Imóveis';
+                            case 'Property_Admin':
+                                echo 'Gerenciar Imóveis';
                                 break;
-                            case 'categorias':
-                                echo isset($param) ? ucfirst($param) . ' Categoria' : 'Gerenciar Categorias';
+                            case 'Property_Create':
+                                echo 'Adicionar Imóvel';
+                                break;
+                            case 'Property_Update':
+                                echo 'Editar Imóvel';
+                                break;
+                            case 'Property_Delete':
+                                echo 'Excluir Imóvel';
+                                break;
+                            case 'Category_Admin':
+                                echo 'Gerenciar Categorias';
+                                break;
+                            case 'Category_Create':
+                                echo 'Adicionar Categoria';
+                                break;
+                            case 'Category_Update':
+                                echo 'Editar Categoria';
+                                break;
+                            case 'Category_Delete':
+                                echo 'Excluir Categoria';
+                                break;
+                            case 'Client_Admin':
+                                echo 'Gerenciar Clientes';
+                                break;
+                            case 'Client_Create':
+                                echo 'Adicionar Cliente';
+                                break;
+                            case 'Client_Update':
+                                echo 'Editar Cliente';
+                                break;
+                            case 'Client_Delete':
+                                echo 'Excluir Cliente';
                                 break;
                             default:
                                 echo 'Dashboard';

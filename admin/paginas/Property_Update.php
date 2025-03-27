@@ -61,6 +61,15 @@ try {
     $estados = [];
 }
 
+// Get available corretores (real estate agents)
+try {
+    $stmt = $databaseConnection->query("SELECT id, nome FROM sistema_usuarios WHERE nivel = 'Corretor' OR nivel = 'Administrador' ORDER BY nome ASC");
+    $corretores = $stmt->fetchAll();
+} catch (PDOException $e) {
+    logError("Error fetching corretores: " . $e->getMessage());
+    $corretores = [];
+}
+
 // Get cities based on selected state
 $cidades = [];
 if (!empty($formData['id_estado'])) {
@@ -100,7 +109,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $quartos = trim($_POST['quartos'] ?? '');
     $suites = trim($_POST['suites'] ?? '');
     $banheiros = trim($_POST['banheiros'] ?? '');
+    $salas = trim($_POST['salas'] ?? '');
+    $cozinhas = trim($_POST['cozinhas'] ?? '');
     $garagem = trim($_POST['garagem'] ?? '');
+    $area_servico = trim($_POST['area_servico'] ?? '');
     $area_total = trim($_POST['area_total'] ?? '');
     $area_construida = trim($_POST['area_construida'] ?? '');
     $und_medida = trim($_POST['und_medida'] ?? 'm²');
@@ -110,6 +122,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $codigo = trim($_POST['codigo'] ?? '');
     $status = trim($_POST['status'] ?? 'ativo');
     $destaque = isset($_POST['destaque']) ? 1 : 0;
+    $classificados = trim($_POST['classificados'] ?? '');
+    $quadra_lote = trim($_POST['quadra_lote'] ?? '');
+    $medida_frente = trim($_POST['medida_frente'] ?? '');
+    $medida_fundo = trim($_POST['medida_fundo'] ?? '');
+    $medida_laterais = trim($_POST['medida_laterais'] ?? '');
+    $latitude = trim($_POST['latitude'] ?? '');
+    $longitude = trim($_POST['longitude'] ?? '');
+    $corretor_responsavel = (int)($_POST['corretor_responsavel'] ?? 0);
+    $nome_anunciante = trim($_POST['nome_anunciante'] ?? '');
+    $telefone_anunciante = trim($_POST['telefone_anunciante'] ?? '');
+    $palavras_chaves = trim($_POST['palavras_chaves'] ?? '');
     
     // Validate form data
     if (empty($titulo)) {
@@ -133,6 +156,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stmt->rowCount() > 0) {
                 $error = 'Um imóvel com este código já existe.';
             } else {
+                // Prepare keywords for search if not provided
+                if (empty($palavras_chaves)) {
+                    $palavras_chaves = $titulo . ' ' . $descricao;
+                }
+                
                 // Update property
                 $stmt = $databaseConnection->prepare(
                     "UPDATE sistema_imoveis SET 
@@ -145,8 +173,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         valor = :valor, 
                         quartos = :quartos, 
                         suites = :suites, 
-                        banheiros = :banheiros, 
+                        banheiros = :banheiros,
+                        salas = :salas,
+                        cozinhas = :cozinhas,
                         garagem = :garagem, 
+                        area_servico = :area_servico,
                         area_total = :area_total, 
                         area_construida = :area_construida, 
                         und_medida = :und_medida, 
@@ -155,7 +186,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ref = :ref, 
                         codigo = :codigo, 
                         status = :status,
-                        destaque = :destaque
+                        destaque = :destaque,
+                        classificados = :classificados,
+                        quadra_lote = :quadra_lote,
+                        medida_frente = :medida_frente,
+                        medida_fundo = :medida_fundo,
+                        medida_laterais = :medida_laterais,
+                        latitude = :latitude,
+                        longitude = :longitude,
+                        corretor_responsavel = :corretor_responsavel,
+                        nome_anunciante = :nome_anunciante,
+                        telefone_anunciante = :telefone_anunciante,
+                        palavras_chaves = :palavras_chaves
                      WHERE id = :id"
                 );
                 
@@ -169,7 +211,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bindParam(':quartos', $quartos);
                 $stmt->bindParam(':suites', $suites);
                 $stmt->bindParam(':banheiros', $banheiros);
+                $stmt->bindParam(':salas', $salas);
+                $stmt->bindParam(':cozinhas', $cozinhas);
                 $stmt->bindParam(':garagem', $garagem);
+                $stmt->bindParam(':area_servico', $area_servico);
                 $stmt->bindParam(':area_total', $area_total);
                 $stmt->bindParam(':area_construida', $area_construida);
                 $stmt->bindParam(':und_medida', $und_medida);
@@ -179,19 +224,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bindParam(':codigo', $codigo);
                 $stmt->bindParam(':status', $status);
                 $stmt->bindParam(':destaque', $destaque);
-                $stmt->bindParam(':id', $property_id);
-                
-                $stmt->execute();
-                
-                // Prepare keywords for search
-                $palavras_chaves = $titulo . ' ' . $descricao;
-                
-                // Update keywords separately
-                $stmt = $databaseConnection->prepare(
-                    "UPDATE sistema_imoveis SET palavras_chaves = :palavras_chaves WHERE id = :id"
-                );
+                $stmt->bindParam(':classificados', $classificados);
+                $stmt->bindParam(':quadra_lote', $quadra_lote);
+                $stmt->bindParam(':medida_frente', $medida_frente);
+                $stmt->bindParam(':medida_fundo', $medida_fundo);
+                $stmt->bindParam(':medida_laterais', $medida_laterais);
+                $stmt->bindParam(':latitude', $latitude);
+                $stmt->bindParam(':longitude', $longitude);
+                $stmt->bindParam(':corretor_responsavel', $corretor_responsavel);
+                $stmt->bindParam(':nome_anunciante', $nome_anunciante);
+                $stmt->bindParam(':telefone_anunciante', $telefone_anunciante);
                 $stmt->bindParam(':palavras_chaves', $palavras_chaves);
                 $stmt->bindParam(':id', $property_id);
+                
                 $stmt->execute();
                 
                 // Handle image uploads
@@ -242,7 +287,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $formData['quartos'] = $quartos;
     $formData['suites'] = $suites;
     $formData['banheiros'] = $banheiros;
+    $formData['salas'] = $salas;
+    $formData['cozinhas'] = $cozinhas;
     $formData['garagem'] = $garagem;
+    $formData['area_servico'] = $area_servico;
     $formData['area_total'] = $area_total;
     $formData['area_construida'] = $area_construida;
     $formData['und_medida'] = $und_medida;
@@ -252,6 +300,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $formData['codigo'] = $codigo;
     $formData['status'] = $status;
     $formData['destaque'] = $destaque;
+    $formData['classificados'] = $classificados;
+    $formData['quadra_lote'] = $quadra_lote;
+    $formData['medida_frente'] = $medida_frente;
+    $formData['medida_fundo'] = $medida_fundo;
+    $formData['medida_laterais'] = $medida_laterais;
+    $formData['latitude'] = $latitude;
+    $formData['longitude'] = $longitude;
+    $formData['corretor_responsavel'] = $corretor_responsavel;
+    $formData['nome_anunciante'] = $nome_anunciante;
+    $formData['telefone_anunciante'] = $telefone_anunciante;
+    $formData['palavras_chaves'] = $palavras_chaves;
 }
 ?>
 
@@ -278,18 +337,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <h3 class="form-section__title">Informações Básicas</h3>
             
             <div class="form-row">
-                <div class="form-group form-group--large">
+                <div class="form-group form-group--full">
                     <label for="titulo">Título do Imóvel <span class="required">*</span></label>
                     <input type="text" id="titulo" name="titulo" class="form-control" 
-                           value="<?= htmlspecialchars($formData['titulo']) ?>" required>
+                           value="<?= htmlspecialchars($formData['titulo']) ?>" required
+                           placeholder="Ex: Casa a venda no bairro jardim paraíso">
                 </div>
                 
-                <div class="form-group">
-                    <label for="codigo">Código <span class="required">*</span></label>
-                    <input type="text" id="codigo" name="codigo" class="form-control" 
-                           value="<?= htmlspecialchars($formData['codigo']) ?>" required>
-                    <small class="form-text">Código único para identificação do imóvel.</small>
-                </div>
+                <!-- Campo oculto para código do imóvel -->
+                <input type="hidden" id="codigo" name="codigo" value="<?= htmlspecialchars($formData['codigo']) ?>">
             </div>
             
             <div class="form-row">
@@ -298,6 +354,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <select id="para" name="para" class="form-control" required>
                         <option value="venda" <?= $formData['para'] === 'venda' ? 'selected' : '' ?>>Venda</option>
                         <option value="aluguel" <?= $formData['para'] === 'aluguel' ? 'selected' : '' ?>>Aluguel</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="classificados">Classificados</label>
+                    <select id="classificados" name="classificados" class="form-control">
+                        <option value="">Selecione...</option>
+                        <option value="Sim" <?= $formData['classificados'] === 'Sim' ? 'selected' : '' ?>>Sim</option>
+                        <option value="Não" <?= $formData['classificados'] === 'Não' ? 'selected' : '' ?>>Não</option>
                     </select>
                 </div>
                 
@@ -319,12 +384,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                            value="<?= formatCurrency($formData['valor']) ?>" required>
                 </div>
                 
-                <div class="form-group">
-                    <label for="ref">Referência</label>
-                    <input type="text" id="ref" name="ref" class="form-control" 
-                           value="<?= htmlspecialchars($formData['ref']) ?>">
-                    <small class="form-text">Código de referência (opcional).</small>
-                </div>
+                <input type="hidden" id="ref" name="ref" value="<?= htmlspecialchars($formData['ref']) ?>">
+
             </div>
         </div>
         
@@ -374,7 +435,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="form-group form-group--large">
                     <label for="endereco">Endereço</label>
                     <input type="text" id="endereco" name="endereco" class="form-control" 
-                           value="<?= htmlspecialchars($formData['endereco']) ?>">
+                           value="<?= htmlspecialchars($formData['endereco']) ?>"
+                           placeholder="Informe o endereço (Ex.: Rua Jorge Amado, n 354, Luis Eduardo Magalhães)">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="latitude">Latitude</label>
+                    <input type="text" id="latitude" name="latitude" class="form-control" 
+                           value="<?= htmlspecialchars($formData['latitude']) ?>">
+                </div>
+                
+                <div class="form-group">
+                    <label for="longitude">Longitude</label>
+                    <input type="text" id="longitude" name="longitude" class="form-control" 
+                           value="<?= htmlspecialchars($formData['longitude']) ?>">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="quadra_lote">Quadra e Lote</label>
+                    <input type="text" id="quadra_lote" name="quadra_lote" class="form-control" 
+                           value="<?= htmlspecialchars($formData['quadra_lote']) ?>"
+                           placeholder="Q. 00, Lt. 00">
+                </div>
+                
+                <div class="form-group">
+                    <label for="medida_frente">Medida da Frente</label>
+                    <input type="text" id="medida_frente" name="medida_frente" class="form-control" 
+                           value="<?= htmlspecialchars($formData['medida_frente']) ?>">
+                </div>
+                
+                <div class="form-group">
+                    <label for="medida_fundo">Medida do Fundo</label>
+                    <input type="text" id="medida_fundo" name="medida_fundo" class="form-control" 
+                           value="<?= htmlspecialchars($formData['medida_fundo']) ?>">
+                </div>
+                
+                <div class="form-group">
+                    <label for="medida_laterais">Medidas Laterais</label>
+                    <input type="text" id="medida_laterais" name="medida_laterais" class="form-control" 
+                           value="<?= htmlspecialchars($formData['medida_laterais']) ?>">
                 </div>
             </div>
         </div>
@@ -385,9 +488,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             <div class="form-row">
                 <div class="form-group">
-                    <label for="quartos">Quartos</label>
+                    <label for="quartos">Quartos/Dormitórios</label>
                     <select id="quartos" name="quartos" class="form-control">
-                        <option value="">Selecione...</option>
+                        <option value="">Nenhum</option>
                         <option value="1" <?= $formData['quartos'] === '1' ? 'selected' : '' ?>>1</option>
                         <option value="2" <?= $formData['quartos'] === '2' ? 'selected' : '' ?>>2</option>
                         <option value="3" <?= $formData['quartos'] === '3' ? 'selected' : '' ?>>3</option>
@@ -399,7 +502,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="form-group">
                     <label for="suites">Suítes</label>
                     <select id="suites" name="suites" class="form-control">
-                        <option value="">Selecione...</option>
+                        <option value="">Nenhum</option>
                         <option value="1" <?= $formData['suites'] === '1' ? 'selected' : '' ?>>1</option>
                         <option value="2" <?= $formData['suites'] === '2' ? 'selected' : '' ?>>2</option>
                         <option value="3" <?= $formData['suites'] === '3' ? 'selected' : '' ?>>3</option>
@@ -409,9 +512,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 
                 <div class="form-group">
+                    <label for="cozinhas">Cozinhas</label>
+                    <select id="cozinhas" name="cozinhas" class="form-control">
+                        <option value="">Nenhum</option>
+                        <option value="1" <?= $formData['cozinhas'] === '1' ? 'selected' : '' ?>>1</option>
+                        <option value="2" <?= $formData['cozinhas'] === '2' ? 'selected' : '' ?>>2</option>
+                        <option value="3" <?= $formData['cozinhas'] === '3' ? 'selected' : '' ?>>3</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="salas">Salas</label>
+                    <select id="salas" name="salas" class="form-control">
+                        <option value="">Nenhum</option>
+                        <option value="1" <?= $formData['salas'] === '1' ? 'selected' : '' ?>>1</option>
+                        <option value="2" <?= $formData['salas'] === '2' ? 'selected' : '' ?>>2</option>
+                        <option value="3" <?= $formData['salas'] === '3' ? 'selected' : '' ?>>3</option>
+                        <option value="4" <?= $formData['salas'] === '4' ? 'selected' : '' ?>>4</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
                     <label for="banheiros">Banheiros</label>
                     <select id="banheiros" name="banheiros" class="form-control">
-                        <option value="">Selecione...</option>
+                        <option value="">Nenhum</option>
                         <option value="1" <?= $formData['banheiros'] === '1' ? 'selected' : '' ?>>1</option>
                         <option value="2" <?= $formData['banheiros'] === '2' ? 'selected' : '' ?>>2</option>
                         <option value="3" <?= $formData['banheiros'] === '3' ? 'selected' : '' ?>>3</option>
@@ -423,7 +549,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="form-group">
                     <label for="garagem">Vagas de Garagem</label>
                     <select id="garagem" name="garagem" class="form-control">
-                        <option value="">Selecione...</option>
+                        <option value="">Nenhum</option>
                         <option value="1" <?= $formData['garagem'] === '1' ? 'selected' : '' ?>>1</option>
                         <option value="2" <?= $formData['garagem'] === '2' ? 'selected' : '' ?>>2</option>
                         <option value="3" <?= $formData['garagem'] === '3' ? 'selected' : '' ?>>3</option>
@@ -431,21 +557,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <option value="5+" <?= $formData['garagem'] === '5+' ? 'selected' : '' ?>>5+</option>
                     </select>
                 </div>
+                
+                <div class="form-group">
+                    <label for="area_servico">Área de Serviço</label>
+                    <select id="area_servico" name="area_servico" class="form-control">
+                        <option value="">Nenhum</option>
+                        <option value="Sim" <?= $formData['area_servico'] === 'Sim' ? 'selected' : '' ?>>Sim</option>
+                        <option value="Não" <?= $formData['area_servico'] === 'Não' ? 'selected' : '' ?>>Não</option>
+                    </select>
+                </div>
             </div>
             
             <div class="form-row">
-                <div class="form-group">
-                    <label for="area_total">Área Total</label>
-                    <input type="text" id="area_total" name="area_total" class="form-control" 
-                           value="<?= htmlspecialchars($formData['area_total']) ?>">
-                </div>
-                
-                <div class="form-group">
-                    <label for="area_construida">Área Construída</label>
-                    <input type="text" id="area_construida" name="area_construida" class="form-control" 
-                           value="<?= htmlspecialchars($formData['area_construida']) ?>">
-                </div>
-                
                 <div class="form-group">
                     <label for="und_medida">Unidade de Medida</label>
                     <select id="und_medida" name="und_medida" class="form-control">
@@ -453,6 +576,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <option value="ha" <?= $formData['und_medida'] === 'ha' ? 'selected' : '' ?>>hectares</option>
                         <option value="km²" <?= $formData['und_medida'] === 'km²' ? 'selected' : '' ?>>km²</option>
                     </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="area_total">Área Total</label>
+                    <input type="text" id="area_total" name="area_total" class="form-control" 
+                           value="<?= htmlspecialchars($formData['area_total']) ?>"
+                           placeholder="Somente Números">
+                </div>
+                
+                <div class="form-group">
+                    <label for="area_construida">Área Construída</label>
+                    <input type="text" id="area_construida" name="area_construida" class="form-control" 
+                           value="<?= htmlspecialchars($formData['area_construida']) ?>"
+                           placeholder="Somente Números">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Additional Information -->
+        <div class="form-section">
+            <h3 class="form-section__title">Informações Adicionais</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="corretor_responsavel">Corretor Responsável</label>
+                    <select id="corretor_responsavel" name="corretor_responsavel" class="form-control">
+                        <option value="">Selecione...</option>
+                        <?php foreach ($corretores as $corretor): ?>
+                            <option value="<?= $corretor['id'] ?>" <?= $formData['corretor_responsavel'] == $corretor['id'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($corretor['nome']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="nome_anunciante">Proprietário do Imóvel</label>
+                    <input type="text" id="nome_anunciante" name="nome_anunciante" class="form-control" 
+                           value="<?= htmlspecialchars($formData['nome_anunciante']) ?>"
+                           placeholder="Nome do Proprietário">
+                </div>
+                
+                <div class="form-group">
+                    <label for="telefone_anunciante">Telefones do Proprietário</label>
+                    <input type="text" id="telefone_anunciante" name="telefone_anunciante" class="form-control" 
+                           value="<?= htmlspecialchars($formData['telefone_anunciante']) ?>"
+                           placeholder="Digite os Telefones do Proprietário">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="palavras_chaves">Palavras-chave</label>
+                    <input type="text" id="palavras_chaves" name="palavras_chaves" class="form-control" 
+                           value="<?= htmlspecialchars($formData['palavras_chaves']) ?>">
+                    <small class="form-text">Palavras-chave separadas por vírgula para melhorar a busca (Opcional).</small>
                 </div>
             </div>
         </div>

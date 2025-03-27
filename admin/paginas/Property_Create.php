@@ -18,7 +18,10 @@ $formData = [
     'quartos' => '',
     'suites' => '',
     'banheiros' => '',
+    'salas' => '',
+    'cozinhas' => '',
     'garagem' => '',
+    'area_servico' => '',
     'area_total' => '',
     'area_construida' => '',
     'und_medida' => 'm²',
@@ -27,7 +30,18 @@ $formData = [
     'ref' => '',
     'codigo' => '',
     'status' => 'ativo',
-    'destaque' => 0
+    'destaque' => 0,
+    'classificados' => '',
+    'quadra_lote' => '',
+    'medida_frente' => '',
+    'medida_fundo' => '',
+    'medida_laterais' => '',
+    'latitude' => '',
+    'longitude' => '',
+    'corretor_responsavel' => '',
+    'nome_anunciante' => '',
+    'telefone_anunciante' => '',
+    'palavras_chaves' => ''
 ];
 
 // Get categories
@@ -48,6 +62,15 @@ try {
     $estados = [];
 }
 
+// Get available corretores (real estate agents)
+try {
+    $stmt = $databaseConnection->query("SELECT id, nome FROM sistema_usuarios WHERE nivel = 'Corretor' OR nivel = 'Administrador' ORDER BY nome ASC");
+    $corretores = $stmt->fetchAll();
+} catch (PDOException $e) {
+    logError("Error fetching corretores: " . $e->getMessage());
+    $corretores = [];
+}
+
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Get form data
@@ -62,7 +85,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'quartos' => trim($_POST['quartos'] ?? ''),
         'suites' => trim($_POST['suites'] ?? ''),
         'banheiros' => trim($_POST['banheiros'] ?? ''),
+        'salas' => trim($_POST['salas'] ?? ''),
+        'cozinhas' => trim($_POST['cozinhas'] ?? ''),
         'garagem' => trim($_POST['garagem'] ?? ''),
+        'area_servico' => trim($_POST['area_servico'] ?? ''),
         'area_total' => trim($_POST['area_total'] ?? ''),
         'area_construida' => trim($_POST['area_construida'] ?? ''),
         'und_medida' => trim($_POST['und_medida'] ?? 'm²'),
@@ -71,7 +97,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'ref' => trim($_POST['ref'] ?? ''),
         'codigo' => trim($_POST['codigo'] ?? ''),
         'status' => trim($_POST['status'] ?? 'ativo'),
-        'destaque' => isset($_POST['destaque']) ? 1 : 0
+        'destaque' => isset($_POST['destaque']) ? 1 : 0,
+        'classificados' => trim($_POST['classificados'] ?? ''),
+        'quadra_lote' => trim($_POST['quadra_lote'] ?? ''),
+        'medida_frente' => trim($_POST['medida_frente'] ?? ''),
+        'medida_fundo' => trim($_POST['medida_fundo'] ?? ''),
+        'medida_laterais' => trim($_POST['medida_laterais'] ?? ''),
+        'latitude' => trim($_POST['latitude'] ?? ''),
+        'longitude' => trim($_POST['longitude'] ?? ''),
+        'corretor_responsavel' => (int)($_POST['corretor_responsavel'] ?? 0),
+        'nome_anunciante' => trim($_POST['nome_anunciante'] ?? ''),
+        'telefone_anunciante' => trim($_POST['telefone_anunciante'] ?? ''),
+        'palavras_chaves' => trim($_POST['palavras_chaves'] ?? '')
     ];
     
     // Validate form data
@@ -101,20 +138,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $id_usuario = $_SESSION['admin_id'];
                 
                 // Prepare keywords for search
-                $palavras_chaves = $formData['titulo'] . ' ' . $formData['descricao'];
+                if (empty($formData['palavras_chaves'])) {
+                    $formData['palavras_chaves'] = $formData['titulo'] . ' ' . $formData['descricao'];
+                }
                 
                 // Insert new property
                 $stmt = $databaseConnection->prepare(
                     "INSERT INTO sistema_imoveis (
                         titulo, para, id_categoria, id_estado, id_cidade, id_bairro, 
-                        valor, quartos, suites, banheiros, garagem, area_total, 
-                        area_construida, und_medida, endereco, descricao, ref, 
-                        codigo, status, data, hora, id_usuario, palavras_chaves, destaque
+                        valor, quartos, suites, banheiros, salas, cozinhas, garagem, area_servico, 
+                        area_total, area_construida, und_medida, endereco, descricao, ref, 
+                        codigo, status, data, hora, id_usuario, palavras_chaves, destaque, 
+                        classificados, quadra_lote, medida_frente, medida_fundo, medida_laterais,
+                        latitude, longitude, corretor_responsavel, nome_anunciante, telefone_anunciante
                     ) VALUES (
                         :titulo, :para, :id_categoria, :id_estado, :id_cidade, :id_bairro, 
-                        :valor, :quartos, :suites, :banheiros, :garagem, :area_total, 
-                        :area_construida, :und_medida, :endereco, :descricao, :ref, 
-                        :codigo, :status, :data, :hora, :id_usuario, :palavras_chaves, :destaque
+                        :valor, :quartos, :suites, :banheiros, :salas, :cozinhas, :garagem, :area_servico, 
+                        :area_total, :area_construida, :und_medida, :endereco, :descricao, :ref, 
+                        :codigo, :status, :data, :hora, :id_usuario, :palavras_chaves, :destaque,
+                        :classificados, :quadra_lote, :medida_frente, :medida_fundo, :medida_laterais,
+                        :latitude, :longitude, :corretor_responsavel, :nome_anunciante, :telefone_anunciante
                     )"
                 );
                 
@@ -128,7 +171,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bindParam(':quartos', $formData['quartos']);
                 $stmt->bindParam(':suites', $formData['suites']);
                 $stmt->bindParam(':banheiros', $formData['banheiros']);
+                $stmt->bindParam(':salas', $formData['salas']);
+                $stmt->bindParam(':cozinhas', $formData['cozinhas']);
                 $stmt->bindParam(':garagem', $formData['garagem']);
+                $stmt->bindParam(':area_servico', $formData['area_servico']);
                 $stmt->bindParam(':area_total', $formData['area_total']);
                 $stmt->bindParam(':area_construida', $formData['area_construida']);
                 $stmt->bindParam(':und_medida', $formData['und_medida']);
@@ -140,8 +186,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bindParam(':data', $data);
                 $stmt->bindParam(':hora', $hora);
                 $stmt->bindParam(':id_usuario', $id_usuario);
-                $stmt->bindParam(':palavras_chaves', $palavras_chaves);
+                $stmt->bindParam(':palavras_chaves', $formData['palavras_chaves']);
                 $stmt->bindParam(':destaque', $formData['destaque']);
+                $stmt->bindParam(':classificados', $formData['classificados']);
+                $stmt->bindParam(':quadra_lote', $formData['quadra_lote']);
+                $stmt->bindParam(':medida_frente', $formData['medida_frente']);
+                $stmt->bindParam(':medida_fundo', $formData['medida_fundo']);
+                $stmt->bindParam(':medida_laterais', $formData['medida_laterais']);
+                $stmt->bindParam(':latitude', $formData['latitude']);
+                $stmt->bindParam(':longitude', $formData['longitude']);
+                $stmt->bindParam(':corretor_responsavel', $formData['corretor_responsavel']);
+                $stmt->bindParam(':nome_anunciante', $formData['nome_anunciante']);
+                $stmt->bindParam(':telefone_anunciante', $formData['telefone_anunciante']);
                 
                 $stmt->execute();
                 $newPropertyId = $databaseConnection->lastInsertId();
@@ -234,18 +290,15 @@ if (!empty($formData['id_cidade'])) {
             <h3 class="form-section__title">Informações Básicas</h3>
             
             <div class="form-row">
-                <div class="form-group form-group--large">
+                <div class="form-group form-group--full">
                     <label for="titulo">Título do Imóvel <span class="required">*</span></label>
                     <input type="text" id="titulo" name="titulo" class="form-control" 
-                           value="<?= htmlspecialchars($formData['titulo']) ?>" required>
+                           value="<?= htmlspecialchars($formData['titulo']) ?>" required
+                           placeholder="Ex: Casa a venda no bairro jardim paraíso">
                 </div>
                 
-                <div class="form-group">
-                    <label for="codigo">Código <span class="required">*</span></label>
-                    <input type="text" id="codigo" name="codigo" class="form-control" 
-                           value="<?= htmlspecialchars($formData['codigo']) ?>" required>
-                    <small class="form-text">Código único para identificação do imóvel.</small>
-                </div>
+                <!-- Campo oculto para código do imóvel -->
+                <input type="hidden" id="codigo" name="codigo" value="<?= htmlspecialchars($formData['codigo'] ?: 'IMV' . time()) ?>">
             </div>
             
             <div class="form-row">
@@ -254,6 +307,15 @@ if (!empty($formData['id_cidade'])) {
                     <select id="para" name="para" class="form-control" required>
                         <option value="venda" <?= $formData['para'] === 'venda' ? 'selected' : '' ?>>Venda</option>
                         <option value="aluguel" <?= $formData['para'] === 'aluguel' ? 'selected' : '' ?>>Aluguel</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="classificados">Classificados</label>
+                    <select id="classificados" name="classificados" class="form-control">
+                        <option value="">Selecione...</option>
+                        <option value="Sim" <?= $formData['classificados'] === 'Sim' ? 'selected' : '' ?>>Sim</option>
+                        <option value="Não" <?= $formData['classificados'] === 'Não' ? 'selected' : '' ?>>Não</option>
                     </select>
                 </div>
                 
@@ -272,15 +334,11 @@ if (!empty($formData['id_cidade'])) {
                 <div class="form-group">
                     <label for="valor">Valor <span class="required">*</span></label>
                     <input type="text" id="valor" name="valor" class="form-control money-mask" 
-                           value="<?= formatCurrency($formData['valor']) ?>" required>
+                           value="<?= !empty($formData['valor']) ? formatCurrency($formData['valor']) : '' ?>" required>
                 </div>
                 
-                <div class="form-group">
-                    <label for="ref">Referência</label>
-                    <input type="text" id="ref" name="ref" class="form-control" 
-                           value="<?= htmlspecialchars($formData['ref']) ?>">
-                    <small class="form-text">Código de referência (opcional).</small>
-                </div>
+                <input type="hidden" id="ref" name="ref" value="">
+
             </div>
         </div>
         
@@ -330,7 +388,49 @@ if (!empty($formData['id_cidade'])) {
                 <div class="form-group form-group--large">
                     <label for="endereco">Endereço</label>
                     <input type="text" id="endereco" name="endereco" class="form-control" 
-                           value="<?= htmlspecialchars($formData['endereco']) ?>">
+                           value="<?= htmlspecialchars($formData['endereco']) ?>"
+                           placeholder="Informe o endereço (Ex.: Rua Jorge Amado, n 354, Luis Eduardo Magalhães)">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="latitude">Latitude</label>
+                    <input type="text" id="latitude" name="latitude" class="form-control" 
+                           value="<?= htmlspecialchars($formData['latitude']) ?>">
+                </div>
+                
+                <div class="form-group">
+                    <label for="longitude">Longitude</label>
+                    <input type="text" id="longitude" name="longitude" class="form-control" 
+                           value="<?= htmlspecialchars($formData['longitude']) ?>">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="quadra_lote">Quadra e Lote</label>
+                    <input type="text" id="quadra_lote" name="quadra_lote" class="form-control" 
+                           value="<?= htmlspecialchars($formData['quadra_lote']) ?>"
+                           placeholder="Q. 00, Lt. 00">
+                </div>
+                
+                <div class="form-group">
+                    <label for="medida_frente">Medida da Frente</label>
+                    <input type="text" id="medida_frente" name="medida_frente" class="form-control" 
+                           value="<?= htmlspecialchars($formData['medida_frente']) ?>">
+                </div>
+                
+                <div class="form-group">
+                    <label for="medida_fundo">Medida do Fundo</label>
+                    <input type="text" id="medida_fundo" name="medida_fundo" class="form-control" 
+                           value="<?= htmlspecialchars($formData['medida_fundo']) ?>">
+                </div>
+                
+                <div class="form-group">
+                    <label for="medida_laterais">Medidas Laterais</label>
+                    <input type="text" id="medida_laterais" name="medida_laterais" class="form-control" 
+                           value="<?= htmlspecialchars($formData['medida_laterais']) ?>">
                 </div>
             </div>
         </div>
@@ -341,9 +441,9 @@ if (!empty($formData['id_cidade'])) {
             
             <div class="form-row">
                 <div class="form-group">
-                    <label for="quartos">Quartos</label>
+                    <label for="quartos">Quartos/Dormitórios</label>
                     <select id="quartos" name="quartos" class="form-control">
-                        <option value="">Selecione...</option>
+                        <option value="">Nenhum</option>
                         <option value="1" <?= $formData['quartos'] === '1' ? 'selected' : '' ?>>1</option>
                         <option value="2" <?= $formData['quartos'] === '2' ? 'selected' : '' ?>>2</option>
                         <option value="3" <?= $formData['quartos'] === '3' ? 'selected' : '' ?>>3</option>
@@ -355,7 +455,7 @@ if (!empty($formData['id_cidade'])) {
                 <div class="form-group">
                     <label for="suites">Suítes</label>
                     <select id="suites" name="suites" class="form-control">
-                        <option value="">Selecione...</option>
+                        <option value="">Nenhum</option>
                         <option value="1" <?= $formData['suites'] === '1' ? 'selected' : '' ?>>1</option>
                         <option value="2" <?= $formData['suites'] === '2' ? 'selected' : '' ?>>2</option>
                         <option value="3" <?= $formData['suites'] === '3' ? 'selected' : '' ?>>3</option>
@@ -365,9 +465,32 @@ if (!empty($formData['id_cidade'])) {
                 </div>
                 
                 <div class="form-group">
+                    <label for="cozinhas">Cozinhas</label>
+                    <select id="cozinhas" name="cozinhas" class="form-control">
+                        <option value="">Nenhum</option>
+                        <option value="1" <?= $formData['cozinhas'] === '1' ? 'selected' : '' ?>>1</option>
+                        <option value="2" <?= $formData['cozinhas'] === '2' ? 'selected' : '' ?>>2</option>
+                        <option value="3" <?= $formData['cozinhas'] === '3' ? 'selected' : '' ?>>3</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="salas">Salas</label>
+                    <select id="salas" name="salas" class="form-control">
+                        <option value="">Nenhum</option>
+                        <option value="1" <?= $formData['salas'] === '1' ? 'selected' : '' ?>>1</option>
+                        <option value="2" <?= $formData['salas'] === '2' ? 'selected' : '' ?>>2</option>
+                        <option value="3" <?= $formData['salas'] === '3' ? 'selected' : '' ?>>3</option>
+                        <option value="4" <?= $formData['salas'] === '4' ? 'selected' : '' ?>>4</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
                     <label for="banheiros">Banheiros</label>
                     <select id="banheiros" name="banheiros" class="form-control">
-                        <option value="">Selecione...</option>
+                        <option value="">Nenhum</option>
                         <option value="1" <?= $formData['banheiros'] === '1' ? 'selected' : '' ?>>1</option>
                         <option value="2" <?= $formData['banheiros'] === '2' ? 'selected' : '' ?>>2</option>
                         <option value="3" <?= $formData['banheiros'] === '3' ? 'selected' : '' ?>>3</option>
@@ -379,7 +502,7 @@ if (!empty($formData['id_cidade'])) {
                 <div class="form-group">
                     <label for="garagem">Vagas de Garagem</label>
                     <select id="garagem" name="garagem" class="form-control">
-                        <option value="">Selecione...</option>
+                        <option value="">Nenhum</option>
                         <option value="1" <?= $formData['garagem'] === '1' ? 'selected' : '' ?>>1</option>
                         <option value="2" <?= $formData['garagem'] === '2' ? 'selected' : '' ?>>2</option>
                         <option value="3" <?= $formData['garagem'] === '3' ? 'selected' : '' ?>>3</option>
@@ -387,21 +510,18 @@ if (!empty($formData['id_cidade'])) {
                         <option value="5+" <?= $formData['garagem'] === '5+' ? 'selected' : '' ?>>5+</option>
                     </select>
                 </div>
+                
+                <div class="form-group">
+                    <label for="area_servico">Área de Serviço</label>
+                    <select id="area_servico" name="area_servico" class="form-control">
+                        <option value="">Nenhum</option>
+                        <option value="Sim" <?= $formData['area_servico'] === 'Sim' ? 'selected' : '' ?>>Sim</option>
+                        <option value="Não" <?= $formData['area_servico'] === 'Não' ? 'selected' : '' ?>>Não</option>
+                    </select>
+                </div>
             </div>
             
             <div class="form-row">
-                <div class="form-group">
-                    <label for="area_total">Área Total</label>
-                    <input type="text" id="area_total" name="area_total" class="form-control" 
-                           value="<?= htmlspecialchars($formData['area_total']) ?>">
-                </div>
-                
-                <div class="form-group">
-                    <label for="area_construida">Área Construída</label>
-                    <input type="text" id="area_construida" name="area_construida" class="form-control" 
-                           value="<?= htmlspecialchars($formData['area_construida']) ?>">
-                </div>
-                
                 <div class="form-group">
                     <label for="und_medida">Unidade de Medida</label>
                     <select id="und_medida" name="und_medida" class="form-control">
@@ -409,6 +529,62 @@ if (!empty($formData['id_cidade'])) {
                         <option value="ha" <?= $formData['und_medida'] === 'ha' ? 'selected' : '' ?>>hectares</option>
                         <option value="km²" <?= $formData['und_medida'] === 'km²' ? 'selected' : '' ?>>km²</option>
                     </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="area_total">Área Total</label>
+                    <input type="text" id="area_total" name="area_total" class="form-control" 
+                           value="<?= htmlspecialchars($formData['area_total']) ?>"
+                           placeholder="Somente Números">
+                </div>
+                
+                <div class="form-group">
+                    <label for="area_construida">Área Construída</label>
+                    <input type="text" id="area_construida" name="area_construida" class="form-control" 
+                           value="<?= htmlspecialchars($formData['area_construida']) ?>"
+                           placeholder="Somente Números">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Additional Information -->
+        <div class="form-section">
+            <h3 class="form-section__title">Informações Adicionais</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="corretor_responsavel">Corretor Responsável</label>
+                    <select id="corretor_responsavel" name="corretor_responsavel" class="form-control">
+                        <option value="">Selecione...</option>
+                        <?php foreach ($corretores as $corretor): ?>
+                            <option value="<?= $corretor['id'] ?>" <?= $formData['corretor_responsavel'] == $corretor['id'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($corretor['nome']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="nome_anunciante">Proprietário do Imóvel</label>
+                    <input type="text" id="nome_anunciante" name="nome_anunciante" class="form-control" 
+                           value="<?= htmlspecialchars($formData['nome_anunciante']) ?>"
+                           placeholder="Nome do Proprietário">
+                </div>
+                
+                <div class="form-group">
+                    <label for="telefone_anunciante">Telefones do Proprietário</label>
+                    <input type="text" id="telefone_anunciante" name="telefone_anunciante" class="form-control" 
+                           value="<?= htmlspecialchars($formData['telefone_anunciante']) ?>"
+                           placeholder="Digite os Telefones do Proprietário">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="palavras_chaves">Palavras-chave</label>
+                    <input type="text" id="palavras_chaves" name="palavras_chaves" class="form-control" 
+                           value="<?= htmlspecialchars($formData['palavras_chaves']) ?>">
+                    <small class="form-text">Palavras-chave separadas por vírgula para melhorar a busca (Opcional).</small>
                 </div>
             </div>
         </div>
@@ -433,7 +609,7 @@ if (!empty($formData['id_cidade'])) {
                 <div class="form-group form-group--full">
                     <label for="imagens">Selecione as Imagens</label>
                     <input type="file" id="imagens" name="imagens[]" class="form-control-file" multiple accept="image/*">
-                    <small class="form-text">Selecione uma ou mais imagens (JPEG, PNG). A primeira imagem será a principal. As imagens devem ter no máximo 5MB.</small>
+                    <small class="form-text">Selecione uma ou mais imagens (JPEG, PNG). A primeira imagem será a principal (Foto de Capa). As imagens devem ter no máximo 5MB.</small>
                 </div>
             </div>
         </div>
@@ -598,6 +774,10 @@ document.addEventListener('DOMContentLoaded', function() {
         valorInput.addEventListener('input', function(e) {
             let value = e.target.value;
             value = value.replace(/\D/g, '');
+            if (value === '') {
+                e.target.value = '';
+                return;
+            }
             value = (parseInt(value) / 100).toFixed(2);
             e.target.value = value.toLocaleString('pt-BR', {
                 style: 'currency',

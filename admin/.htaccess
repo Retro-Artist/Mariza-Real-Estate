@@ -1,13 +1,10 @@
-# Turn on URL rewriting
-RewriteEngine On
+# Disable directory browsing
+Options -Indexes
 
-# Set base directory path (if in a subdirectory)
-# RewriteBase /admin/
+# Prevent viewing of .htaccess file
+<Files .htaccess>
+order allow,deny
+deny from all
+</Files>
 
-# Don't rewrite files or directories
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule ^ - [L]
-
-# Redirect all URLs that contain "admin/" to index.php
-RewriteRule ^ index.php [L]
+# No need for complex rewrite rules since we're using query strings

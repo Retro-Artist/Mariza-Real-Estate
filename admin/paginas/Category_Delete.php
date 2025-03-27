@@ -9,7 +9,7 @@ if (!isset($_SESSION['admin_id'])) {
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     $_SESSION['alert_message'] = 'ID da categoria não especificado.';
     $_SESSION['alert_type'] = 'error';
-    header('Location: ' . BASE_URL . '/admin/categorias');
+    header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
     exit;
 }
 
@@ -34,7 +34,7 @@ if (!$confirmDelete) {
         if (!$categoryData) {
             $_SESSION['alert_message'] = 'Categoria não encontrada.';
             $_SESSION['alert_type'] = 'error';
-            header('Location: ' . BASE_URL . '/admin/categorias');
+            header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
             exit;
         }
         
@@ -52,7 +52,7 @@ if (!$confirmDelete) {
         if ($imoveisCount > 0) {
             $_SESSION['alert_message'] = 'Esta categoria não pode ser excluída pois existem ' . $imoveisCount . ' imóveis associados a ela.';
             $_SESSION['alert_type'] = 'error';
-            header('Location: ' . BASE_URL . '/admin/categorias');
+            header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
             exit;
         }
         
@@ -60,7 +60,7 @@ if (!$confirmDelete) {
         logError("Error fetching category data: " . $e->getMessage());
         $_SESSION['alert_message'] = 'Erro ao buscar dados da categoria.';
         $_SESSION['alert_type'] = 'error';
-        header('Location: ' . BASE_URL . '/admin/categorias');
+        header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
         exit;
     }
 }
@@ -79,7 +79,7 @@ else {
         if ($imoveisCount > 0) {
             $_SESSION['alert_message'] = 'Esta categoria não pode ser excluída pois existem imóveis associados a ela.';
             $_SESSION['alert_type'] = 'error';
-            header('Location: ' . BASE_URL . '/admin/categorias');
+            header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
             exit;
         }
         
@@ -94,14 +94,14 @@ else {
         $_SESSION['alert_message'] = 'Categoria excluída com sucesso!';
         $_SESSION['alert_type'] = 'success';
         
-        header('Location: ' . BASE_URL . '/admin/categorias');
+        header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
         exit;
         
     } catch (PDOException $e) {
         logError("Error deleting category: " . $e->getMessage());
         $_SESSION['alert_message'] = 'Ocorreu um erro ao excluir a categoria.';
         $_SESSION['alert_type'] = 'error';
-        header('Location: ' . BASE_URL . '/admin/categorias');
+        header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
         exit;
     }
 }
@@ -112,7 +112,7 @@ else {
     <!-- Page Header -->
     <div class="admin-page__header">
         <h2 class="admin-page__title">Excluir Categoria</h2>
-        <a href="<?= BASE_URL ?>/admin/categorias" class="cancel-button">
+        <a href="<?= BASE_URL ?>/admin/index.php?page=Category_Admin" class="cancel-button">
             <i class="fas fa-arrow-left"></i> Voltar
         </a>
     </div>
@@ -127,10 +127,10 @@ else {
         </div>
         
         <div class="confirmation-actions">
-            <a href="<?= BASE_URL ?>/admin/categorias" class="cancel-button">
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Category_Admin" class="cancel-button">
                 Cancelar
             </a>
-            <a href="<?= BASE_URL ?>/admin/categorias/excluir?id=<?= $category_id ?>&confirm=1" class="delete-button">
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Category_Delete&id=<?= $category_id ?>&confirm=1" class="delete-button">
                 <i class="fas fa-trash"></i> Sim, Excluir Categoria
             </a>
         </div>
