@@ -1,0 +1,15 @@
+# Prevent script execution
+<FilesMatch "\.(php|php5|phtml|ph3|ph4|phps|cgi|pl|py|jsp|asp|htm|shtml|sh|bash)$">
+    deny from all
+</FilesMatch>
+
+# Allow only image files
+<FilesMatch "\.(jpg|jpeg|png|gif)$">
+    Allow from all
+</FilesMatch>
+
+# Disable directory listing
+Options -Indexes
+
+# Protect against hotlinking
+Header set X-Frame-Options "SAMEORIGIN"

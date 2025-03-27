@@ -1,0 +1,427 @@
+/* Property Detail Page Styles */
+.property-detail {
+    padding: 60px 0;
+    background-color: var(--color-bg-light);
+  }
+  
+  .property-detail__wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+  }
+  
+  .property-detail__main {
+    flex: 3;
+    min-width: 300px;
+  }
+  
+  /* Galeria de Fotos */
+  .property-gallery {
+    background-color: var(--color-content-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+    margin-bottom: 30px;
+  }
+  
+  .property-gallery__main {
+    position: relative;
+  }
+  
+  .property-gallery__current {
+    position: relative;
+    height: 450px;
+    overflow: hidden;
+  }
+  
+  .property-gallery__current img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+  }
+  
+  .property-gallery__current img:hover {
+    transform: scale(1.02);
+  }
+  
+  .property-gallery__nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(255, 255, 255, 0.7);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-lg);
+    cursor: pointer;
+    transition: var(--transition);
+    z-index: 5;
+  }
+  
+  .property-gallery__nav:hover {
+    background-color: var(--color-accent);
+    color: var(--color-text-light);
+  }
+  
+  .property-gallery__nav--prev {
+    left: 15px;
+  }
+  
+  .property-gallery__nav--next {
+    right: 15px;
+  }
+  
+  .property-gallery__thumbs {
+    display: flex;
+    padding: 10px;
+    gap: 10px;
+    overflow-x: auto;
+  }
+  
+  .property-gallery__thumb {
+    width: 80px;
+    height: 60px;
+    flex-shrink: 0;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+  }
+  
+  .property-gallery__thumb::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.2);
+    transition: var(--transition);
+  }
+  
+  .property-gallery__thumb--active::after,
+  .property-gallery__thumb:hover::after {
+    background-color: rgba(0, 0, 0, 0);
+  }
+  
+  .property-gallery__thumb--active {
+    border: 2px solid var(--color-accent);
+  }
+  
+  .property-gallery__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  /* Informações do Imóvel */
+  .property-info {
+    background-color: var(--color-content-bg);
+    border-radius: var(--border-radius);
+    padding: 30px;
+    box-shadow: var(--box-shadow);
+  }
+  
+  .property-info__title {
+    font-size: var(--font-2xl);
+    font-family: var(--font-secondary);
+    margin-bottom: 15px;
+    color: var(--color-text-dark);
+  }
+  
+  .property-info__meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .property-info__tag {
+    display: inline-block;
+    background-color: var(--color-accent);
+    color: var(--color-text-light);
+    padding: 5px 15px;
+    border-radius: var(--border-radius);
+    font-size: var(--font-sm);
+  }
+  
+  .property-info__price {
+    font-size: var(--font-xl);
+    font-weight: bold;
+    color: var(--color-accent);
+    font-family: var(--font-secondary);
+  }
+  
+  .property-info__location,
+  .property-info__ref {
+    margin-bottom: 20px;
+    color: var(--color-text-dark);
+    font-size: var(--font-base);
+  }
+  
+  .property-info__location i,
+  .property-info__ref i {
+    margin-right: 5px;
+    color: var(--color-accent);
+  }
+  
+  /* Características */
+  .property-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px 0;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 30px;
+  }
+  
+  .property-features__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--color-text-dark);
+    font-size: var(--font-base);
+  }
+  
+  .property-features__item i {
+    color: var(--color-accent);
+    font-size: var(--font-lg);
+  }
+  
+  /* Descrição */
+  .property-description {
+    margin-bottom: 30px;
+  }
+  
+  .property-description__title,
+  .property-map__title {
+    font-size: var(--font-xl);
+    font-family: var(--font-secondary);
+    margin-bottom: 15px;
+    color: var(--color-text-dark);
+  }
+  
+  .property-description__content {
+    font-size: var(--font-base);
+    line-height: 1.7;
+    color: var(--color-text-dark);
+    opacity: 0.9;
+  }
+  
+  /* Mapa */
+  .property-map__container {
+    height: 400px;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    margin-bottom: 30px;
+  }
+  
+  /* Sidebar */
+  .property-sidebar {
+    flex: 1;
+    min-width: 300px;
+  }
+  
+  .property-sidebar__info {
+    background-color: var(--color-content-bg);
+    border-radius: var(--border-radius);
+    padding: 30px;
+    box-shadow: var(--box-shadow);
+    position: sticky;
+    top: 20px;
+  }
+  
+  .property-sidebar__info h2 {
+    font-size: var(--font-xl);
+    font-family: var(--font-secondary);
+    margin-bottom: 10px;
+    color: var(--color-text-dark);
+  }
+  
+  .property-sidebar__info p {
+    font-size: var(--font-base);
+    margin-bottom: 20px;
+    color: var(--color-text-dark);
+    opacity: 0.9;
+  }
+  
+  /* Formulário de Contato */
+  .property-contact-form {
+    margin-bottom: 30px;
+  }
+  
+  .property-contact-form .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .property-contact-form .form-control {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    font-size: var(--font-base);
+    font-family: var(--font-primary);
+  }
+  
+  .property-contact-form .form-control:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+  
+  .property-contact-form__submit {
+    width: 100%;
+    padding: 12px;
+    font-size: var(--font-base);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  
+  /* WhatsApp Button */
+  .property-whatsapp {
+    text-align: center;
+  }
+  
+  .property-whatsapp h3 {
+    font-size: var(--font-md);
+    font-family: var(--font-secondary);
+    margin-bottom: 15px;
+    color: var(--color-text-dark);
+  }
+  
+  .whatsapp-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background-color: #25D366;
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 12px 15px;
+    font-size: var(--font-base);
+    font-weight: 600;
+    width: 100%;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  
+  .whatsapp-button:hover {
+    background-color: #20bd5a;
+    transform: translateY(-2px);
+  }
+  
+  .whatsapp-button i {
+    font-size: var(--font-lg);
+  }
+  
+  /* Lightbox */
+  .lightbox {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    padding-top: 50px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.9);
+  }
+  
+  .lightbox__image {
+    display: block;
+    margin: auto;
+    max-width: 80%;
+    max-height: 80vh;
+  }
+  
+  .lightbox__close {
+    position: absolute;
+    top: 15px;
+    right: 35px;
+    color: white;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  .lightbox__prev,
+  .lightbox__next {
+    position: absolute;
+    top: 50%;
+    padding: 16px;
+    margin-top: -22px;
+    color: white;
+    font-weight: bold;
+    font-size: 30px;
+    cursor: pointer;
+    transition: 0.3s ease;
+    border-radius: 50%;
+    user-select: none;
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  .lightbox__prev:hover,
+  .lightbox__next:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  .lightbox__prev {
+    left: 15px;
+  }
+  
+  .lightbox__next {
+    right: 15px;
+  }
+  
+  /* Responsive */
+  @media (max-width: 992px) {
+    .property-detail__wrapper {
+      flex-direction: column;
+    }
+    
+    .property-gallery__current {
+      height: 350px;
+    }
+    
+    .property-sidebar__info {
+      position: static;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .property-gallery__current {
+      height: 300px;
+    }
+    
+    .property-gallery__thumb {
+      width: 60px;
+      height: 45px;
+    }
+    
+    .property-info__meta {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    
+    .property-features {
+      gap: 15px;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .property-gallery__current {
+      height: 250px;
+    }
+  }

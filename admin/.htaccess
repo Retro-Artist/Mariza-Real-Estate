@@ -1,0 +1,13 @@
+# Turn on URL rewriting
+RewriteEngine On
+
+# Set base directory path (if in a subdirectory)
+# RewriteBase /admin/
+
+# Don't rewrite files or directories
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Redirect all URLs that contain "admin/" to index.php
+RewriteRule ^ index.php [L]

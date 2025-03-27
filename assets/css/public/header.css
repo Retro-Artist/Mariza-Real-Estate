@@ -1,0 +1,167 @@
+/* Header Styles */
+.site-header {
+  background-color: var(--color-content-bg);
+  box-shadow: var(--box-shadow);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.site-header__top {
+  background-color: var(--color-accent);
+  height: 20px;
+}
+
+.site-header__wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 15px 20px;
+}
+
+.site-header__logo {
+  font-size: var(--font-xl);
+  font-weight: bold;
+  font-family: var(--font-secondary);
+}
+
+.site-header__logo img {
+  max-height: 60px;
+}
+
+.site-header__nav {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.site-header__nav-item {
+  font-size: var(--font-sm);
+  font-family: var(--font-primary);
+  position: relative;
+  padding: 5px 0;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.site-header__nav-item:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--color-accent);
+  transition: var(--transition);
+}
+
+.site-header__nav-item:hover:after {
+  width: 100%;
+}
+/* Estilos apenas para o botão de busca */
+.site-header__search-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--font-md);
+  color: var(--color-text-dark);
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.site-header__search-toggle:focus {
+  outline: none;
+}
+
+/* Esconde por completo o ícone de fechar por padrão */
+.site-header__search-toggle .search-close {
+  display: none !important; /* Força o esconder em qualquer circunstância */
+}
+
+/* Mostra apenas o ícone de busca por padrão */
+.site-header__search-toggle .search-open {
+  display: block;
+}
+
+/* Quando a busca está ativa, inverte a visibilidade */
+body.search-active .site-header__search-toggle .search-close {
+  display: block !important; /* Força o mostrar */
+}
+
+body.search-active .site-header__search-toggle .search-open {
+  display: none;
+}
+
+/* Barra de pesquisa */
+.search-bar {
+  background-color: #333;
+  padding: 15px 0;
+  display: none;
+}
+
+.search-bar.active {
+  display: block;
+  animation: slideDown 0.3s ease;
+}
+
+.search-bar__form {
+  display: flex;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.search-bar__input {
+  width: 100%;
+  padding: 10px 15px;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: var(--font-base);
+  color: var(--color-text-light);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.search-bar__input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.search-bar__input:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Sticky header */
+.site-header--sticky {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  animation: slideDown 0.3s ease;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .site-header__nav {
+    gap: 15px;
+  }
+  
+  .site-header__nav-item {
+    font-size: var(--font-xs);
+  }
+}
+
+@media (max-width: 576px) {
+  .site-header__wrapper {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .site-header__nav {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

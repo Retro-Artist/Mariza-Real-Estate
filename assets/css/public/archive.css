@@ -1,0 +1,141 @@
+/* Archive/Imóveis Page Styles */
+
+/* Filter Section Styles */
+.filter-section {
+    background-color: #f5f5f5;
+    padding: 30px 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+  
+  .filter-section__wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  
+  .filter-section__form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .filter-section__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: space-between;
+  }
+  
+  .filter-section__group {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .filter-section__group--wide {
+    flex: 2;
+    min-width: 300px;
+  }
+  
+  .filter-section__group--submit {
+    align-self: flex-end;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  
+  .filter-section__group label {
+    font-weight: 500;
+    font-size: var(--font-sm);
+    color: var(--color-text-dark);
+  }
+  
+  .filter-section__submit-button {
+    width: 100%;
+    padding: 10px 20px;
+    margin-top: auto;
+  }
+  
+  /* Properties Section Styles */
+  .properties-section {
+    padding: 60px 0;
+  }
+  
+  .properties-section__wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  
+  .properties-section__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+  }
+  
+  .properties-section__no-results {
+    text-align: center;
+    padding: 40px 20px;
+    background-color: var(--color-content-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+  }
+  
+  .properties-section__no-results p {
+    margin-bottom: 15px;
+    font-size: var(--font-md);
+  }
+  
+  .properties-section__no-results .primary-button {
+    margin-top: 20px;
+  }
+  
+  /* Pagination Styles */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 40px;
+    gap: 8px;
+  }
+  
+  .pagination__item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 12px;
+    background-color: var(--color-content-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    font-size: var(--font-base);
+    transition: var(--transition);
+  }
+  
+  .pagination__item:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .pagination__item--active {
+    background-color: var(--color-accent);
+    color: var(--color-text-light);
+    border-color: var(--color-accent);
+  }
+  
+  .pagination__item--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  /* Responsive Styles */
+  @media (max-width: 768px) {
+    .filter-section__group {
+      min-width: 100%;
+    }
+    
+    .filter-section__submit-button {
+      margin-top: 20px;
+    }
+  }

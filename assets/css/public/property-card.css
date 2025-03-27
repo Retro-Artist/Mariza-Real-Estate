@@ -1,0 +1,156 @@
+/* Property Cards Styles - Shared between Home and Archive pages */
+
+/* Grid Layout */
+.properties-section__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+/* Property Card Component */
+.property-card {
+  background-color: var(--color-content-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+  transition: var(--transition);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.property-card__image {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-top-left-radius: var(--border-radius);
+    border-top-right-radius: var(--border-radius);
+    transition: transform 0.3s ease;
+  }
+  
+  .property-card__image:hover {
+    transform: scale(1.05);
+  }
+
+.property-card__content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.property-card__tag {
+    display: inline-block;
+    background-color: var(--color-accent);
+    color: var(--color-text-light);
+    font-size: var(--font-xs);
+    padding: 4px 10px;
+    border-radius: var(--border-radius);
+    margin-bottom: 10px;
+    font-weight: 500;
+    width: auto;
+    max-width: fit-content;
+  }
+
+.property-card__title {
+  font-size: var(--font-md);
+  font-family: var(--font-secondary);
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  /* Para evitar que títulos longos quebrem o layout */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  height: 2.8em; /* Altura para 2 linhas aproximadamente */
+}
+
+.property-card__price {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: var(--color-accent);
+  margin-bottom: 5px;
+  font-family: var(--font-secondary);
+}
+
+.property-card__location {
+  font-size: var(--font-sm);
+  color: var(--color-text-dark);
+  opacity: 0.8;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.property-card__location i {
+  margin-right: 5px;
+  color: var(--color-accent);
+}
+
+.property-card__features {
+  padding-top: 15px;
+  margin-top: auto;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.property-card__feature {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-sm);
+  color: var(--color-text-dark);
+  flex: 1;
+  min-width: calc(33% - 10px);
+}
+
+.property-card__feature i {
+  margin-right: 8px;
+  color: var(--color-accent);
+  width: 16px;
+  text-align: center;
+}
+
+.property-card__agent {
+  margin-top: 10px;
+  font-size: var(--font-sm);
+  color: var(--color-text-dark);
+  opacity: 0.8;
+  display: flex;
+  align-items: center;
+}
+
+.property-card__agent i {
+  margin-right: 5px;
+  color: var(--color-accent);
+}
+
+/* Utility Classes */
+.text-center {
+  text-align: center;
+}
+
+.mt-4 {
+  margin-top: 40px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .properties-section__grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+@media (max-width: 576px) {
+  .properties-section__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .property-card__image {
+    height: 180px;
+  }
+}

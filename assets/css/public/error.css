@@ -1,0 +1,31 @@
+/* Error Page Styles */
+.error-section {
+    padding: 100px 0;
+    text-align: center;
+  }
+  
+  .error-section__wrapper {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  
+  .error-section__title {
+    font-size: 120px;
+    font-weight: bold;
+    color: var(--color-accent);
+    margin-bottom: 10px;
+    line-height: 1;
+  }
+  
+  .error-section__subtitle {
+    font-size: var(--font-2xl);
+    margin-bottom: 20px;
+    color: var(--color-text-dark);
+  }
+  
+  .error-section__text {
+    font-size: var(--font-md);
+    margin-bottom: 30px;
+    color: var(--color-text-dark);
+  }
