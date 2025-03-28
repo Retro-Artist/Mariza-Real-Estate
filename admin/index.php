@@ -88,23 +88,6 @@ switch ($page) {
         include 'paginas/Calendar_Delete.php';
         break;
 
-    // Service Request pages
-    case 'Atendimento':
-        include 'paginas/Atendimento.php';
-        break;
-    case 'Atendimento_Create':
-        include 'paginas/Atendimento_Create.php';
-        break;
-    case 'Atendimento_Update':
-        include 'paginas/Atendimento_Update.php';
-        break;
-    case 'Atendimento_View':
-        include 'paginas/Atendimento_View.php';
-        break;
-    case 'Atendimento_Delete':
-        include 'paginas/Atendimento_Delete.php';
-        break;
-
     default:
         include 'paginas/Admin_Dashboard.php';
         break;

@@ -1,6 +1,4 @@
 <?php
-// admin/Admin_Header.php - FIXED VERSION
-
 // Security check - already handled in index.php
 if (!isset($_SESSION['admin_id'])) {
     return;
@@ -38,6 +36,7 @@ $current_page = isset($page) ? $page : 'dashboard';
                 <div class="admin-sidebar__logo">
                     <img src="<?= BASE_URL ?>/assets/img/site-logo.webp" alt="<?= SITE_NAME ?>">
                 </div>
+                <h2 class="admin-sidebar__title">Painel Admin</h2>
                 <button class="admin-sidebar__toggle" id="sidebarToggle">
                     <i class="fas fa-bars"></i>
                 </button>
@@ -73,17 +72,11 @@ $current_page = isset($page) ? $page : 'dashboard';
                         </a>
                     </li>
 
-                    <li class="admin-sidebar__item <?= strpos($current_page, 'Atendimento') === 0 ? 'active' : '' ?>">
-                        <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento" class="admin-sidebar__link">
-                            <i class="fas fa-headset"></i>
-                            <span>Atendimentos</span>
-                        </a>
-                    </li>
 
                     <li class="admin-sidebar__item <?= strpos($current_page, 'Calendar') === 0 ? 'active' : '' ?>">
                         <a href="<?= BASE_URL ?>/admin/index.php?page=Calendar" class="admin-sidebar__link">
                             <i class="fas fa-calendar-alt"></i>
-                            <span>Lembretes</span>
+                            <span>Calendário</span>
                         </a>
                     </li>
 
@@ -146,36 +139,6 @@ $current_page = isset($page) ? $page : 'dashboard';
                             case 'Client_Delete':
                                 echo 'Excluir Cliente';
                                 break;
-                            case 'Atendimento':
-                                echo 'Gerenciar Atendimentos';
-                                break;
-                            case 'Atendimento_Create':
-                                echo 'Adicionar Atendimento';
-                                break;
-                            case 'Atendimento_Update':
-                                echo 'Editar Atendimento';
-                                break;
-                            case 'Atendimento_View':
-                                echo 'Detalhes do Atendimento';
-                                break;
-                            case 'Atendimento_Delete':
-                                echo 'Excluir Atendimento';
-                                break;
-                            case 'Calendar':
-                                echo 'Lembretes';
-                                break;
-                            case 'Calendar_Create':
-                                echo 'Adicionar Lembrete';
-                                break;
-                            case 'Calendar_Update':
-                                echo 'Editar Lembrete';
-                                break;
-                            case 'Calendar_View':
-                                echo 'Detalhes do Lembrete';
-                                break;
-                            case 'Calendar_Delete':
-                                echo 'Excluir Lembrete';
-                                break;
                             default:
                                 echo 'Dashboard';
                         }
@@ -200,84 +163,3 @@ $current_page = isset($page) ? $page : 'dashboard';
 
             <!-- Content Area -->
             <div class="admin-content">
-                <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento_View&id=<?= $atendimento_id ?>" class="cancel-button">
-                    <i class="fas fa-arrow-left"></i> Voltar
-                </a>
-            </div>
-
-            <!-- Service Request Form -->
-            <form method="POST" action="" class="admin-form">
-                <?php if (!empty($error)): ?>
-                    <div class="alert-message alert-message--error">
-                        <?= htmlspecialchars($error) ?>
-                    </div>
-                <?php endif; ?>
-
-                <div class="form-section">
-                    <h3 class="form-section__title">Informações do Contato</h3>
-
-                    <div class="form-row">
-                        <div class="form-group form-group--large">
-                            <label for="nome">Nome <span class="required">*</span></label>
-                            <input type="text" id="nome" name="nome" class="form-control"
-                                value="<?= htmlspecialchars($formData['nome']) ?>" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="telefone">Telefone <span class="required">*</span></label>
-                            <input type="text" id="telefone" name="telefone" class="form-control telefone-mask"
-                                value="<?= htmlspecialchars($formData['telefone']) ?>" required
-                                placeholder="(99) 99999-9999">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group form-group--large">
-                            <label for="email">Email</label>
-                            <input type="email" id="email" name="email" class="form-control"
-                                value="<?= htmlspecialchars($formData['email']) ?>"
-                                placeholder="email@exemplo.com">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="local">Origem</label>
-                            <select id="local" name="local" class="form-control">
-                                <option value="Site" <?= $formData['local'] === 'Site' ? 'selected' : '' ?>>Site</option>
-                                <option value="WhatsApp" <?= $formData['local'] === 'WhatsApp' ? 'selected' : '' ?>>WhatsApp</option>
-                                <option value="Telefone" <?= $formData['local'] === 'Telefone' ? 'selected' : '' ?>>Telefone</option>
-                                <option value="Pessoal" <?= $formData['local'] === 'Pessoal' ? 'selected' : '' ?>>Pessoal</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h3 class="form-section__title">Mensagem e Status</h3>
-
-                    <div class="form-row">
-                        <div class="form-group form-group--full">
-                            <label for="mensagem">Mensagem <span class="required">*</span></label>
-                            <textarea id="mensagem" name="mensagem" class="form-control" rows="6" required><?= htmlspecialchars($formData['mensagem']) ?></textarea>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="status">Status</label>
-                            <select id="status" name="status" class="form-control">
-                                <option value="Pendente" <?= $formData['status'] === 'Pendente' ? 'selected' : '' ?>>Pendente</option>
-                                <option value="Em Andamento" <?= $formData['status'] === 'Em Andamento' ? 'selected' : '' ?>>Em Andamento</option>
-                                <option value="Concluído" <?= $formData['status'] === 'Concluído' ? 'selected' : '' ?>>Concluído</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-actions">
-                    <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento_View&id=<?= $atendimento_id ?>" class="cancel-button">Cancelar</a>
-                    <button type="submit" class="primary-button">
-                        <i class="fas fa-save"></i> Salvar Alterações
-                    </button>
-                </div>
-            </form>
-    </div>
