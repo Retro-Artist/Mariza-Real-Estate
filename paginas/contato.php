@@ -1,4 +1,5 @@
 <?php
+
 // Processar o formulário de contato
 $message = '';
 $messageClass = '';
@@ -16,12 +17,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = 'Por favor, informe um email válido.';
         $messageClass = 'error';
     } else {
-        // Aqui você implementaria o envio do email
-        // Por enquanto, apenas mostrar mensagem de sucesso
-        $message = 'Obrigado pelo seu contato! Retornaremos em breve.';
-        $messageClass = 'success';
+        try {
+            // Inserir o contato na tabela sistema_interacao
+            $data = date('Y-m-d');
+            $hora = date('H:i:s');
+            $local = 'Site';
+            $status = 'Pendente';
+            
+            $stmt = $databaseConnection->prepare(
+                "INSERT INTO sistema_interacao (
+                    nome, email, telefone, mensagem,
+                    data, hora, local, status
+                ) VALUES (
+                    :nome, :email, :telefone, :mensagem,
+                    :data, :hora, :local, :status
+                )"
+            );
+            
+            $stmt->bindParam(':nome', $nome);
+            $stmt->bindParam(':email', $email);
+            $stmt->bindParam(':telefone', $telefone);
+            $stmt->bindParam(':mensagem', $mensagem);
+            $stmt->bindParam(':data', $data);
+            $stmt->bindParam(':hora', $hora);
+            $stmt->bindParam(':local', $local);
+            $stmt->bindParam(':status', $status);
+            
+            $stmt->execute();
+            
+            // Mostrar mensagem de sucesso
+            $message = 'Obrigado pelo seu contato! Retornaremos em breve.';
+            $messageClass = 'success';
+            
+            // Reset form fields after successful submission
+            $nome = $email = $telefone = $mensagem = '';
+        } catch (PDOException $e) {
+            logError("Error saving contact form: " . $e->getMessage());
+            $message = 'Ocorreu um erro ao enviar sua mensagem. Por favor, tente novamente.';
+            $messageClass = 'error';
+        }
     }
 }
+
 ?>
 
 <!-------------------Contato Section-------------------->

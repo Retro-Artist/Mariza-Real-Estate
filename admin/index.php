@@ -25,7 +25,7 @@ switch ($page) {
     case 'dashboard':
         include 'paginas/Admin_Dashboard.php';
         break;
-        
+
     // Category pages
     case 'Category_Admin':
         include 'paginas/Category_Admin.php';
@@ -39,7 +39,7 @@ switch ($page) {
     case 'Category_Delete':
         include 'paginas/Category_Delete.php';
         break;
-        
+
     // Property pages
     case 'Property_Admin':
         include 'paginas/Property_Admin.php';
@@ -53,7 +53,7 @@ switch ($page) {
     case 'Property_Delete':
         include 'paginas/Property_Delete.php';
         break;
-        
+
     // Client pages
     case 'Client_Admin':
         include 'paginas/Client_Admin.php';
@@ -70,7 +70,41 @@ switch ($page) {
     case 'Client_View':
         include 'paginas/Client_View.php';
         break;
-        
+
+    // Calendar pages
+    case 'Calendar':
+        include 'paginas/Calendar.php';
+        break;
+    case 'Calendar_Create':
+        include 'paginas/Calendar_Create.php';
+        break;
+    case 'Calendar_Update':
+        include 'paginas/Calendar_Update.php';
+        break;
+    case 'Calendar_View':
+        include 'paginas/Calendar_View.php';
+        break;
+    case 'Calendar_Delete':
+        include 'paginas/Calendar_Delete.php';
+        break;
+
+    // Service Request pages
+    case 'Atendimento':
+        include 'paginas/Atendimento.php';
+        break;
+    case 'Atendimento_Create':
+        include 'paginas/Atendimento_Create.php';
+        break;
+    case 'Atendimento_Update':
+        include 'paginas/Atendimento_Update.php';
+        break;
+    case 'Atendimento_View':
+        include 'paginas/Atendimento_View.php';
+        break;
+    case 'Atendimento_Delete':
+        include 'paginas/Atendimento_Delete.php';
+        break;
+
     default:
         include 'paginas/Admin_Dashboard.php';
         break;
