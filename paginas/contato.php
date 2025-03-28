@@ -1,5 +1,4 @@
 <?php
-
 // Processar o formulário de contato
 $message = '';
 $messageClass = '';
@@ -58,7 +57,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
-
 ?>
 
 <!-------------------Contato Section-------------------->

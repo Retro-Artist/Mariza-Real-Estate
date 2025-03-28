@@ -36,7 +36,6 @@ $current_page = isset($page) ? $page : 'dashboard';
                 <div class="admin-sidebar__logo">
                     <img src="<?= BASE_URL ?>/assets/img/site-logo.webp" alt="<?= SITE_NAME ?>">
                 </div>
-                <h2 class="admin-sidebar__title">Painel Admin</h2>
                 <button class="admin-sidebar__toggle" id="sidebarToggle">
                     <i class="fas fa-bars"></i>
                 </button>
@@ -77,6 +76,14 @@ $current_page = isset($page) ? $page : 'dashboard';
                         <a href="<?= BASE_URL ?>/admin/index.php?page=Calendar" class="admin-sidebar__link">
                             <i class="fas fa-calendar-alt"></i>
                             <span>Calendário</span>
+                        </a>
+                    </li>
+
+                    <!-- Add this to the sidebar menu in Admin_Header.php, after the Calendar menu item -->
+                    <li class="admin-sidebar__item <?= strpos($current_page, 'Atendimento') === 0 ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento_Admin" class="admin-sidebar__link">
+                            <i class="fas fa-headset"></i>
+                            <span>Atendimentos</span>
                         </a>
                     </li>
 

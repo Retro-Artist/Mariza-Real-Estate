@@ -1,4 +1,6 @@
 <?php
+// admin/paginas/Admin_Dashboard.php
+
 // Security check
 if (!isset($_SESSION['admin_id'])) {
     header('Location: ' . BASE_URL . '/admin/Admin_Login.php');
@@ -351,7 +353,7 @@ foreach ($imoveisPorTipo as $tipo) {
             </div>
             
             <div class="dashboard__see-all">
-                <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento" class="see-all-link">
+                <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento_Admin" class="see-all-link">
                     Ver todos os atendimentos <i class="fas fa-arrow-right"></i>
                 </a>
             </div>
