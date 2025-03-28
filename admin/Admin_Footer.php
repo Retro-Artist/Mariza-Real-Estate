@@ -2,8 +2,8 @@
         </main><!-- End of admin-main -->
     </div><!-- End of admin-container -->
     
-    <!-- Scripts -->
-    <script>
+        <!-- Scripts -->
+        <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Sidebar toggle functionality
         const sidebarToggle = document.getElementById('sidebarToggle');
