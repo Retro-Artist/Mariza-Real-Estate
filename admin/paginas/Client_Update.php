@@ -9,7 +9,7 @@ if (!isset($_SESSION['admin_id'])) {
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     $_SESSION['alert_message'] = 'ID do cliente não especificado.';
     $_SESSION['alert_type'] = 'error';
-    header('Location: ' . BASE_URL . '/admin/Client_Admin.php');
+    header('Location: ' . BASE_URL . '/admin/index.php?page=Client_Admin');
     exit;
 }
 
@@ -32,14 +32,14 @@ try {
     if (!$formData) {
         $_SESSION['alert_message'] = 'Cliente não encontrado.';
         $_SESSION['alert_type'] = 'error';
-        header('Location: ' . BASE_URL . '/admin/Client_Admin.php');
+        header('Location: ' . BASE_URL . '/admin/index.php?page=Client_Admin');
         exit;
     }
 } catch (PDOException $e) {
     logError("Error fetching client data: " . $e->getMessage());
     $_SESSION['alert_message'] = 'Erro ao buscar dados do cliente.';
     $_SESSION['alert_type'] = 'error';
-    header('Location: ' . BASE_URL . '/admin/Client_Admin.php');
+    header('Location: ' . BASE_URL . '/admin/index.php?page=Client_Admin');
     exit;
 }
 
@@ -50,6 +50,32 @@ try {
 } catch (PDOException $e) {
     logError("Error fetching states: " . $e->getMessage());
     $estados = [];
+}
+
+// Get cities based on selected state
+$cidades = [];
+if (!empty($formData['id_estado'])) {
+    try {
+        $stmt = $databaseConnection->prepare("SELECT * FROM sistema_cidades WHERE id_estado = :id_estado ORDER BY nome ASC");
+        $stmt->bindParam(':id_estado', $formData['id_estado']);
+        $stmt->execute();
+        $cidades = $stmt->fetchAll();
+    } catch (PDOException $e) {
+        logError("Error fetching cities: " . $e->getMessage());
+    }
+}
+
+// Get neighborhoods based on selected city
+$bairros = [];
+if (!empty($formData['id_cidade'])) {
+    try {
+        $stmt = $databaseConnection->prepare("SELECT * FROM sistema_bairros WHERE id_cidade = :id_cidade ORDER BY bairro ASC");
+        $stmt->bindParam(':id_cidade', $formData['id_cidade']);
+        $stmt->execute();
+        $bairros = $stmt->fetchAll();
+    } catch (PDOException $e) {
+        logError("Error fetching neighborhoods: " . $e->getMessage());
+    }
 }
 
 // Process form submission
@@ -150,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['alert_message'] = 'Cliente atualizado com sucesso!';
             $_SESSION['alert_type'] = 'success';
             
-            header('Location: ' . BASE_URL . '/admin/Client_Admin.php');
+            header('Location: ' . BASE_URL . '/admin/index.php?page=Client_Admin');
             exit;
         } catch (PDOException $e) {
             logError("Error updating client: " . $e->getMessage());
@@ -178,304 +204,386 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $formData['categoria'] = $categoria;
     $formData['principal'] = $principal;
 }
-
-// Get cities based on selected state
-$cidades = [];
-if (!empty($formData['id_estado'])) {
-    try {
-        $stmt = $databaseConnection->prepare("SELECT * FROM sistema_cidades WHERE id_estado = :id_estado ORDER BY nome ASC");
-        $stmt->bindParam(':id_estado', $formData['id_estado']);
-        $stmt->execute();
-        $cidades = $stmt->fetchAll();
-    } catch (PDOException $e) {
-        logError("Error fetching cities: " . $e->getMessage());
-    }
-}
-
-// Get neighborhoods based on selected city
-$bairros = [];
-if (!empty($formData['id_cidade'])) {
-    try {
-        $stmt = $databaseConnection->prepare("SELECT * FROM sistema_bairros WHERE id_cidade = :id_cidade ORDER BY bairro ASC");
-        $stmt->bindParam(':id_cidade', $formData['id_cidade']);
-        $stmt->execute();
-        $bairros = $stmt->fetchAll();
-    } catch (PDOException $e) {
-        logError("Error fetching neighborhoods: " . $e->getMessage());
-    }
-}
 ?>
 
 <!-- Update Client Page -->
-<div class="admin-page client-update">
-    <!-- Page Header -->
-    <div class="admin-page__header">
-        <h2 class="admin-page__title">Editar Cliente</h2>
-        <a href="<?= BASE_URL ?>/admin/Client_Admin.php" class="cancel-button">
-            <i class="fas fa-arrow-left"></i> Voltar
-        </a>
-    </div>
+<div class="client-create-container">
+    <h1 class="client-page-title">Atualizar <span>Cliente</span></h1>
+    
+    <?php if (!empty($error)): ?>
+        <div class="alert-message alert-message--error">
+            <?= htmlspecialchars($error) ?>
+        </div>
+    <?php endif; ?>
     
     <!-- Client Form -->
-    <form method="POST" action="<?= BASE_URL ?>/admin/index.php?page=Client_Update&id=<?= $client_id ?>" class="admin-form">
-        <?php if (!empty($error)): ?>
-            <div class="alert-message alert-message--error">
-                <?= htmlspecialchars($error) ?>
+    <form method="POST" action="<?= BASE_URL ?>/admin/index.php?page=Client_Update&id=<?= $client_id ?>" class="client-form">
+        <div class="client-form-card">
+            <div class="form-section-header">
+                <h3>Informações do Cliente</h3>
             </div>
-        <?php endif; ?>
-        
-        <!-- Client Type Selection -->
-        <div class="form-section">
-            <h3 class="form-section__title">Tipo de Cliente</h3>
             
-            <div class="form-row">
+            <div class="form-section">
+                <!-- Category Dropdown -->
                 <div class="form-group">
-                    <label for="tipo">Tipo de Cliente <span class="required">*</span></label>
-                    <select id="tipo" name="tipo" class="form-control" required onchange="toggleClientType()">
-                        <option value="Pessoa Física" <?= $formData['tipo'] === 'Pessoa Física' ? 'selected' : '' ?>>Pessoa Física</option>
-                        <option value="Pessoa Jurídica" <?= $formData['tipo'] === 'Pessoa Jurídica' ? 'selected' : '' ?>>Pessoa Jurídica</option>
+                    <label for="categoria">Categoria:</label>
+                    <select id="categoria" name="categoria" class="form-control">
+                        <option value="Cliente" <?= $formData['categoria'] === 'Cliente' ? 'selected' : '' ?>>Cliente</option>
+                        <option value="Proprietário" <?= $formData['categoria'] === 'Proprietário' ? 'selected' : '' ?>>Proprietário</option>
+                        <option value="Locatário" <?= $formData['categoria'] === 'Locatário' ? 'selected' : '' ?>>Locatário</option>
+                        <option value="Locador" <?= $formData['categoria'] === 'Locador' ? 'selected' : '' ?>>Locador</option>
+                        <option value="Vendedor" <?= $formData['categoria'] === 'Vendedor' ? 'selected' : '' ?>>Vendedor</option>
+                        <option value="Comprador" <?= $formData['categoria'] === 'Comprador' ? 'selected' : '' ?>>Comprador</option>
+                        <option value="Fiador" <?= $formData['categoria'] === 'Fiador' ? 'selected' : '' ?>>Fiador</option>
                     </select>
                 </div>
                 
-                <div class="form-group">
-                    <label for="categoria">Categoria</label>
-                    <input type="text" id="categoria" name="categoria" class="form-control" 
-                           value="<?= htmlspecialchars($formData['categoria']) ?>" list="categorias">
-                    <datalist id="categorias">
-                        <option value="Proprietário">
-                        <option value="Locador">
-                        <option value="Locatário">
-                        <option value="Comprador">
-                        <option value="Vendedor">
-                        <option value="Fiador">
-                    </datalist>
-                </div>
-                
-                <div class="form-group form-group--checkbox">
-                    <div class="checkbox-container">
-                        <input type="checkbox" id="principal" name="principal" value="1" 
-                               <?= $formData['principal'] === 'Sim' ? 'checked' : '' ?>>
-                        <label for="principal">Cliente Principal</label>
+                <!-- Client Type Radio Buttons -->
+                <div class="client-type-container">
+                    <div class="client-type-option">
+                        <input type="radio" id="fisica" name="tipo" value="Pessoa Física" 
+                              <?= $formData['tipo'] === 'Pessoa Física' ? 'checked' : '' ?> 
+                              onclick="toggleClientType()">
+                        <label for="fisica">Pessoa Física</label>
                     </div>
-                    <small class="form-text">Marque esta opção para destacar este cliente como principal.</small>
+                    
+                    <div class="client-type-option">
+                        <input type="radio" id="juridica" name="tipo" value="Pessoa Jurídica" 
+                              <?= $formData['tipo'] === 'Pessoa Jurídica' ? 'checked' : '' ?> 
+                              onclick="toggleClientType()">
+                        <label for="juridica">Pessoa Jurídica</label>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Basic Information -->
-        <div class="form-section">
-            <h3 class="form-section__title">Informações Básicas</h3>
             
-            <!-- Pessoa Física Fields -->
-            <div id="pessoa-fisica-fields" style="<?= $formData['tipo'] === 'Pessoa Jurídica' ? 'display: none;' : '' ?>">
-                <div class="form-row">
-                    <div class="form-group form-group--large">
-                        <label for="nome_completo">Nome Completo <span class="required">*</span></label>
+            <!-- Person/Company Information -->
+            <div class="form-section form-two-columns">
+                <!-- Pessoa Física Fields -->
+                <div id="pessoa-fisica-fields" class="form-column" <?= $formData['tipo'] === 'Pessoa Jurídica' ? 'style="display: none;"' : '' ?>>
+                    <div class="form-group">
+                        <label for="nome_completo">Nome Completo ou Empresa:</label>
                         <input type="text" id="nome_completo" name="nome_completo" class="form-control" 
-                               value="<?= htmlspecialchars($formData['nome_completo']) ?>">
+                              value="<?= htmlspecialchars($formData['nome_completo']) ?>" 
+                              placeholder="João da Silva">
                     </div>
                     
                     <div class="form-group">
-                        <label for="cpf">CPF <span class="required">*</span></label>
-                        <input type="text" id="cpf" name="cpf" class="form-control cpf-mask" 
-                               value="<?= htmlspecialchars($formData['cpf']) ?>">
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="rg">RG</label>
-                        <input type="text" id="rg" name="rg" class="form-control" 
-                               value="<?= htmlspecialchars($formData['rg']) ?>">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="data_nascimento">Data de Nascimento</label>
+                        <label for="data_nascimento">Data Nascimento:</label>
                         <input type="date" id="data_nascimento" name="data_nascimento" class="form-control" 
-                               value="<?= htmlspecialchars($formData['data_nascimento']) ?>">
+                              value="<?= htmlspecialchars($formData['data_nascimento']) ?>"
+                              placeholder="dd/mm/yyyy">
                     </div>
                     
                     <div class="form-group">
-                        <label for="profissao">Profissão</label>
+                        <label for="cpf">CPF:</label>
+                        <input type="text" id="cpf" name="cpf" class="form-control cpf-mask" 
+                              value="<?= htmlspecialchars($formData['cpf']) ?>"
+                              placeholder="999.999.999-99">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="profissao">Profissão:</label>
                         <input type="text" id="profissao" name="profissao" class="form-control" 
-                               value="<?= htmlspecialchars($formData['profissao']) ?>">
+                              value="<?= htmlspecialchars($formData['profissao']) ?>"
+                              placeholder="Profissão">
                     </div>
                 </div>
-            </div>
-            
-            <!-- Pessoa Jurídica Fields -->
-            <div id="pessoa-juridica-fields" style="<?= $formData['tipo'] === 'Pessoa Física' ? 'display: none;' : '' ?>">
-                <div class="form-row">
-                    <div class="form-group form-group--large">
-                        <label for="razao_social">Razão Social <span class="required">*</span></label>
+                
+                <!-- Pessoa Jurídica Fields -->
+                <div id="pessoa-juridica-fields" class="form-column" <?= $formData['tipo'] === 'Pessoa Física' ? 'style="display: none;"' : '' ?>>
+                    <div class="form-group">
+                        <label for="razao_social">Razão Social:</label>
                         <input type="text" id="razao_social" name="razao_social" class="form-control" 
-                               value="<?= htmlspecialchars($formData['razao_social']) ?>">
+                              value="<?= htmlspecialchars($formData['razao_social']) ?>"
+                              placeholder="Empresa de Teste LTDA.">
                     </div>
                     
                     <div class="form-group">
-                        <label for="cnpj">CNPJ <span class="required">*</span></label>
+                        <label for="cnpj">CNPJ:</label>
                         <input type="text" id="cnpj" name="cnpj" class="form-control cnpj-mask" 
-                               value="<?= htmlspecialchars($formData['cnpj']) ?>">
+                              value="<?= htmlspecialchars($formData['cnpj']) ?>"
+                              placeholder="99.999.999/9999-99">
+                    </div>
+                </div>
+                
+                <!-- Common Right Column Fields -->
+                <div class="form-column">
+                    <div class="form-group" id="rg-field" <?= $formData['tipo'] === 'Pessoa Jurídica' ? 'style="display: none;"' : '' ?>>
+                        <label for="rg">RG:</label>
+                        <input type="text" id="rg" name="rg" class="form-control" 
+                              value="<?= htmlspecialchars($formData['rg']) ?>"
+                              placeholder="00000000 00">
+                    </div>
+                    
+                    <div class="form-group" id="cnpj-field" <?= $formData['tipo'] === 'Pessoa Física' ? 'style="display: none;"' : '' ?>>
+                        <label>&nbsp;</label>
+                        <div class="form-spacer"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="telefone1">Telefone:</label>
+                        <input type="text" id="telefone1" name="telefone1" class="form-control telefone-mask" 
+                              value="<?= htmlspecialchars($formData['telefone1']) ?>"
+                              placeholder="(77) 0000-0000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="telefone2">Celular:</label>
+                        <input type="text" id="telefone2" name="telefone2" class="form-control telefone-mask" 
+                              value="<?= htmlspecialchars($formData['telefone2']) ?>"
+                              placeholder="(77) 00000-0000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">E-mail:</label>
+                        <input type="email" id="email" name="email" class="form-control" 
+                              value="<?= htmlspecialchars($formData['email']) ?>"
+                              placeholder="contato@exemplo.com.br">
                     </div>
                 </div>
             </div>
             
-            <!-- Common Fields -->
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="email">Email <span class="required">*</span></label>
-                    <input type="email" id="email" name="email" class="form-control" 
-                           value="<?= htmlspecialchars($formData['email']) ?>" required>
+            <!-- Address Information -->
+            <div class="form-section form-two-columns">
+                <div class="form-column">
+                    <div class="form-group">
+                        <label for="endereco">Endereço:</label>
+                        <input type="text" id="endereco" name="endereco" class="form-control" 
+                              value="<?= htmlspecialchars($formData['endereco']) ?>"
+                              placeholder="Ex.: Rua Bom Jesus da Lapa Qd. 00, Lt. 00, nº 00">
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="telefone1">Telefone Principal <span class="required">*</span></label>
-                    <input type="text" id="telefone1" name="telefone1" class="form-control telefone-mask" 
-                           value="<?= htmlspecialchars($formData['telefone1']) ?>" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="telefone2">Telefone Secundário</label>
-                    <input type="text" id="telefone2" name="telefone2" class="form-control telefone-mask" 
-                           value="<?= htmlspecialchars($formData['telefone2']) ?>">
+                <div class="form-column address-selects">
+                    <div class="form-group">
+                        <label for="id_estado">Estado:</label>
+                        <select id="id_estado" name="id_estado" class="form-control estado-select">
+                            <option value="">Selecione</option>
+                            <?php foreach ($estados as $estado): ?>
+                                <option value="<?= $estado['id'] ?>" <?= $formData['id_estado'] == $estado['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($estado['nome']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_cidade">Cidade:</label>
+                        <select id="id_cidade" name="id_cidade" class="form-control cidade-select" <?= empty($formData['id_estado']) ? 'disabled' : '' ?>>
+                            <option value="">Selecione</option>
+                            <?php foreach ($cidades as $cidade): ?>
+                                <option value="<?= $cidade['id'] ?>" <?= $formData['id_cidade'] == $cidade['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($cidade['nome']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_bairro">Bairro:</label>
+                        <select id="id_bairro" name="id_bairro" class="form-control" <?= empty($formData['id_cidade']) ? 'disabled' : '' ?>>
+                            <option value="">Selecione</option>
+                            <?php foreach ($bairros as $bairro): ?>
+                                <option value="<?= $bairro['id'] ?>" <?= $formData['id_bairro'] == $bairro['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($bairro['bairro']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Location Information -->
-        <div class="form-section">
-            <h3 class="form-section__title">Endereço</h3>
             
-            <div class="form-row">
-                <div class="form-group form-group--large">
-                    <label for="endereco">Endereço Completo</label>
-                    <input type="text" id="endereco" name="endereco" class="form-control" 
-                           value="<?= htmlspecialchars($formData['endereco']) ?>">
+            <!-- Observations -->
+            <div class="form-section">
+                <div class="form-group">
+                    <label for="observacoes">Observação:</label>
+                    <textarea id="observacoes" name="observacoes" class="form-control" rows="5"
+                           placeholder="Observações do Cliente"><?= htmlspecialchars($formData['observacoes']) ?></textarea>
                 </div>
             </div>
             
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="id_estado">Estado</label>
-                    <select id="id_estado" name="id_estado" class="form-control estado-select">
-                        <option value="">Selecione...</option>
-                        <?php foreach ($estados as $estado): ?>
-                            <option value="<?= $estado['id'] ?>" <?= $formData['id_estado'] == $estado['id'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($estado['nome']) ?> (<?= htmlspecialchars($estado['uf']) ?>)
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="id_cidade">Cidade</label>
-                    <select id="id_cidade" name="id_cidade" class="form-control cidade-select" <?= empty($formData['id_estado']) ? 'disabled' : '' ?>>
-                        <option value="">Selecione...</option>
-                        <?php foreach ($cidades as $cidade): ?>
-                            <option value="<?= $cidade['id'] ?>" <?= $formData['id_cidade'] == $cidade['id'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($cidade['nome']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="id_bairro">Bairro</label>
-                    <select id="id_bairro" name="id_bairro" class="form-control" <?= empty($formData['id_cidade']) ? 'disabled' : '' ?>>
-                        <option value="">Selecione...</option>
-                        <?php foreach ($bairros as $bairro): ?>
-                            <option value="<?= $bairro['id'] ?>" <?= $formData['id_bairro'] == $bairro['id'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($bairro['bairro']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+            <div class="form-actions">
+                <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Admin" class="cancel-button">Cancelar</a>
+                <button type="submit" class="btn-cadastrar">Atualizar Cliente</button>
             </div>
-        </div>
-        
-        <!-- Observations -->
-        <div class="form-section">
-            <h3 class="form-section__title">Observações</h3>
-            
-            <div class="form-row">
-                <div class="form-group form-group--full">
-                    <label for="observacoes">Observações</label>
-                    <textarea id="observacoes" name="observacoes" class="form-control" rows="5"><?= htmlspecialchars($formData['observacoes']) ?></textarea>
-                </div>
-            </div>
-        </div>
-        
-        <div class="form-actions">
-            <a href="<?= BASE_URL ?>/admin/Client_Admin.php" class="cancel-button">Cancelar</a>
-            <button type="submit" class="primary-button">
-                <i class="fas fa-save"></i> Salvar Alterações
-            </button>
         </div>
     </form>
 </div>
 
 <style>
-/* Additional styles for client form */
-.form-section {
-    background-color: var(--admin-card-bg);
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
+/* Client Create/Edit Form Styles */
+.client-create-container {
     padding: 20px;
-    margin-bottom: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
-.form-section__title {
-    font-size: var(--font-lg);
-    margin-top: 0;
-    margin-bottom: 20px;
-    font-family: var(--font-secondary);
+.client-page-title {
+    font-size: 28px;
+    margin-bottom: 30px;
+    font-weight: 500;
+    color: #333;
 }
 
-.form-group--large {
-    flex: 2;
+.client-page-title span {
+    font-weight: 300;
+    color: #777;
 }
 
-.form-group--full {
-    flex: 1 0 100%;
+.client-form-card {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-.form-group--checkbox {
+.form-section-header {
+    background-color: #f8f8f8;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.form-section-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-section {
+    padding: 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+}
+
+.form-two-columns {
     display: flex;
-    flex-direction: column;
-    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
 }
 
-.checkbox-container {
+.form-column {
+    flex: 1;
+    min-width: 300px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: normal;
+    color: #333;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.form-control:focus {
+    border-color: #baa448;
+    outline: none;
+}
+
+.form-control::placeholder {
+    color: #aaa;
+}
+
+.form-spacer {
+    height: 38px;
+}
+
+.client-type-container {
+    display: flex;
+    margin-top: 20px;
+    gap: 30px;
+}
+
+.client-type-option {
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.checkbox-container input[type="checkbox"] {
-    width: auto;
+.client-type-option input[type="radio"] {
+    margin: 0;
 }
 
-.checkbox-container label {
-    margin-bottom: 0;
+.address-selects select {
+    width: 100%;
+}
+
+.form-actions {
+    padding: 20px;
+    text-align: right;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn-cadastrar {
+    padding: 12px 24px;
+    background-color: #7bbd7b;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
     cursor: pointer;
+    transition: background-color 0.2s;
 }
 
-.required {
-    color: var(--admin-red);
+.btn-cadastrar:hover {
+    background-color: #6aac6a;
 }
 
-.form-text {
-    font-size: var(--font-xs);
-    color: var(--admin-text);
-    opacity: 0.7;
-    margin-top: 5px;
-    display: block;
+.cancel-button {
+    padding: 12px 24px;
+    background-color: #f5f5f5;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    text-decoration: none;
+    display: inline-block;
 }
 
+.cancel-button:hover {
+    background-color: #e5e5e5;
+}
+
+.alert-message {
+    margin-bottom: 20px;
+    padding: 12px;
+    border-radius: 4px;
+}
+
+.alert-message--error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
-    .form-group,
-    .form-group--large {
-        flex: 1 0 100%;
+    .form-two-columns {
+        flex-direction: column;
+    }
+    
+    .form-column {
+        width: 100%;
     }
 }
 </style>
@@ -484,16 +592,22 @@ if (!empty($formData['id_cidade'])) {
 document.addEventListener('DOMContentLoaded', function() {
     // Toggle client type fields
     window.toggleClientType = function() {
-        const tipoSelect = document.getElementById('tipo');
+        const pessoaFisicaRadio = document.getElementById('fisica');
         const pessoaFisicaFields = document.getElementById('pessoa-fisica-fields');
         const pessoaJuridicaFields = document.getElementById('pessoa-juridica-fields');
+        const rgField = document.getElementById('rg-field');
+        const cnpjField = document.getElementById('cnpj-field');
         
-        if (tipoSelect.value === 'Pessoa Física') {
+        if (pessoaFisicaRadio.checked) {
             pessoaFisicaFields.style.display = 'block';
             pessoaJuridicaFields.style.display = 'none';
+            rgField.style.display = 'block';
+            cnpjField.style.display = 'none';
         } else {
             pessoaFisicaFields.style.display = 'none';
             pessoaJuridicaFields.style.display = 'block';
+            rgField.style.display = 'none';
+            cnpjField.style.display = 'block';
         }
     };
     
@@ -507,9 +621,9 @@ document.addEventListener('DOMContentLoaded', function() {
         estadoSelect.addEventListener('change', function() {
             const estadoId = this.value;
             cidadeSelect.disabled = !estadoId;
-            cidadeSelect.innerHTML = '<option value="">Selecione...</option>';
+            cidadeSelect.innerHTML = '<option value="">Selecione</option>';
             bairroSelect.disabled = true;
-            bairroSelect.innerHTML = '<option value="">Selecione...</option>';
+            bairroSelect.innerHTML = '<option value="">Selecione</option>';
             
             if (estadoId) {
                 fetch(`<?= BASE_URL ?>/admin/ajax/get_cidades.php?id_estado=${estadoId}`)
@@ -535,7 +649,7 @@ document.addEventListener('DOMContentLoaded', function() {
         cidadeSelect.addEventListener('change', function() {
             const cidadeId = this.value;
             bairroSelect.disabled = !cidadeId;
-            bairroSelect.innerHTML = '<option value="">Selecione...</option>';
+            bairroSelect.innerHTML = '<option value="">Selecione</option>';
             
             if (cidadeId) {
                 fetch(`<?= BASE_URL ?>/admin/ajax/get_bairros.php?id_cidade=${cidadeId}`)
@@ -555,5 +669,44 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Add input masks when a proper masking library is available
+    // For now, these are commented out placeholders
+    /*
+    if (typeof IMask !== 'undefined') {
+        // CPF mask
+        const cpfInput = document.getElementById('cpf');
+        if (cpfInput) {
+            IMask(cpfInput, {
+                mask: '000.000.000-00'
+            });
+        }
+        
+        // CNPJ mask
+        const cnpjInput = document.getElementById('cnpj');
+        if (cnpjInput) {
+            IMask(cnpjInput, {
+                mask: '00.000.000/0000-00'
+            });
+        }
+        
+        // Phone masks
+        const phoneInputs = document.querySelectorAll('.telefone-mask');
+        phoneInputs.forEach(input => {
+            IMask(input, {
+                mask: [{
+                    mask: '(00) 0000-0000'
+                }, {
+                    mask: '(00) 00000-0000'
+                }],
+                dispatch: function(appended, dynamicMasked) {
+                    return dynamicMasked.value.length > 14 
+                        ? dynamicMasked.compiledMasks[1] 
+                        : dynamicMasked.compiledMasks[0];
+                }
+            });
+        });
+    }
+    */
 });
 </script>

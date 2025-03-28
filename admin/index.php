@@ -67,6 +67,9 @@ switch ($page) {
     case 'Client_Delete':
         include 'paginas/Client_Delete.php';
         break;
+    case 'Client_View':
+        include 'paginas/Client_View.php';
+        break;
         
     default:
         include 'paginas/Admin_Dashboard.php';

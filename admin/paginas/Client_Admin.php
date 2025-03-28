@@ -12,16 +12,21 @@ $offset = ($paginaAtual - 1) * $itensPorPagina;
 
 // Filtros
 $filtros = [];
-$filtroCategoria = isset($_GET['categoria']) ? $_GET['categoria'] : '';
 $filtroTipo = isset($_GET['tipo']) ? $_GET['tipo'] : '';
+$filtroCidade = isset($_GET['cidade']) ? (int)$_GET['cidade'] : 0;
+$filtroBairro = isset($_GET['bairro']) ? (int)$_GET['bairro'] : 0;
 $filtroBusca = isset($_GET['busca']) ? $_GET['busca'] : '';
-
-if (!empty($filtroCategoria)) {
-    $filtros[] = "c.categoria = :categoria";
-}
 
 if (!empty($filtroTipo)) {
     $filtros[] = "c.tipo = :tipo";
+}
+
+if (!empty($filtroCidade)) {
+    $filtros[] = "c.id_cidade = :cidade";
+}
+
+if (!empty($filtroBairro)) {
+    $filtros[] = "c.id_bairro = :bairro";
 }
 
 if (!empty($filtroBusca)) {
@@ -38,11 +43,14 @@ try {
     $stmtCount = $databaseConnection->prepare($sqlCount);
     
     // Bind parameters for count query
-    if (!empty($filtroCategoria)) {
-        $stmtCount->bindParam(':categoria', $filtroCategoria);
-    }
     if (!empty($filtroTipo)) {
         $stmtCount->bindParam(':tipo', $filtroTipo);
+    }
+    if (!empty($filtroCidade)) {
+        $stmtCount->bindParam(':cidade', $filtroCidade);
+    }
+    if (!empty($filtroBairro)) {
+        $stmtCount->bindParam(':bairro', $filtroBairro);
     }
     if (!empty($filtroBusca)) {
         $termoBusca = "%" . $filtroBusca . "%";
@@ -56,6 +64,7 @@ try {
     // Pegar registros paginados
     $sql = "SELECT c.*, 
                   e.nome as estado, 
+                  e.uf as uf,
                   cid.nome as cidade, 
                   b.bairro as bairro
            FROM sistema_clientes c
@@ -69,11 +78,14 @@ try {
     $stmt = $databaseConnection->prepare($sql);
     
     // Bind parameters for main query
-    if (!empty($filtroCategoria)) {
-        $stmt->bindParam(':categoria', $filtroCategoria);
-    }
     if (!empty($filtroTipo)) {
         $stmt->bindParam(':tipo', $filtroTipo);
+    }
+    if (!empty($filtroCidade)) {
+        $stmt->bindParam(':cidade', $filtroCidade);
+    }
+    if (!empty($filtroBairro)) {
+        $stmt->bindParam(':bairro', $filtroBairro);
     }
     if (!empty($filtroBusca)) {
         $stmt->bindParam(':busca', $termoBusca);
@@ -85,13 +97,23 @@ try {
     
     $clientes = $stmt->fetchAll();
     
-    // Get client categories for filter
-    $stmtCategorias = $databaseConnection->query("SELECT DISTINCT categoria FROM sistema_clientes WHERE categoria != '' ORDER BY categoria ASC");
-    $categorias = $stmtCategorias->fetchAll(PDO::FETCH_COLUMN);
+    // Get tipos for filter
+    $stmtTipos = $databaseConnection->query("SELECT DISTINCT tipo FROM sistema_clientes ORDER BY tipo ASC");
+    $tipos = $stmtTipos->fetchAll(PDO::FETCH_COLUMN);
+
+    // Get cidades for filter
+    $stmtCidades = $databaseConnection->query("SELECT c.id, c.nome, e.uf FROM sistema_cidades c LEFT JOIN sistema_estados e ON c.id_estado = e.id ORDER BY c.nome ASC");
+    $cidades = $stmtCidades->fetchAll();
+
+    // Get bairros for filter
+    $stmtBairros = $databaseConnection->query("SELECT id, bairro FROM sistema_bairros ORDER BY bairro ASC");
+    $bairros = $stmtBairros->fetchAll();
 } catch (PDOException $e) {
     logError("Error fetching clients: " . $e->getMessage());
     $clientes = [];
-    $categorias = [];
+    $tipos = [];
+    $cidades = [];
+    $bairros = [];
     $totalRegistros = 0;
     $totalPaginas = 1;
 }
@@ -111,7 +133,7 @@ if (isset($_SESSION['alert_message'])) {
 ?>
 
 <!-- Clients List Page -->
-<div class="admin-page client-admin">
+<div class="admin-page">
     <?php if (!empty($alertMessage)): ?>
         <div class="alert-message alert-message--<?= $alertType ?>">
             <?= htmlspecialchars($alertMessage) ?>
@@ -119,157 +141,149 @@ if (isset($_SESSION['alert_message'])) {
     <?php endif; ?>
     
     <!-- Page Header with Add Button -->
-    <div class="admin-page__header">
-        <h2 class="admin-page__title">Gerenciar Clientes</h2>
-        <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Create" class="primary-button">
-            <i class="fas fa-plus"></i> Novo Cliente
+    <div class="page-header">
+        <h1 class="page-title">Gerenciar Clientes</h1>
+        <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Create" class="btn btn-success">
+            <i class="fas fa-plus"></i> Adicionar Cliente
         </a>
     </div>
     
     <!-- Filter Form -->
-    <div class="admin-card">
-        <h3 class="card-title">Filtros</h3>
+    <div class="filter-card">
         <form method="GET" action="<?= BASE_URL ?>/admin/index.php" class="filter-form">
             <input type="hidden" name="page" value="Client_Admin">
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="tipo">Tipo</label>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="tipo">Tipo:</label>
                     <select id="tipo" name="tipo" class="form-control">
                         <option value="">Todos</option>
-                        <option value="Pessoa Física" <?= $filtroTipo === 'Pessoa Física' ? 'selected' : '' ?>>Pessoa Física</option>
-                        <option value="Pessoa Jurídica" <?= $filtroTipo === 'Pessoa Jurídica' ? 'selected' : '' ?>>Pessoa Jurídica</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="categoria">Categoria</label>
-                    <select id="categoria" name="categoria" class="form-control">
-                        <option value="">Todas</option>
-                        <?php foreach ($categorias as $categoria): ?>
-                            <option value="<?= htmlspecialchars($categoria) ?>" <?= $filtroCategoria === $categoria ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($categoria) ?>
+                        <?php foreach ($tipos as $tipo): ?>
+                            <option value="<?= htmlspecialchars($tipo) ?>" <?= $filtroTipo === $tipo ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($tipo) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 
-                <div class="form-group">
-                    <label for="busca">Busca</label>
-                    <input type="text" id="busca" name="busca" class="form-control" 
-                           placeholder="Nome, razão social, email ou telefone" value="<?= htmlspecialchars($filtroBusca) ?>">
+                <div class="filter-group">
+                    <label for="cidade">Cidade:</label>
+                    <select id="cidade" name="cidade" class="form-control">
+                        <option value="">Sua Cidade</option>
+                        <?php foreach ($cidades as $cidade): ?>
+                            <option value="<?= $cidade['id'] ?>" <?= $filtroCidade === (int)$cidade['id'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($cidade['nome']) ?> - <?= htmlspecialchars($cidade['uf']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 
-                <div class="form-group form-group--submit">
-                    <button type="submit" class="primary-button">
-                        <i class="fas fa-search"></i> Filtrar
-                    </button>
-                    <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Admin" class="cancel-button">Limpar</a>
+                <div class="filter-group">
+                    <label for="bairro">Bairro:</label>
+                    <select id="bairro" name="bairro" class="form-control">
+                        <option value="">Bairro</option>
+                        <?php foreach ($bairros as $bairro): ?>
+                            <option value="<?= $bairro['id'] ?>" <?= $filtroBairro === (int)$bairro['id'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($bairro['bairro']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                
+                <div class="filter-group busca-group">
+                    <label for="busca">Buscar por Nome:</label>
+                    <input type="text" id="busca" name="busca" class="form-control" 
+                           placeholder="Digite sua busca..." value="<?= htmlspecialchars($filtroBusca) ?>">
+                </div>
+                
+                <div class="filter-group submit-group">
+                    <button type="submit" class="btn btn-primary">Buscar</button>
                 </div>
             </div>
         </form>
     </div>
     
     <!-- Clients Table -->
-    <div class="admin-card">
+    <div class="table-responsive">
         <?php if (empty($clientes)): ?>
             <div class="empty-state">
                 <p>Nenhum cliente encontrado.</p>
-                <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Create" class="primary-button">
+                <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Create" class="btn btn-success">
                     Adicionar Cliente
                 </a>
             </div>
         <?php else: ?>
-            <div class="table-responsive">
-                <table class="data-table">
-                    <thead>
+            <table class="clients-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Cadastro</th>
+                        <th>Tipo</th>
+                        <th>Nome / Empresa</th>
+                        <th>Telefone</th>
+                        <th>Cidade</th>
+                        <th>Estado</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($clientes as $cliente): ?>
                         <tr>
-                            <th>ID</th>
-                            <th>Tipo</th>
-                            <th>Nome/Razão Social</th>
-                            <th>Telefone</th>
-                            <th>Cidade</th>
-                            <th>UF</th>
-                            <th>Categoria</th>
-                            <th>Data Cadastro</th>
-                            <th width="150">Ações</th>
+                            <td><?= $cliente['id'] ?></td>
+                            <td>
+                                <?php if ($cliente['principal'] === 'Sim'): ?>
+                                    <span class="badge badge-principal">Principal</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?= htmlspecialchars(str_replace('Pessoa ', 'PF - ', $cliente['tipo'])) ?>
+                            </td>
+                            <td><?= htmlspecialchars($cliente['nome_completo'] ?: $cliente['razao_social']) ?></td>
+                            <td><?= !empty($cliente['telefone1']) ? htmlspecialchars($cliente['telefone1']) : '-' ?></td>
+                            <td><?= !empty($cliente['cidade']) ? htmlspecialchars($cliente['cidade']) : '-' ?></td>
+                            <td><?= !empty($cliente['uf']) ? htmlspecialchars($cliente['uf']) : '-' ?></td>
+                            <td class="actions">
+                                <a href="<?= BASE_URL ?>/admin/index.php?page=Client_View&id=<?= $cliente['id'] ?>" class="btn btn-sm btn-view" title="Visualizar">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Update&id=<?= $cliente['id'] ?>" class="btn btn-sm btn-edit" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Delete&id=<?= $cliente['id'] ?>" class="btn btn-sm btn-delete" title="Excluir">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($clientes as $cliente): ?>
-                            <tr>
-                                <td><?= $cliente['id'] ?></td>
-                                <td>
-                                    <span class="badge <?= $cliente['tipo'] === 'Pessoa Física' ? 'badge--blue' : 'badge--green' ?>">
-                                        <?= htmlspecialchars($cliente['tipo']) ?>
-                                    </span>
-                                </td>
-                                <td><?= htmlspecialchars($cliente['nome_completo'] ?: $cliente['razao_social']) ?></td>
-                                <td><?= !empty($cliente['telefone1']) ? htmlspecialchars($cliente['telefone1']) : '-' ?></td>
-                                <td><?= !empty($cliente['cidade']) ? htmlspecialchars($cliente['cidade']) : '-' ?></td>
-                                <td><?= !empty($cliente['estado']) ? htmlspecialchars(substr($cliente['estado'], 0, 2)) : '-' ?></td>
-                                <td><?= !empty($cliente['categoria']) ? htmlspecialchars($cliente['categoria']) : '-' ?></td>
-                                <td><?= formatDate($cliente['data_cadastro']) ?></td>
-                                <td class="actions">
-                                    <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Update&id=<?= $cliente['id'] ?>" class="action-button action-button--edit" title="Editar">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Delete&id=<?= $cliente['id'] ?>" class="action-button action-button--delete delete-button" title="Excluir">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            
+            <!-- Print Report Button -->
+            <div class="report-actions">
+                <a href="#" class="btn btn-info btn-report">
+                    <i class="fas fa-print"></i> Imprimir Relatório
+                </a>
             </div>
             
             <!-- Pagination -->
             <?php if ($totalPaginas > 1): ?>
                 <div class="pagination">
                     <?php if ($paginaAtual > 1): ?>
-                        <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Admin&pagina=1<?= !empty($filtroTipo) ? '&tipo='.urlencode($filtroTipo) : '' ?><?= !empty($filtroCategoria) ? '&categoria='.urlencode($filtroCategoria) : '' ?><?= !empty($filtroBusca) ? '&busca='.urlencode($filtroBusca) : '' ?>" class="pagination__item">
-                            <i class="fas fa-angle-double-left"></i>
-                        </a>
-                        <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Admin&pagina=<?= $paginaAtual-1 ?><?= !empty($filtroTipo) ? '&tipo='.urlencode($filtroTipo) : '' ?><?= !empty($filtroCategoria) ? '&categoria='.urlencode($filtroCategoria) : '' ?><?= !empty($filtroBusca) ? '&busca='.urlencode($filtroBusca) : '' ?>" class="pagination__item">
-                            <i class="fas fa-angle-left"></i>
+                        <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Admin&pagina=<?= $paginaAtual-1 ?><?= !empty($filtroTipo) ? '&tipo='.urlencode($filtroTipo) : '' ?><?= !empty($filtroCidade) ? '&cidade='.$filtroCidade : '' ?><?= !empty($filtroBairro) ? '&bairro='.$filtroBairro : '' ?><?= !empty($filtroBusca) ? '&busca='.urlencode($filtroBusca) : '' ?>" class="pagination-item">
+                            «
                         </a>
                     <?php endif; ?>
                     
-                    <?php
-                    // Determine range of page numbers to display
-                    $range = 2; // Show 2 pages before and after current page
-                    $startPage = max(1, $paginaAtual - $range);
-                    $endPage = min($totalPaginas, $paginaAtual + $range);
-                    
-                    // Always show first page
-                    if ($startPage > 1) {
-                        echo '<a href="'.BASE_URL.'/admin/index.php?page=Client_Admin&pagina=1'.(!empty($filtroTipo) ? '&tipo='.urlencode($filtroTipo) : '').(!empty($filtroCategoria) ? '&categoria='.urlencode($filtroCategoria) : '').(!empty($filtroBusca) ? '&busca='.urlencode($filtroBusca) : '').'" class="pagination__item">1</a>';
-                        if ($startPage > 2) {
-                            echo '<span class="pagination__item pagination__item--ellipsis">...</span>';
-                        }
-                    }
-                    
-                    // Display page numbers within range
-                    for ($i = $startPage; $i <= $endPage; $i++) {
-                        $activeClass = ($i === $paginaAtual) ? 'pagination__item--active' : '';
-                        echo '<a href="'.BASE_URL.'/admin/index.php?page=Client_Admin&pagina='.$i.(!empty($filtroTipo) ? '&tipo='.urlencode($filtroTipo) : '').(!empty($filtroCategoria) ? '&categoria='.urlencode($filtroCategoria) : '').(!empty($filtroBusca) ? '&busca='.urlencode($filtroBusca) : '').'" class="pagination__item '.$activeClass.'">'.$i.'</a>';
-                    }
-                    
-                    // Always show last page
-                    if ($endPage < $totalPaginas) {
-                        if ($endPage < $totalPaginas - 1) {
-                            echo '<span class="pagination__item pagination__item--ellipsis">...</span>';
-                        }
-                        echo '<a href="'.BASE_URL.'/admin/index.php?page=Client_Admin&pagina='.$totalPaginas.(!empty($filtroTipo) ? '&tipo='.urlencode($filtroTipo) : '').(!empty($filtroCategoria) ? '&categoria='.urlencode($filtroCategoria) : '').(!empty($filtroBusca) ? '&busca='.urlencode($filtroBusca) : '').'" class="pagination__item">'.$totalPaginas.'</a>';
-                    }
-                    ?>
+                    <?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
+                        <?php if ($i == $paginaAtual): ?>
+                            <span class="pagination-item active"><?= $i ?></span>
+                        <?php else: ?>
+                            <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Admin&pagina=<?= $i ?><?= !empty($filtroTipo) ? '&tipo='.urlencode($filtroTipo) : '' ?><?= !empty($filtroCidade) ? '&cidade='.$filtroCidade : '' ?><?= !empty($filtroBairro) ? '&bairro='.$filtroBairro : '' ?><?= !empty($filtroBusca) ? '&busca='.urlencode($filtroBusca) : '' ?>" class="pagination-item"><?= $i ?></a>
+                        <?php endif; ?>
+                    <?php endfor; ?>
                     
                     <?php if ($paginaAtual < $totalPaginas): ?>
-                        <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Admin&pagina=<?= $paginaAtual+1 ?><?= !empty($filtroTipo) ? '&tipo='.urlencode($filtroTipo) : '' ?><?= !empty($filtroCategoria) ? '&categoria='.urlencode($filtroCategoria) : '' ?><?= !empty($filtroBusca) ? '&busca='.urlencode($filtroBusca) : '' ?>" class="pagination__item">
-                            <i class="fas fa-angle-right"></i>
-                        </a>
-                        <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Admin&pagina=<?= $totalPaginas ?><?= !empty($filtroTipo) ? '&tipo='.urlencode($filtroTipo) : '' ?><?= !empty($filtroCategoria) ? '&categoria='.urlencode($filtroCategoria) : '' ?><?= !empty($filtroBusca) ? '&busca='.urlencode($filtroBusca) : '' ?>" class="pagination__item">
-                            <i class="fas fa-angle-double-right"></i>
+                        <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Admin&pagina=<?= $paginaAtual+1 ?><?= !empty($filtroTipo) ? '&tipo='.urlencode($filtroTipo) : '' ?><?= !empty($filtroCidade) ? '&cidade='.$filtroCidade : '' ?><?= !empty($filtroBairro) ? '&bairro='.$filtroBairro : '' ?><?= !empty($filtroBusca) ? '&busca='.urlencode($filtroBusca) : '' ?>" class="pagination-item">
+                            »
                         </a>
                     <?php endif; ?>
                 </div>
@@ -279,48 +293,291 @@ if (isset($_SESSION['alert_message'])) {
 </div>
 
 <style>
-/* Additional styles for client admin page */
-.client-admin .property-thumbnail {
-    width: 60px;
-    height: 60px;
-    border-radius: var(--border-radius);
-    overflow: hidden;
-}
-
-.client-admin .property-thumbnail img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.client-admin .filter-form {
+/* Client Admin Page Styles */
+.page-header {
     display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.client-admin .form-group--submit {
-    display: flex;
-    align-items: flex-end;
-    gap: 10px;
-}
-
-.client-admin .card-title {
-    font-size: var(--font-lg);
-    margin-top: 0;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 20px;
-    font-family: var(--font-secondary);
 }
 
-/* Mobile responsive adjustments */
+.page-title {
+    font-size: 32px;
+    margin: 0;
+    color: #333;
+    font-weight: 500;
+}
+
+.filter-card {
+    background-color: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: flex-end;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: normal;
+    color: #555;
+}
+
+.busca-group {
+    flex: 2;
+}
+
+.submit-group {
+    align-self: flex-end;
+    min-width: 100px;
+    flex: 0 0 auto;
+}
+
+/* Table Styles */
+.table-responsive {
+    overflow-x: auto;
+}
+
+.clients-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.clients-table th,
+.clients-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.clients-table th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+    color: #333;
+}
+
+.clients-table tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Badge styles */
+.badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge-principal {
+    background-color: #4CAF50;
+    color: white;
+}
+
+/* Button styles */
+.btn {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.btn-success {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #3e8e41;
+}
+
+.btn-primary {
+    background-color: #baa448;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #a8933f;
+}
+
+.btn-info {
+    background-color: #2196F3;
+    color: white;
+}
+
+.btn-info:hover {
+    background-color: #0b7dda;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 14px;
+}
+
+.btn-view {
+    background-color: #FF9800;
+    color: white;
+}
+
+.btn-edit {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.btn-delete {
+    background-color: #f44336;
+    color: white;
+}
+
+/* Actions column */
+.actions {
+    display: flex;
+    gap: 5px;
+}
+
+/* Report button */
+.report-actions {
+    margin: 20px 0;
+}
+
+.btn-report {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    gap: 5px;
+}
+
+.pagination-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    background-color: #f5f5f5;
+    color: #333;
+    border-radius: 4px;
+    text-decoration: none;
+    padding: 0 10px;
+}
+
+.pagination-item:hover {
+    background-color: #e0e0e0;
+}
+
+.pagination-item.active {
+    background-color: #4CAF50;
+    color: white;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    margin: 20px 0;
+}
+
+.empty-state p {
+    margin-bottom: 20px;
+    color: #666;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .filter-group {
+        min-width: 150px;
+    }
+}
+
 @media (max-width: 768px) {
-    .client-admin .form-group--submit {
-        margin-top: 10px;
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
     }
     
-    .client-admin .action-button {
-        width: 25px;
-        height: 25px;
+    .filter-group {
+        min-width: 100%;
+    }
+    
+    .submit-group {
+        width: 100%;
+    }
+    
+    .btn {
+        width: 100%;
     }
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // When cidade changes, filter bairros
+    const cidadeSelect = document.getElementById('cidade');
+    const bairroSelect = document.getElementById('bairro');
+    
+    if (cidadeSelect && bairroSelect) {
+        cidadeSelect.addEventListener('change', function() {
+            const cidadeId = this.value;
+            
+            if (cidadeId) {
+                // Fetch bairros for selected city
+                fetch(`<?= BASE_URL ?>/admin/ajax/get_bairros.php?id_cidade=${cidadeId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Clear current options except the first one
+                        while (bairroSelect.options.length > 1) {
+                            bairroSelect.remove(1);
+                        }
+                        
+                        // Add new options
+                        if (data.bairros && data.bairros.length > 0) {
+                            data.bairros.forEach(bairro => {
+                                const option = document.createElement('option');
+                                option.value = bairro.id;
+                                option.text = bairro.bairro;
+                                bairroSelect.add(option);
+                            });
+                        }
+                    })
+                    .catch(error => console.error('Error fetching bairros:', error));
+            } else {
+                // Reset bairro dropdown
+                while (bairroSelect.options.length > 1) {
+                    bairroSelect.remove(1);
+                }
+            }
+        });
+    }
+});
+</script>
