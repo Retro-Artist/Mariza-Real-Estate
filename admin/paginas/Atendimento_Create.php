@@ -21,68 +21,37 @@ $formData = [
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Get form data
-    $nome = trim($_POST['nome'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $telefone = trim($_POST['telefone'] ?? '');
-    $mensagem = trim($_POST['mensagem'] ?? '');
-    $local = trim($_POST['local'] ?? 'Telefone');
-    $status = trim($_POST['status'] ?? 'Pendente');
+    $formData = [
+        'nome' => trim($_POST['nome'] ?? ''),
+        'email' => trim($_POST['email'] ?? ''),
+        'telefone' => trim($_POST['telefone'] ?? ''),
+        'mensagem' => trim($_POST['mensagem'] ?? ''),
+        'local' => trim($_POST['local'] ?? 'Telefone'),
+        'status' => trim($_POST['status'] ?? 'Pendente')
+    ];
     
     // Validate form data
-    if (empty($nome)) {
+    if (empty($formData['nome'])) {
         $error = 'O nome é obrigatório.';
-    } elseif (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    } elseif (empty($formData['email']) || !filter_var($formData['email'], FILTER_VALIDATE_EMAIL)) {
         $error = 'Por favor, informe um email válido.';
-    } elseif (empty($mensagem)) {
+    } elseif (empty($formData['mensagem'])) {
         $error = 'A mensagem é obrigatória.';
     } else {
-        try {
-            // Get current date and time
-            $data = date('Y-m-d');
-            $hora = date('H:i:s');
-            
-            // Insert new atendimento
-            $stmt = $databaseConnection->prepare(
-                "INSERT INTO sistema_interacao (
-                    nome, email, telefone, mensagem,
-                    data, hora, local, status
-                ) VALUES (
-                    :nome, :email, :telefone, :mensagem,
-                    :data, :hora, :local, :status
-                )"
-            );
-            
-            $stmt->bindParam(':nome', $nome);
-            $stmt->bindParam(':email', $email);
-            $stmt->bindParam(':telefone', $telefone);
-            $stmt->bindParam(':mensagem', $mensagem);
-            $stmt->bindParam(':data', $data);
-            $stmt->bindParam(':hora', $hora);
-            $stmt->bindParam(':local', $local);
-            $stmt->bindParam(':status', $status);
-            
-            $stmt->execute();
-            $newAtendimentoId = $databaseConnection->lastInsertId();
-            
+        // Create service request using function from admin_functions.php
+        $newRequestId = createServiceRequest($formData);
+        
+        if ($newRequestId) {
             // Set success message and redirect
             $_SESSION['alert_message'] = 'Atendimento adicionado com sucesso!';
             $_SESSION['alert_type'] = 'success';
             
-            header('Location: ' . BASE_URL . '/admin/index.php?page=Atendimento_View&id=' . $newAtendimentoId);
+            header('Location: ' . BASE_URL . '/admin/index.php?page=Atendimento_View&id=' . $newRequestId);
             exit;
-        } catch (PDOException $e) {
-            logError("Error creating atendimento: " . $e->getMessage());
+        } else {
             $error = 'Ocorreu um erro ao adicionar o atendimento. Por favor, tente novamente.';
         }
     }
-    
-    // Update formData with POST values for form re-population in case of error
-    $formData['nome'] = $nome;
-    $formData['email'] = $email;
-    $formData['telefone'] = $telefone;
-    $formData['mensagem'] = $mensagem;
-    $formData['local'] = $local;
-    $formData['status'] = $status;
 }
 ?>
 

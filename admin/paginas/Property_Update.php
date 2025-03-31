@@ -9,7 +9,7 @@ if (!isset($_SESSION['admin_id'])) {
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     $_SESSION['alert_message'] = 'ID do imóvel não especificado.';
     $_SESSION['alert_type'] = 'error';
-    header('Location: ' . BASE_URL . '/admin/imoveis');
+    header('Location: ' . BASE_URL . '/admin/index.php?page=Property_Admin');
     exit;
 }
 
@@ -17,49 +17,22 @@ $property_id = (int)$_GET['id'];
 
 // Initialize variables
 $error = '';
-$formData = [];
 
-// Get property data
-try {
-    $stmt = $databaseConnection->prepare(
-        "SELECT * FROM sistema_imoveis WHERE id = :id LIMIT 1"
-    );
-    $stmt->bindParam(':id', $property_id);
-    $stmt->execute();
-    
-    $formData = $stmt->fetch();
-    
-    if (!$formData) {
-        $_SESSION['alert_message'] = 'Imóvel não encontrado.';
-        $_SESSION['alert_type'] = 'error';
-        header('Location: ' . BASE_URL . '/admin/imoveis');
-        exit;
-    }
-} catch (PDOException $e) {
-    logError("Error fetching property data: " . $e->getMessage());
-    $_SESSION['alert_message'] = 'Erro ao buscar dados do imóvel.';
+// Get property data using function from admin_functions.php
+$formData = getAdminPropertyById($property_id);
+
+if (!$formData) {
+    $_SESSION['alert_message'] = 'Imóvel não encontrado.';
     $_SESSION['alert_type'] = 'error';
-    header('Location: ' . BASE_URL . '/admin/imoveis');
+    header('Location: ' . BASE_URL . '/admin/index.php?page=Property_Admin');
     exit;
 }
 
 // Get categories
-try {
-    $stmt = $databaseConnection->query("SELECT * FROM sistema_imoveis_categorias ORDER BY categoria ASC");
-    $categorias = $stmt->fetchAll();
-} catch (PDOException $e) {
-    logError("Error fetching categories: " . $e->getMessage());
-    $categorias = [];
-}
+$categorias = getAdminCategories();
 
 // Get states
-try {
-    $stmt = $databaseConnection->query("SELECT * FROM sistema_estados ORDER BY nome ASC");
-    $estados = $stmt->fetchAll();
-} catch (PDOException $e) {
-    logError("Error fetching states: " . $e->getMessage());
-    $estados = [];
-}
+$estados = getStates();
 
 // Get available corretores (real estate agents)
 try {
@@ -70,247 +43,109 @@ try {
     $corretores = [];
 }
 
+// Process form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Get form data
+    $postData = [
+        'titulo' => trim($_POST['titulo'] ?? ''),
+        'para' => trim($_POST['para'] ?? 'venda'),
+        'id_categoria' => (int)($_POST['id_categoria'] ?? 0),
+        'id_estado' => (int)($_POST['id_estado'] ?? 0),
+        'id_cidade' => (int)($_POST['id_cidade'] ?? 0),
+        'id_bairro' => (int)($_POST['id_bairro'] ?? 0),
+        'valor' => str_replace(['R$', '.', ','], ['', '', '.'], trim($_POST['valor'] ?? '0')),
+        'quartos' => trim($_POST['quartos'] ?? ''),
+        'suites' => trim($_POST['suites'] ?? ''),
+        'banheiros' => trim($_POST['banheiros'] ?? ''),
+        'salas' => trim($_POST['salas'] ?? ''),
+        'cozinhas' => trim($_POST['cozinhas'] ?? ''),
+        'garagem' => trim($_POST['garagem'] ?? ''),
+        'area_servico' => trim($_POST['area_servico'] ?? ''),
+        'area_total' => trim($_POST['area_total'] ?? ''),
+        'area_construida' => trim($_POST['area_construida'] ?? ''),
+        'und_medida' => trim($_POST['und_medida'] ?? 'm²'),
+        'endereco' => trim($_POST['endereco'] ?? ''),
+        'descricao' => trim($_POST['descricao'] ?? ''),
+        'ref' => trim($_POST['ref'] ?? ''),
+        'codigo' => trim($_POST['codigo'] ?? ''),
+        'status' => trim($_POST['status'] ?? 'ativo'),
+        'destaque' => isset($_POST['destaque']) ? 1 : 0,
+        'classificados' => trim($_POST['classificados'] ?? ''),
+        'quadra_lote' => trim($_POST['quadra_lote'] ?? ''),
+        'medida_frente' => trim($_POST['medida_frente'] ?? ''),
+        'medida_fundo' => trim($_POST['medida_fundo'] ?? ''),
+        'medida_laterais' => trim($_POST['medida_laterais'] ?? ''),
+        'latitude' => trim($_POST['latitude'] ?? ''),
+        'longitude' => trim($_POST['longitude'] ?? ''),
+        'corretor_responsavel' => (int)($_POST['corretor_responsavel'] ?? 0),
+        'nome_anunciante' => trim($_POST['nome_anunciante'] ?? ''),
+        'telefone_anunciante' => trim($_POST['telefone_anunciante'] ?? ''),
+        'palavras_chaves' => trim($_POST['palavras_chaves'] ?? '')
+    ];
+    
+    // Validate form data
+    if (empty($postData['titulo'])) {
+        $error = 'O título do imóvel é obrigatório.';
+    } elseif (empty($postData['id_categoria'])) {
+        $error = 'Selecione uma categoria para o imóvel.';
+    } elseif (empty($postData['valor'])) {
+        $error = 'Informe o valor do imóvel.';
+    } elseif (empty($postData['codigo'])) {
+        $error = 'O código do imóvel é obrigatório.';
+    } else {
+        // Update property using function from admin_functions.php
+        $result = updateProperty($property_id, $postData);
+        
+        if ($result) {
+            // Handle image uploads
+            if (isset($_FILES['imagens']) && !empty($_FILES['imagens']['name'][0])) {
+                $uploadDir = __DIR__ . '/../../../uploads/imoveis/';
+                
+                // Create directory if it doesn't exist
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                
+                // Process each uploaded image
+                $totalFiles = count($_FILES['imagens']['name']);
+                for ($i = 0; $i < $totalFiles; $i++) {
+                    if ($_FILES['imagens']['error'][$i] === UPLOAD_ERR_OK) {
+                        $tempFile = $_FILES['imagens']['tmp_name'][$i];
+                        $imageNumber = str_pad($i + 1, 2, '0', STR_PAD_LEFT); // 01, 02, etc.
+                        $fileName = $postData['codigo'] . $imageNumber . '.jpg';
+                        $targetFile = $uploadDir . $fileName;
+                        
+                        // Move the uploaded file
+                        move_uploaded_file($tempFile, $targetFile);
+                    }
+                }
+            }
+            
+            // Set success message and redirect
+            $_SESSION['alert_message'] = 'Imóvel atualizado com sucesso!';
+            $_SESSION['alert_type'] = 'success';
+            
+            header('Location: ' . BASE_URL . '/admin/index.php?page=Property_Admin');
+            exit;
+        } else {
+            $error = 'Um imóvel com este código já existe.';
+        }
+    }
+    
+    // Update formData with POST values for form re-population in case of error
+    $formData = array_merge($formData, $postData);
+}
+
 // Get cities based on selected state
 $cidades = [];
 if (!empty($formData['id_estado'])) {
-    try {
-        $stmt = $databaseConnection->prepare("SELECT * FROM sistema_cidades WHERE id_estado = :id_estado ORDER BY nome ASC");
-        $stmt->bindParam(':id_estado', $formData['id_estado']);
-        $stmt->execute();
-        $cidades = $stmt->fetchAll();
-    } catch (PDOException $e) {
-        logError("Error fetching cities: " . $e->getMessage());
-    }
+    $cidades = getCitiesByState($formData['id_estado']);
 }
 
 // Get neighborhoods based on selected city
 $bairros = [];
 if (!empty($formData['id_cidade'])) {
-    try {
-        $stmt = $databaseConnection->prepare("SELECT * FROM sistema_bairros WHERE id_cidade = :id_cidade ORDER BY bairro ASC");
-        $stmt->bindParam(':id_cidade', $formData['id_cidade']);
-        $stmt->execute();
-        $bairros = $stmt->fetchAll();
-    } catch (PDOException $e) {
-        logError("Error fetching neighborhoods: " . $e->getMessage());
-    }
-}
-
-// Process form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Get form data
-    $titulo = trim($_POST['titulo'] ?? '');
-    $para = trim($_POST['para'] ?? 'venda');
-    $id_categoria = (int)($_POST['id_categoria'] ?? 0);
-    $id_estado = (int)($_POST['id_estado'] ?? 0);
-    $id_cidade = (int)($_POST['id_cidade'] ?? 0);
-    $id_bairro = (int)($_POST['id_bairro'] ?? 0);
-    $valor = str_replace(['R$', '.', ','], ['', '', '.'], trim($_POST['valor'] ?? '0'));
-    $quartos = trim($_POST['quartos'] ?? '');
-    $suites = trim($_POST['suites'] ?? '');
-    $banheiros = trim($_POST['banheiros'] ?? '');
-    $salas = trim($_POST['salas'] ?? '');
-    $cozinhas = trim($_POST['cozinhas'] ?? '');
-    $garagem = trim($_POST['garagem'] ?? '');
-    $area_servico = trim($_POST['area_servico'] ?? '');
-    $area_total = trim($_POST['area_total'] ?? '');
-    $area_construida = trim($_POST['area_construida'] ?? '');
-    $und_medida = trim($_POST['und_medida'] ?? 'm²');
-    $endereco = trim($_POST['endereco'] ?? '');
-    $descricao = trim($_POST['descricao'] ?? '');
-    $ref = trim($_POST['ref'] ?? '');
-    $codigo = trim($_POST['codigo'] ?? '');
-    $status = trim($_POST['status'] ?? 'ativo');
-    $destaque = isset($_POST['destaque']) ? 1 : 0;
-    $classificados = trim($_POST['classificados'] ?? '');
-    $quadra_lote = trim($_POST['quadra_lote'] ?? '');
-    $medida_frente = trim($_POST['medida_frente'] ?? '');
-    $medida_fundo = trim($_POST['medida_fundo'] ?? '');
-    $medida_laterais = trim($_POST['medida_laterais'] ?? '');
-    $latitude = trim($_POST['latitude'] ?? '');
-    $longitude = trim($_POST['longitude'] ?? '');
-    $corretor_responsavel = (int)($_POST['corretor_responsavel'] ?? 0);
-    $nome_anunciante = trim($_POST['nome_anunciante'] ?? '');
-    $telefone_anunciante = trim($_POST['telefone_anunciante'] ?? '');
-    $palavras_chaves = trim($_POST['palavras_chaves'] ?? '');
-    
-    // Validate form data
-    if (empty($titulo)) {
-        $error = 'O título do imóvel é obrigatório.';
-    } elseif (empty($id_categoria)) {
-        $error = 'Selecione uma categoria para o imóvel.';
-    } elseif (empty($valor)) {
-        $error = 'Informe o valor do imóvel.';
-    } elseif (empty($codigo)) {
-        $error = 'O código do imóvel é obrigatório.';
-    } else {
-        try {
-            // Check if property code already exists (except for this property)
-            $stmt = $databaseConnection->prepare(
-                "SELECT id FROM sistema_imoveis WHERE codigo = :codigo AND id != :id LIMIT 1"
-            );
-            $stmt->bindParam(':codigo', $codigo);
-            $stmt->bindParam(':id', $property_id);
-            $stmt->execute();
-            
-            if ($stmt->rowCount() > 0) {
-                $error = 'Um imóvel com este código já existe.';
-            } else {
-                // Prepare keywords for search if not provided
-                if (empty($palavras_chaves)) {
-                    $palavras_chaves = $titulo . ' ' . $descricao;
-                }
-                
-                // Update property
-                $stmt = $databaseConnection->prepare(
-                    "UPDATE sistema_imoveis SET 
-                        titulo = :titulo, 
-                        para = :para, 
-                        id_categoria = :id_categoria, 
-                        id_estado = :id_estado, 
-                        id_cidade = :id_cidade, 
-                        id_bairro = :id_bairro, 
-                        valor = :valor, 
-                        quartos = :quartos, 
-                        suites = :suites, 
-                        banheiros = :banheiros,
-                        salas = :salas,
-                        cozinhas = :cozinhas,
-                        garagem = :garagem, 
-                        area_servico = :area_servico,
-                        area_total = :area_total, 
-                        area_construida = :area_construida, 
-                        und_medida = :und_medida, 
-                        endereco = :endereco, 
-                        descricao = :descricao, 
-                        ref = :ref, 
-                        codigo = :codigo, 
-                        status = :status,
-                        destaque = :destaque,
-                        classificados = :classificados,
-                        quadra_lote = :quadra_lote,
-                        medida_frente = :medida_frente,
-                        medida_fundo = :medida_fundo,
-                        medida_laterais = :medida_laterais,
-                        latitude = :latitude,
-                        longitude = :longitude,
-                        corretor_responsavel = :corretor_responsavel,
-                        nome_anunciante = :nome_anunciante,
-                        telefone_anunciante = :telefone_anunciante,
-                        palavras_chaves = :palavras_chaves
-                     WHERE id = :id"
-                );
-                
-                $stmt->bindParam(':titulo', $titulo);
-                $stmt->bindParam(':para', $para);
-                $stmt->bindParam(':id_categoria', $id_categoria);
-                $stmt->bindParam(':id_estado', $id_estado);
-                $stmt->bindParam(':id_cidade', $id_cidade);
-                $stmt->bindParam(':id_bairro', $id_bairro);
-                $stmt->bindParam(':valor', $valor);
-                $stmt->bindParam(':quartos', $quartos);
-                $stmt->bindParam(':suites', $suites);
-                $stmt->bindParam(':banheiros', $banheiros);
-                $stmt->bindParam(':salas', $salas);
-                $stmt->bindParam(':cozinhas', $cozinhas);
-                $stmt->bindParam(':garagem', $garagem);
-                $stmt->bindParam(':area_servico', $area_servico);
-                $stmt->bindParam(':area_total', $area_total);
-                $stmt->bindParam(':area_construida', $area_construida);
-                $stmt->bindParam(':und_medida', $und_medida);
-                $stmt->bindParam(':endereco', $endereco);
-                $stmt->bindParam(':descricao', $descricao);
-                $stmt->bindParam(':ref', $ref);
-                $stmt->bindParam(':codigo', $codigo);
-                $stmt->bindParam(':status', $status);
-                $stmt->bindParam(':destaque', $destaque);
-                $stmt->bindParam(':classificados', $classificados);
-                $stmt->bindParam(':quadra_lote', $quadra_lote);
-                $stmt->bindParam(':medida_frente', $medida_frente);
-                $stmt->bindParam(':medida_fundo', $medida_fundo);
-                $stmt->bindParam(':medida_laterais', $medida_laterais);
-                $stmt->bindParam(':latitude', $latitude);
-                $stmt->bindParam(':longitude', $longitude);
-                $stmt->bindParam(':corretor_responsavel', $corretor_responsavel);
-                $stmt->bindParam(':nome_anunciante', $nome_anunciante);
-                $stmt->bindParam(':telefone_anunciante', $telefone_anunciante);
-                $stmt->bindParam(':palavras_chaves', $palavras_chaves);
-                $stmt->bindParam(':id', $property_id);
-                
-                $stmt->execute();
-                
-                // Handle image uploads
-                if (isset($_FILES['imagens']) && !empty($_FILES['imagens']['name'][0])) {
-                    $uploadDir = __DIR__ . '/../../../uploads/imoveis/';
-                    
-                    // Create directory if it doesn't exist
-                    if (!is_dir($uploadDir)) {
-                        mkdir($uploadDir, 0755, true);
-                    }
-                    
-                    // Process each uploaded image
-                    $totalFiles = count($_FILES['imagens']['name']);
-                    for ($i = 0; $i < $totalFiles; $i++) {
-                        if ($_FILES['imagens']['error'][$i] === UPLOAD_ERR_OK) {
-                            $tempFile = $_FILES['imagens']['tmp_name'][$i];
-                            $imageNumber = str_pad($i + 1, 2, '0', STR_PAD_LEFT); // 01, 02, etc.
-                            $fileName = $codigo . $imageNumber . '.jpg';
-                            $targetFile = $uploadDir . $fileName;
-                            
-                            // Move the uploaded file
-                            move_uploaded_file($tempFile, $targetFile);
-                        }
-                    }
-                }
-                
-                // Set success message and redirect
-                $_SESSION['alert_message'] = 'Imóvel atualizado com sucesso!';
-                $_SESSION['alert_type'] = 'success';
-                
-                header('Location: ' . BASE_URL . '/admin/imoveis');
-                exit;
-            }
-        } catch (PDOException $e) {
-            logError("Error updating property: " . $e->getMessage());
-            $error = 'Ocorreu um erro ao atualizar o imóvel. Por favor, tente novamente.';
-        }
-    }
-    
-    // Update formData with POST values for form re-population in case of error
-    $formData['titulo'] = $titulo;
-    $formData['para'] = $para;
-    $formData['id_categoria'] = $id_categoria;
-    $formData['id_estado'] = $id_estado;
-    $formData['id_cidade'] = $id_cidade;
-    $formData['id_bairro'] = $id_bairro;
-    $formData['valor'] = $valor;
-    $formData['quartos'] = $quartos;
-    $formData['suites'] = $suites;
-    $formData['banheiros'] = $banheiros;
-    $formData['salas'] = $salas;
-    $formData['cozinhas'] = $cozinhas;
-    $formData['garagem'] = $garagem;
-    $formData['area_servico'] = $area_servico;
-    $formData['area_total'] = $area_total;
-    $formData['area_construida'] = $area_construida;
-    $formData['und_medida'] = $und_medida;
-    $formData['endereco'] = $endereco;
-    $formData['descricao'] = $descricao;
-    $formData['ref'] = $ref;
-    $formData['codigo'] = $codigo;
-    $formData['status'] = $status;
-    $formData['destaque'] = $destaque;
-    $formData['classificados'] = $classificados;
-    $formData['quadra_lote'] = $quadra_lote;
-    $formData['medida_frente'] = $medida_frente;
-    $formData['medida_fundo'] = $medida_fundo;
-    $formData['medida_laterais'] = $medida_laterais;
-    $formData['latitude'] = $latitude;
-    $formData['longitude'] = $longitude;
-    $formData['corretor_responsavel'] = $corretor_responsavel;
-    $formData['nome_anunciante'] = $nome_anunciante;
-    $formData['telefone_anunciante'] = $telefone_anunciante;
-    $formData['palavras_chaves'] = $palavras_chaves;
+    $bairros = getNeighborhoodsByCity($formData['id_cidade']);
 }
 ?>
 
@@ -319,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Page Header -->
     <div class="admin-page__header">
         <h2 class="admin-page__title">Editar Imóvel</h2>
-        <a href="<?= BASE_URL ?>/admin/imoveis" class="cancel-button">
+        <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin" class="cancel-button">
             <i class="fas fa-arrow-left"></i> Voltar
         </a>
     </div>
@@ -344,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                            placeholder="Ex: Casa a venda no bairro jardim paraíso">
                 </div>
                 
-                <!-- Campo oculto para código do imóvel -->
+                <!-- Campo para código do imóvel -->
                 <input type="hidden" id="codigo" name="codigo" value="<?= htmlspecialchars($formData['codigo']) ?>">
             </div>
             
@@ -385,7 +220,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 
                 <input type="hidden" id="ref" name="ref" value="<?= htmlspecialchars($formData['ref']) ?>">
-
             </div>
         </div>
         
@@ -718,7 +552,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         
         <div class="form-actions">
-            <a href="<?= BASE_URL ?>/admin/imoveis" class="cancel-button">Cancelar</a>
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin" class="cancel-button">Cancelar</a>
             <button type="submit" class="primary-button">
                 <i class="fas fa-save"></i> Salvar Alterações
             </button>

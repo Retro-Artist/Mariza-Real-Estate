@@ -17,24 +17,11 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $atendimento_id = (int)$_GET['id'];
 
-// Get atendimento data
-try {
-    $stmt = $databaseConnection->prepare("SELECT * FROM sistema_interacao WHERE id = :id LIMIT 1");
-    $stmt->bindParam(':id', $atendimento_id);
-    $stmt->execute();
-    
-    $atendimento = $stmt->fetch();
-    
-    if (!$atendimento) {
-        $_SESSION['alert_message'] = 'Atendimento não encontrado.';
-        $_SESSION['alert_type'] = 'error';
-        header('Location: ' . BASE_URL . '/admin/index.php?page=Atendimento_Admin');
-        exit;
-    }
-    
-} catch (PDOException $e) {
-    logError("Error fetching atendimento details: " . $e->getMessage());
-    $_SESSION['alert_message'] = 'Erro ao buscar detalhes do atendimento.';
+// Get service request using function from admin_functions.php
+$atendimento = getServiceRequestById($atendimento_id);
+
+if (!$atendimento) {
+    $_SESSION['alert_message'] = 'Atendimento não encontrado.';
     $_SESSION['alert_type'] = 'error';
     header('Location: ' . BASE_URL . '/admin/index.php?page=Atendimento_Admin');
     exit;
@@ -44,20 +31,24 @@ try {
 if (isset($_POST['update_status'])) {
     $new_status = $_POST['status'];
     
-    try {
-        $stmt = $databaseConnection->prepare("UPDATE sistema_interacao SET status = :status WHERE id = :id");
-        $stmt->bindParam(':status', $new_status);
-        $stmt->bindParam(':id', $atendimento_id);
-        $stmt->execute();
-        
+    // Update service request status (just the status field)
+    $result = updateServiceRequest($atendimento_id, [
+        'nome' => $atendimento['nome'],
+        'email' => $atendimento['email'],
+        'telefone' => $atendimento['telefone'],
+        'mensagem' => $atendimento['mensagem'],
+        'local' => $atendimento['local'],
+        'status' => $new_status
+    ]);
+    
+    if ($result) {
         $_SESSION['alert_message'] = 'Status atualizado com sucesso!';
         $_SESSION['alert_type'] = 'success';
         
         // Refresh the page to show updated data
         header('Location: ' . BASE_URL . '/admin/index.php?page=Atendimento_View&id=' . $atendimento_id);
         exit;
-    } catch (PDOException $e) {
-        logError("Error updating atendimento status: " . $e->getMessage());
+    } else {
         $error = 'Ocorreu um erro ao atualizar o status.';
     }
 }
@@ -288,6 +279,7 @@ $sourceClass = 'badge--' . strtolower($atendimento['local']);
     padding: 8px 0;
 }
 
+/* Add these to the previous style section */
 .detail-value a {
     color: var(--admin-primary);
     text-decoration: none;

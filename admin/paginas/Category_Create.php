@@ -20,37 +20,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($tipo) || empty($categoria)) {
         $error = 'Por favor, preencha todos os campos.';
     } else {
-        try {
-            // Check if category already exists
-            $stmt = $databaseConnection->prepare(
-                "SELECT id FROM sistema_imoveis_categorias 
-                 WHERE LOWER(categoria) = LOWER(:categoria) LIMIT 1"
-            );
-            $stmt->bindParam(':categoria', $categoria);
-            $stmt->execute();
+        // Create category using our function from admin_functions.php
+        $categoryId = createCategory($tipo, $categoria);
+        
+        if ($categoryId) {
+            // Set success message and redirect
+            $_SESSION['alert_message'] = 'Categoria adicionada com sucesso!';
+            $_SESSION['alert_type'] = 'success';
             
-            if ($stmt->rowCount() > 0) {
-                $error = 'Uma categoria com este nome já existe.';
-            } else {
-                // Insert new category
-                $stmt = $databaseConnection->prepare(
-                    "INSERT INTO sistema_imoveis_categorias (tipo, categoria) 
-                     VALUES (:tipo, :categoria)"
-                );
-                $stmt->bindParam(':tipo', $tipo);
-                $stmt->bindParam(':categoria', $categoria);
-                $stmt->execute();
-                
-                // Set success message and redirect
-                $_SESSION['alert_message'] = 'Categoria adicionada com sucesso!';
-                $_SESSION['alert_type'] = 'success';
-                
-                header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
-                exit;
-            }
-        } catch (PDOException $e) {
-            logError("Error creating category: " . $e->getMessage());
-            $error = 'Ocorreu um erro ao adicionar a categoria. Por favor, tente novamente.';
+            header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
+            exit;
+        } else {
+            $error = 'Uma categoria com este nome já existe.';
         }
     }
 }

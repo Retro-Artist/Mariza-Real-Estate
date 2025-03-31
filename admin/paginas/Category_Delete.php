@@ -22,84 +22,32 @@ $confirmDelete = isset($_GET['confirm']) && $_GET['confirm'] === '1';
 
 // If not confirmed, get category data for confirmation page
 if (!$confirmDelete) {
-    try {
-        $stmt = $databaseConnection->prepare(
-            "SELECT * FROM sistema_imoveis_categorias WHERE id = :id LIMIT 1"
-        );
-        $stmt->bindParam(':id', $category_id);
-        $stmt->execute();
-        
-        $categoryData = $stmt->fetch();
-        
-        if (!$categoryData) {
-            $_SESSION['alert_message'] = 'Categoria não encontrada.';
-            $_SESSION['alert_type'] = 'error';
-            header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
-            exit;
-        }
-        
-        $categoria = $categoryData['categoria'];
-        
-        // Check if category is in use
-        $stmt = $databaseConnection->prepare(
-            "SELECT COUNT(*) as total FROM sistema_imoveis WHERE id_categoria = :id_categoria"
-        );
-        $stmt->bindParam(':id_categoria', $category_id);
-        $stmt->execute();
-        
-        $imoveisCount = $stmt->fetch()['total'];
-        
-        if ($imoveisCount > 0) {
-            $_SESSION['alert_message'] = 'Esta categoria não pode ser excluída pois existem ' . $imoveisCount . ' imóveis associados a ela.';
-            $_SESSION['alert_type'] = 'error';
-            header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
-            exit;
-        }
-        
-    } catch (PDOException $e) {
-        logError("Error fetching category data: " . $e->getMessage());
-        $_SESSION['alert_message'] = 'Erro ao buscar dados da categoria.';
+    // Get category data using our function from admin_functions.php
+    $categoryData = getAdminCategoryById($category_id);
+    
+    if (!$categoryData) {
+        $_SESSION['alert_message'] = 'Categoria não encontrada.';
         $_SESSION['alert_type'] = 'error';
         header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
         exit;
     }
+    
+    $categoria = $categoryData['categoria'];
 }
 // If confirmed, process deletion
 else {
-    try {
-        // Check again if category is in use (for security)
-        $stmt = $databaseConnection->prepare(
-            "SELECT COUNT(*) as total FROM sistema_imoveis WHERE id_categoria = :id_categoria"
-        );
-        $stmt->bindParam(':id_categoria', $category_id);
-        $stmt->execute();
-        
-        $imoveisCount = $stmt->fetch()['total'];
-        
-        if ($imoveisCount > 0) {
-            $_SESSION['alert_message'] = 'Esta categoria não pode ser excluída pois existem imóveis associados a ela.';
-            $_SESSION['alert_type'] = 'error';
-            header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
-            exit;
-        }
-        
-        // Delete category
-        $stmt = $databaseConnection->prepare(
-            "DELETE FROM sistema_imoveis_categorias WHERE id = :id"
-        );
-        $stmt->bindParam(':id', $category_id);
-        $stmt->execute();
-        
+    // Delete category using our function from admin_functions.php
+    $result = deleteCategory($category_id);
+    
+    if ($result) {
         // Set success message and redirect
         $_SESSION['alert_message'] = 'Categoria excluída com sucesso!';
         $_SESSION['alert_type'] = 'success';
         
         header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
         exit;
-        
-    } catch (PDOException $e) {
-        logError("Error deleting category: " . $e->getMessage());
-        $_SESSION['alert_message'] = 'Ocorreu um erro ao excluir a categoria.';
+    } else {
+        $_SESSION['alert_message'] = 'Esta categoria não pode ser excluída pois existem imóveis associados a ela.';
         $_SESSION['alert_type'] = 'error';
         header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
         exit;

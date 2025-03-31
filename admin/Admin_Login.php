@@ -6,6 +6,7 @@ session_start();
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/database.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/admin_functions.php';
 
 // Check if already logged in
 if (isset($_SESSION['admin_id'])) {
@@ -26,34 +27,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($login_email) || empty($login_password)) {
         $error = 'Por favor, preencha todos os campos.';
     } else {
-        // Verify login credentials
-        try {
-            $stmt = $databaseConnection->prepare(
-                "SELECT id, nome, email, senha, nivel FROM sistema_usuarios 
-                 WHERE email = :email LIMIT 1"
-            );
-            $stmt->bindParam(':email', $login_email);
-            $stmt->execute();
+        // Verify login credentials using our function from admin_functions.php
+        $user = authenticateAdmin($login_email, $login_password);
+        
+        if ($user) {
+            // Login successful - create session
+            $_SESSION['admin_id'] = $user['id'];
+            $_SESSION['admin_name'] = $user['nome'];
+            $_SESSION['admin_level'] = $user['nivel'];
             
-            $user = $stmt->fetch();
-            
-            if ($user && password_verify($login_password, $user['senha'])) {
-                // Login successful - create session
-                $_SESSION['admin_id'] = $user['id'];
-                $_SESSION['admin_name'] = $user['nome'];
-                $_SESSION['admin_level'] = $user['nivel'];
-                
-                // Redirect to admin dashboard
-                header('Location: ' . BASE_URL . '/admin/');
-                exit;
-            } else {
-                // Login failed
-                $error = 'Email ou senha inválidos. Por favor, tente novamente.';
-            }
-        } catch (PDOException $e) {
-            // Log error
-            logError("Login attempt failed: " . $e->getMessage());
-            $error = 'Ocorreu um erro durante o login. Por favor, tente novamente.';
+            // Redirect to admin dashboard
+            header('Location: ' . BASE_URL . '/admin/');
+            exit;
+        } else {
+            // Login failed
+            $error = 'Email ou senha inválidos. Por favor, tente novamente.';
         }
     }
 }

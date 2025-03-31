@@ -45,22 +45,10 @@ $formData = [
 ];
 
 // Get categories
-try {
-    $stmt = $databaseConnection->query("SELECT * FROM sistema_imoveis_categorias ORDER BY categoria ASC");
-    $categorias = $stmt->fetchAll();
-} catch (PDOException $e) {
-    logError("Error fetching categories: " . $e->getMessage());
-    $categorias = [];
-}
+$categorias = getAdminCategories();
 
 // Get states
-try {
-    $stmt = $databaseConnection->query("SELECT * FROM sistema_estados ORDER BY nome ASC");
-    $estados = $stmt->fetchAll();
-} catch (PDOException $e) {
-    logError("Error fetching states: " . $e->getMessage());
-    $estados = [];
-}
+$estados = getStates();
 
 // Get available corretores (real estate agents)
 try {
@@ -121,121 +109,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (empty($formData['codigo'])) {
         $error = 'O código do imóvel é obrigatório.';
     } else {
-        try {
-            // Check if property code already exists
-            $stmt = $databaseConnection->prepare(
-                "SELECT id FROM sistema_imoveis WHERE codigo = :codigo LIMIT 1"
-            );
-            $stmt->bindParam(':codigo', $formData['codigo']);
-            $stmt->execute();
-            
-            if ($stmt->rowCount() > 0) {
-                $error = 'Um imóvel com este código já existe.';
-            } else {
-                // Get current date and time
-                $data = date('Y-m-d');
-                $hora = date('H:i:s');
-                $id_usuario = $_SESSION['admin_id'];
+        // Create property using function from admin_functions.php
+        $newPropertyId = createProperty($formData);
+        
+        if ($newPropertyId) {
+            // Handle image uploads
+            if (isset($_FILES['imagens']) && !empty($_FILES['imagens']['name'][0])) {
+                $uploadDir = __DIR__ . '/../../../uploads/imoveis/';
                 
-                // Prepare keywords for search
-                if (empty($formData['palavras_chaves'])) {
-                    $formData['palavras_chaves'] = $formData['titulo'] . ' ' . $formData['descricao'];
+                // Create directory if it doesn't exist
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
                 }
                 
-                // Insert new property
-                $stmt = $databaseConnection->prepare(
-                    "INSERT INTO sistema_imoveis (
-                        titulo, para, id_categoria, id_estado, id_cidade, id_bairro, 
-                        valor, quartos, suites, banheiros, salas, cozinhas, garagem, area_servico, 
-                        area_total, area_construida, und_medida, endereco, descricao, ref, 
-                        codigo, status, data, hora, id_usuario, palavras_chaves, destaque, 
-                        classificados, quadra_lote, medida_frente, medida_fundo, medida_laterais,
-                        latitude, longitude, corretor_responsavel, nome_anunciante, telefone_anunciante
-                    ) VALUES (
-                        :titulo, :para, :id_categoria, :id_estado, :id_cidade, :id_bairro, 
-                        :valor, :quartos, :suites, :banheiros, :salas, :cozinhas, :garagem, :area_servico, 
-                        :area_total, :area_construida, :und_medida, :endereco, :descricao, :ref, 
-                        :codigo, :status, :data, :hora, :id_usuario, :palavras_chaves, :destaque,
-                        :classificados, :quadra_lote, :medida_frente, :medida_fundo, :medida_laterais,
-                        :latitude, :longitude, :corretor_responsavel, :nome_anunciante, :telefone_anunciante
-                    )"
-                );
-                
-                $stmt->bindParam(':titulo', $formData['titulo']);
-                $stmt->bindParam(':para', $formData['para']);
-                $stmt->bindParam(':id_categoria', $formData['id_categoria']);
-                $stmt->bindParam(':id_estado', $formData['id_estado']);
-                $stmt->bindParam(':id_cidade', $formData['id_cidade']);
-                $stmt->bindParam(':id_bairro', $formData['id_bairro']);
-                $stmt->bindParam(':valor', $formData['valor']);
-                $stmt->bindParam(':quartos', $formData['quartos']);
-                $stmt->bindParam(':suites', $formData['suites']);
-                $stmt->bindParam(':banheiros', $formData['banheiros']);
-                $stmt->bindParam(':salas', $formData['salas']);
-                $stmt->bindParam(':cozinhas', $formData['cozinhas']);
-                $stmt->bindParam(':garagem', $formData['garagem']);
-                $stmt->bindParam(':area_servico', $formData['area_servico']);
-                $stmt->bindParam(':area_total', $formData['area_total']);
-                $stmt->bindParam(':area_construida', $formData['area_construida']);
-                $stmt->bindParam(':und_medida', $formData['und_medida']);
-                $stmt->bindParam(':endereco', $formData['endereco']);
-                $stmt->bindParam(':descricao', $formData['descricao']);
-                $stmt->bindParam(':ref', $formData['ref']);
-                $stmt->bindParam(':codigo', $formData['codigo']);
-                $stmt->bindParam(':status', $formData['status']);
-                $stmt->bindParam(':data', $data);
-                $stmt->bindParam(':hora', $hora);
-                $stmt->bindParam(':id_usuario', $id_usuario);
-                $stmt->bindParam(':palavras_chaves', $formData['palavras_chaves']);
-                $stmt->bindParam(':destaque', $formData['destaque']);
-                $stmt->bindParam(':classificados', $formData['classificados']);
-                $stmt->bindParam(':quadra_lote', $formData['quadra_lote']);
-                $stmt->bindParam(':medida_frente', $formData['medida_frente']);
-                $stmt->bindParam(':medida_fundo', $formData['medida_fundo']);
-                $stmt->bindParam(':medida_laterais', $formData['medida_laterais']);
-                $stmt->bindParam(':latitude', $formData['latitude']);
-                $stmt->bindParam(':longitude', $formData['longitude']);
-                $stmt->bindParam(':corretor_responsavel', $formData['corretor_responsavel']);
-                $stmt->bindParam(':nome_anunciante', $formData['nome_anunciante']);
-                $stmt->bindParam(':telefone_anunciante', $formData['telefone_anunciante']);
-                
-                $stmt->execute();
-                $newPropertyId = $databaseConnection->lastInsertId();
-                
-                // Handle image uploads
-                if (isset($_FILES['imagens']) && !empty($_FILES['imagens']['name'][0])) {
-                    $uploadDir = __DIR__ . '/../../../uploads/imoveis/';
-                    
-                    // Create directory if it doesn't exist
-                    if (!is_dir($uploadDir)) {
-                        mkdir($uploadDir, 0755, true);
-                    }
-                    
-                    // Process each uploaded image
-                    $totalFiles = count($_FILES['imagens']['name']);
-                    for ($i = 0; $i < $totalFiles; $i++) {
-                        if ($_FILES['imagens']['error'][$i] === UPLOAD_ERR_OK) {
-                            $tempFile = $_FILES['imagens']['tmp_name'][$i];
-                            $imageNumber = str_pad($i + 1, 2, '0', STR_PAD_LEFT); // 01, 02, etc.
-                            $fileName = $formData['codigo'] . $imageNumber . '.jpg';
-                            $targetFile = $uploadDir . $fileName;
-                            
-                            // Move the uploaded file
-                            move_uploaded_file($tempFile, $targetFile);
-                        }
+                // Process each uploaded image
+                $totalFiles = count($_FILES['imagens']['name']);
+                for ($i = 0; $i < $totalFiles; $i++) {
+                    if ($_FILES['imagens']['error'][$i] === UPLOAD_ERR_OK) {
+                        $tempFile = $_FILES['imagens']['tmp_name'][$i];
+                        $imageNumber = str_pad($i + 1, 2, '0', STR_PAD_LEFT); // 01, 02, etc.
+                        $fileName = $formData['codigo'] . $imageNumber . '.jpg';
+                        $targetFile = $uploadDir . $fileName;
+                        
+                        // Move the uploaded file
+                        move_uploaded_file($tempFile, $targetFile);
                     }
                 }
-                
-                // Set success message and redirect
-                $_SESSION['alert_message'] = 'Imóvel adicionado com sucesso!';
-                $_SESSION['alert_type'] = 'success';
-                
-                header('Location: ' . BASE_URL . '/admin/imoveis');
-                exit;
             }
-        } catch (PDOException $e) {
-            logError("Error creating property: " . $e->getMessage());
-            $error = 'Ocorreu um erro ao adicionar o imóvel. Por favor, tente novamente.';
+            
+            // Set success message and redirect
+            $_SESSION['alert_message'] = 'Imóvel adicionado com sucesso!';
+            $_SESSION['alert_type'] = 'success';
+            
+            header('Location: ' . BASE_URL . '/admin/index.php?page=Property_Admin');
+            exit;
+        } else {
+            $error = 'Um imóvel com este código já existe.';
         }
     }
 }
@@ -243,27 +152,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Get cities based on selected state
 $cidades = [];
 if (!empty($formData['id_estado'])) {
-    try {
-        $stmt = $databaseConnection->prepare("SELECT * FROM sistema_cidades WHERE id_estado = :id_estado ORDER BY nome ASC");
-        $stmt->bindParam(':id_estado', $formData['id_estado']);
-        $stmt->execute();
-        $cidades = $stmt->fetchAll();
-    } catch (PDOException $e) {
-        logError("Error fetching cities: " . $e->getMessage());
-    }
+    $cidades = getCitiesByState($formData['id_estado']);
 }
 
 // Get neighborhoods based on selected city
 $bairros = [];
 if (!empty($formData['id_cidade'])) {
-    try {
-        $stmt = $databaseConnection->prepare("SELECT * FROM sistema_bairros WHERE id_cidade = :id_cidade ORDER BY bairro ASC");
-        $stmt->bindParam(':id_cidade', $formData['id_cidade']);
-        $stmt->execute();
-        $bairros = $stmt->fetchAll();
-    } catch (PDOException $e) {
-        logError("Error fetching neighborhoods: " . $e->getMessage());
-    }
+    $bairros = getNeighborhoodsByCity($formData['id_cidade']);
 }
 ?>
 
@@ -272,7 +167,7 @@ if (!empty($formData['id_cidade'])) {
     <!-- Page Header -->
     <div class="admin-page__header">
         <h2 class="admin-page__title">Adicionar Novo Imóvel</h2>
-        <a href="<?= BASE_URL ?>/admin/imoveis" class="cancel-button">
+        <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin" class="cancel-button">
             <i class="fas fa-arrow-left"></i> Voltar
         </a>
     </div>
@@ -639,7 +534,7 @@ if (!empty($formData['id_cidade'])) {
         </div>
         
         <div class="form-actions">
-            <a href="<?= BASE_URL ?>/admin/imoveis" class="cancel-button">Cancelar</a>
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin" class="cancel-button">Cancelar</a>
             <button type="submit" class="primary-button">
                 <i class="fas fa-save"></i> Salvar Imóvel
             </button>

@@ -49,47 +49,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (empty($formData['data_inicio']) || empty($formData['data_fim'])) {
         $error = 'As datas de início e fim são obrigatórias.';
     } else {
-        try {
-            // Format dates and times for database
-            $data_inicio_completa = $formData['data_inicio'] . ' ' . $formData['hora_inicio'] . ':00';
-            $data_fim_completa = $formData['data_fim'] . ' ' . $formData['hora_fim'] . ':00';
-            
-            // Insert new event
-            $stmt = $databaseConnection->prepare(
-                "INSERT INTO sistema_avisos (
-                    id_usuario, para, prioridade, titulo, descricao, 
-                    data_inicio, data_fim, status
-                ) VALUES (
-                    :id_usuario, :para, :prioridade, :titulo, :descricao, 
-                    :data_inicio, :data_fim, :status
-                )"
-            );
-            
-            $stmt->bindParam(':id_usuario', $_SESSION['admin_id']);
-            $stmt->bindParam(':para', $formData['para']);
-            $stmt->bindParam(':prioridade', $formData['prioridade']);
-            $stmt->bindParam(':titulo', $formData['titulo']);
-            $stmt->bindParam(':descricao', $formData['descricao']);
-            $stmt->bindParam(':data_inicio', $data_inicio_completa);
-            $stmt->bindParam(':data_fim', $data_fim_completa);
-            $stmt->bindParam(':status', $formData['status']);
-            
-            $stmt->execute();
-            
+        // Create calendar event using function from admin_functions.php
+        $newEventId = createCalendarEvent($formData);
+        
+        if ($newEventId) {
             // Set success message and redirect
             $_SESSION['alert_message'] = 'Lembrete adicionado com sucesso!';
             $_SESSION['alert_type'] = 'success';
             
             header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar');
             exit;
-            
-        } catch (PDOException $e) {
-            logError("Error creating event: " . $e->getMessage());
+        } else {
             $error = 'Ocorreu um erro ao adicionar o lembrete. Por favor, tente novamente.';
         }
     }
 }
 ?>
+
+<!-- HTML content remains unchanged -->
 
 <!-- Add Event Page -->
 <div class="admin-page event-create">

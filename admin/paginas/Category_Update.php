@@ -20,34 +20,19 @@ $tipo = '';
 $categoria = '';
 $error = '';
 
-// Get category data
-try {
-    $stmt = $databaseConnection->prepare(
-        "SELECT * FROM sistema_imoveis_categorias WHERE id = :id LIMIT 1"
-    );
-    $stmt->bindParam(':id', $category_id);
-    $stmt->execute();
-    
-    $categoryData = $stmt->fetch();
-    
-    if (!$categoryData) {
-        $_SESSION['alert_message'] = 'Categoria não encontrada.';
-        $_SESSION['alert_type'] = 'error';
-        header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
-        exit;
-    }
-    
-    // Set values for form
-    $tipo = $categoryData['tipo'];
-    $categoria = $categoryData['categoria'];
-    
-} catch (PDOException $e) {
-    logError("Error fetching category data: " . $e->getMessage());
-    $_SESSION['alert_message'] = 'Erro ao buscar dados da categoria.';
+// Get category data using our function from admin_functions.php
+$categoryData = getAdminCategoryById($category_id);
+
+if (!$categoryData) {
+    $_SESSION['alert_message'] = 'Categoria não encontrada.';
     $_SESSION['alert_type'] = 'error';
     header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
     exit;
 }
+
+// Set values for form
+$tipo = $categoryData['tipo'];
+$categoria = $categoryData['categoria'];
 
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -59,40 +44,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($tipo) || empty($categoria)) {
         $error = 'Por favor, preencha todos os campos.';
     } else {
-        try {
-            // Check if category name already exists (excluding current category)
-            $stmt = $databaseConnection->prepare(
-                "SELECT id FROM sistema_imoveis_categorias 
-                 WHERE LOWER(categoria) = LOWER(:categoria) AND id != :id LIMIT 1"
-            );
-            $stmt->bindParam(':categoria', $categoria);
-            $stmt->bindParam(':id', $category_id);
-            $stmt->execute();
+        // Update category using our function from admin_functions.php
+        $result = updateCategory($category_id, $tipo, $categoria);
+        
+        if ($result) {
+            // Set success message and redirect
+            $_SESSION['alert_message'] = 'Categoria atualizada com sucesso!';
+            $_SESSION['alert_type'] = 'success';
             
-            if ($stmt->rowCount() > 0) {
-                $error = 'Uma categoria com este nome já existe.';
-            } else {
-                // Update category
-                $stmt = $databaseConnection->prepare(
-                    "UPDATE sistema_imoveis_categorias 
-                     SET tipo = :tipo, categoria = :categoria
-                     WHERE id = :id"
-                );
-                $stmt->bindParam(':tipo', $tipo);
-                $stmt->bindParam(':categoria', $categoria);
-                $stmt->bindParam(':id', $category_id);
-                $stmt->execute();
-                
-                // Set success message and redirect
-                $_SESSION['alert_message'] = 'Categoria atualizada com sucesso!';
-                $_SESSION['alert_type'] = 'success';
-                
-                header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
-                exit;
-            }
-        } catch (PDOException $e) {
-            logError("Error updating category: " . $e->getMessage());
-            $error = 'Ocorreu um erro ao atualizar a categoria. Por favor, tente novamente.';
+            header('Location: ' . BASE_URL . '/admin/index.php?page=Category_Admin');
+            exit;
+        } else {
+            $error = 'Uma categoria com este nome já existe.';
         }
     }
 }

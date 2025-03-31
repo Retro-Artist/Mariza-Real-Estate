@@ -10,7 +10,6 @@ if (!isset($_SESSION['admin_id'])) {
 // Paginação
 $paginaAtual = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
 $itensPorPagina = 10;
-$offset = ($paginaAtual - 1) * $itensPorPagina;
 
 // Filtros
 $filtros = [];
@@ -19,72 +18,22 @@ $filtroLocal = isset($_GET['local']) ? $_GET['local'] : '';
 $filtroBusca = isset($_GET['busca']) ? $_GET['busca'] : '';
 
 if (!empty($filtroStatus)) {
-    $filtros[] = "status = :status";
+    $filtros['status'] = $filtroStatus;
 }
 
 if (!empty($filtroLocal)) {
-    $filtros[] = "local = :local";
+    $filtros['local'] = $filtroLocal;
 }
 
 if (!empty($filtroBusca)) {
-    $filtros[] = "(nome LIKE :busca OR email LIKE :busca OR telefone LIKE :busca OR mensagem LIKE :busca)";
+    $filtros['busca'] = $filtroBusca;
 }
 
-// Construir a cláusula WHERE
-$whereClause = !empty($filtros) ? " WHERE " . implode(" AND ", $filtros) : "";
-
-// Get all interactions
-try {
-    // Pegar total de registros para paginação
-    $sqlCount = "SELECT COUNT(*) as total FROM sistema_interacao" . $whereClause;
-    $stmtCount = $databaseConnection->prepare($sqlCount);
-    
-    // Bind parameters for count query
-    if (!empty($filtroStatus)) {
-        $stmtCount->bindParam(':status', $filtroStatus);
-    }
-    if (!empty($filtroLocal)) {
-        $stmtCount->bindParam(':local', $filtroLocal);
-    }
-    if (!empty($filtroBusca)) {
-        $termoBusca = "%" . $filtroBusca . "%";
-        $stmtCount->bindParam(':busca', $termoBusca);
-    }
-    
-    $stmtCount->execute();
-    $totalRegistros = $stmtCount->fetch()['total'];
-    $totalPaginas = ceil($totalRegistros / $itensPorPagina);
-    
-    // Pegar registros paginados
-    $sql = "SELECT * FROM sistema_interacao" . $whereClause . " 
-           ORDER BY data DESC, hora DESC
-           LIMIT :limit OFFSET :offset";
-    
-    $stmt = $databaseConnection->prepare($sql);
-    
-    // Bind parameters for main query
-    if (!empty($filtroStatus)) {
-        $stmt->bindParam(':status', $filtroStatus);
-    }
-    if (!empty($filtroLocal)) {
-        $stmt->bindParam(':local', $filtroLocal);
-    }
-    if (!empty($filtroBusca)) {
-        $stmt->bindParam(':busca', $termoBusca);
-    }
-    
-    $stmt->bindParam(':limit', $itensPorPagina, PDO::PARAM_INT);
-    $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-    $stmt->execute();
-    
-    $atendimentos = $stmt->fetchAll();
-    
-} catch (PDOException $e) {
-    logError("Error fetching atendimentos: " . $e->getMessage());
-    $atendimentos = [];
-    $totalRegistros = 0;
-    $totalPaginas = 1;
-}
+// Get service requests with pagination using function from admin_functions.php
+$requestResult = getServiceRequests($filtros, $paginaAtual, $itensPorPagina);
+$atendimentos = $requestResult['requests'];
+$totalRegistros = $requestResult['total'];
+$totalPaginas = $requestResult['totalPages'];
 
 // Check for alert messages in session
 $alertMessage = '';

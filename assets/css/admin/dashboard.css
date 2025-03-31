@@ -1,0 +1,32 @@
+/* Dashboard specific styles */
+.dashboard-page {
+    padding: 20px;
+  }
+  
+  .stats-summary {
+    margin-bottom: 30px;
+  }
+  
+  .recent-activities {
+    background-color: var(--admin-card-bg);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .activity-item {
+    padding: 15px 0;
+    border-bottom: 1px solid var(--admin-border);
+  }
+  
+  .activity-item:last-child {
+    border-bottom: none;
+  }
+  
+  .activity-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--font-sm);
+    color: #777;
+    margin-top: 8px;
+  }

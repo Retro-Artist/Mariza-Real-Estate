@@ -22,23 +22,11 @@ $confirmDelete = isset($_GET['confirm']) && $_GET['confirm'] === '1';
 
 // If not confirmed, get event data for confirmation page
 if (!$confirmDelete) {
-    try {
-        $stmt = $databaseConnection->prepare("SELECT * FROM sistema_avisos WHERE id = :id LIMIT 1");
-        $stmt->bindParam(':id', $event_id);
-        $stmt->execute();
-        
-        $event = $stmt->fetch();
-        
-        if (!$event) {
-            $_SESSION['alert_message'] = 'Lembrete não encontrado.';
-            $_SESSION['alert_type'] = 'error';
-            header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar');
-            exit;
-        }
-        
-    } catch (PDOException $e) {
-        logError("Error fetching event data: " . $e->getMessage());
-        $_SESSION['alert_message'] = 'Erro ao buscar dados do lembrete.';
+    // Get event data using function from admin_functions.php
+    $event = getCalendarEventById($event_id);
+    
+    if (!$event) {
+        $_SESSION['alert_message'] = 'Lembrete não encontrado.';
         $_SESSION['alert_type'] = 'error';
         header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar');
         exit;
@@ -46,21 +34,17 @@ if (!$confirmDelete) {
 }
 // If confirmed, process deletion
 else {
-    try {
-        // Delete event
-        $stmt = $databaseConnection->prepare("DELETE FROM sistema_avisos WHERE id = :id");
-        $stmt->bindParam(':id', $event_id);
-        $stmt->execute();
-        
+    // Delete event using function from admin_functions.php
+    $result = deleteCalendarEvent($event_id);
+    
+    if ($result) {
         // Set success message and redirect
         $_SESSION['alert_message'] = 'Lembrete excluído com sucesso!';
         $_SESSION['alert_type'] = 'success';
         
         header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar');
         exit;
-        
-    } catch (PDOException $e) {
-        logError("Error deleting event: " . $e->getMessage());
+    } else {
         $_SESSION['alert_message'] = 'Ocorreu um erro ao excluir o lembrete.';
         $_SESSION['alert_type'] = 'error';
         header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar');

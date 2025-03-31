@@ -19,25 +19,12 @@ $atendimento_id = (int)$_GET['id'];
 
 // Initialize variables
 $error = '';
-$formData = [];
 
-// Get atendimento data
-try {
-    $stmt = $databaseConnection->prepare("SELECT * FROM sistema_interacao WHERE id = :id LIMIT 1");
-    $stmt->bindParam(':id', $atendimento_id);
-    $stmt->execute();
-    
-    $formData = $stmt->fetch();
-    
-    if (!$formData) {
-        $_SESSION['alert_message'] = 'Atendimento não encontrado.';
-        $_SESSION['alert_type'] = 'error';
-        header('Location: ' . BASE_URL . '/admin/index.php?page=Atendimento_Admin');
-        exit;
-    }
-} catch (PDOException $e) {
-    logError("Error fetching atendimento data: " . $e->getMessage());
-    $_SESSION['alert_message'] = 'Erro ao buscar dados do atendimento.';
+// Get service request data using function from admin_functions.php
+$formData = getServiceRequestById($atendimento_id);
+
+if (!$formData) {
+    $_SESSION['alert_message'] = 'Atendimento não encontrado.';
     $_SESSION['alert_type'] = 'error';
     header('Location: ' . BASE_URL . '/admin/index.php?page=Atendimento_Admin');
     exit;
@@ -61,37 +48,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (empty($mensagem)) {
         $error = 'A mensagem é obrigatória.';
     } else {
-        try {
-            // Update atendimento
-            $stmt = $databaseConnection->prepare(
-                "UPDATE sistema_interacao SET
-                    nome = :nome,
-                    email = :email,
-                    telefone = :telefone,
-                    mensagem = :mensagem,
-                    local = :local,
-                    status = :status
-                WHERE id = :id"
-            );
-            
-            $stmt->bindParam(':nome', $nome);
-            $stmt->bindParam(':email', $email);
-            $stmt->bindParam(':telefone', $telefone);
-            $stmt->bindParam(':mensagem', $mensagem);
-            $stmt->bindParam(':local', $local);
-            $stmt->bindParam(':status', $status);
-            $stmt->bindParam(':id', $atendimento_id);
-            
-            $stmt->execute();
-            
+        // Prepare service request data
+        $requestData = [
+            'nome' => $nome,
+            'email' => $email,
+            'telefone' => $telefone,
+            'mensagem' => $mensagem,
+            'local' => $local,
+            'status' => $status
+        ];
+        
+        // Update service request using function from admin_functions.php
+        $result = updateServiceRequest($atendimento_id, $requestData);
+        
+        if ($result) {
             // Set success message and redirect
             $_SESSION['alert_message'] = 'Atendimento atualizado com sucesso!';
             $_SESSION['alert_type'] = 'success';
             
             header('Location: ' . BASE_URL . '/admin/index.php?page=Atendimento_View&id=' . $atendimento_id);
             exit;
-        } catch (PDOException $e) {
-            logError("Error updating atendimento: " . $e->getMessage());
+        } else {
             $error = 'Ocorreu um erro ao atualizar o atendimento. Por favor, tente novamente.';
         }
     }

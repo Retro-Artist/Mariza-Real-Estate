@@ -30,49 +30,29 @@ $monthNames = [
     9 => 'Setembro', 10 => 'Outubro', 11 => 'Novembro', 12 => 'Dezembro'
 ];
 
-// Get events for this month
-try {
-    $startDate = date('Y-m-d', mktime(0, 0, 0, $month, 1, $year));
-    $endDate = date('Y-m-d', mktime(0, 0, 0, $month + 1, 0, $year));
+// Get events for this month using function from admin_functions.php
+$events = getMonthEvents($month, $year);
+
+// Organize events by day
+$eventsByDay = [];
+foreach ($events as $event) {
+    $eventStart = new DateTime($event['data_inicio']);
+    $eventEnd = new DateTime($event['data_fim']);
     
-    $stmt = $databaseConnection->prepare(
-        "SELECT * FROM sistema_avisos 
-         WHERE (data_inicio BETWEEN :startDate AND :endDate) 
-         OR (data_fim BETWEEN :startDate AND :endDate)
-         OR (data_inicio <= :startDate AND data_fim >= :endDate)
-         ORDER BY data_inicio ASC"
-    );
-    $stmt->bindParam(':startDate', $startDate);
-    $stmt->bindParam(':endDate', $endDate);
-    $stmt->execute();
+    // Create a period from start to end date
+    $interval = new DateInterval('P1D');
+    $dateRange = new DatePeriod($eventStart, $interval, $eventEnd->modify('+1 day'));
     
-    $events = $stmt->fetchAll();
-    
-    // Organize events by day
-    $eventsByDay = [];
-    foreach ($events as $event) {
-        $eventStart = new DateTime($event['data_inicio']);
-        $eventEnd = new DateTime($event['data_fim']);
-        
-        // Create a period from start to end date
-        $interval = new DateInterval('P1D');
-        $dateRange = new DatePeriod($eventStart, $interval, $eventEnd->modify('+1 day'));
-        
-        // Add event to each day in the range
-        foreach ($dateRange as $date) {
-            $day = $date->format('j');
-            if ($date->format('n') == $month && $date->format('Y') == $year) {
-                if (!isset($eventsByDay[$day])) {
-                    $eventsByDay[$day] = [];
-                }
-                $eventsByDay[$day][] = $event;
+    // Add event to each day in the range
+    foreach ($dateRange as $date) {
+        $day = $date->format('j');
+        if ($date->format('n') == $month && $date->format('Y') == $year) {
+            if (!isset($eventsByDay[$day])) {
+                $eventsByDay[$day] = [];
             }
+            $eventsByDay[$day][] = $event;
         }
     }
-} catch (PDOException $e) {
-    logError("Error fetching calendar events: " . $e->getMessage());
-    $events = [];
-    $eventsByDay = [];
 }
 
 // Previous and next month links
@@ -90,6 +70,8 @@ if ($nextMonth > 12) {
     $nextYear++;
 }
 ?>
+
+<!-- HTML content remains unchanged -->
 
 <div class="admin-page calendar-page">
     <div class="admin-page__header">

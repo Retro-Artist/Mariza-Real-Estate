@@ -17,46 +17,32 @@ $event_id = (int)$_GET['id'];
 
 // Initialize variables
 $error = '';
-$formData = [];
 
-// Get event data
-try {
-    $stmt = $databaseConnection->prepare("SELECT * FROM sistema_avisos WHERE id = :id LIMIT 1");
-    $stmt->bindParam(':id', $event_id);
-    $stmt->execute();
-    
-    $event = $stmt->fetch();
-    
-    if (!$event) {
-        $_SESSION['alert_message'] = 'Lembrete não encontrado.';
-        $_SESSION['alert_type'] = 'error';
-        header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar');
-        exit;
-    }
-    
-    // Format dates for form inputs
-    $data_inicio = new DateTime($event['data_inicio']);
-    $data_fim = new DateTime($event['data_fim']);
-    
-    $formData = [
-        'titulo' => $event['titulo'],
-        'descricao' => $event['descricao'],
-        'para' => $event['para'],
-        'prioridade' => $event['prioridade'],
-        'data_inicio' => $data_inicio->format('Y-m-d'),
-        'hora_inicio' => $data_inicio->format('H:i'),
-        'data_fim' => $data_fim->format('Y-m-d'),
-        'hora_fim' => $data_fim->format('H:i'),
-        'status' => $event['status']
-    ];
-    
-} catch (PDOException $e) {
-    logError("Error fetching event data: " . $e->getMessage());
-    $_SESSION['alert_message'] = 'Erro ao buscar dados do lembrete.';
+// Get event data using function from admin_functions.php
+$event = getCalendarEventById($event_id);
+
+if (!$event) {
+    $_SESSION['alert_message'] = 'Lembrete não encontrado.';
     $_SESSION['alert_type'] = 'error';
     header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar');
     exit;
 }
+
+// Format dates for form inputs
+$data_inicio = new DateTime($event['data_inicio']);
+$data_fim = new DateTime($event['data_fim']);
+
+$formData = [
+    'titulo' => $event['titulo'],
+    'descricao' => $event['descricao'],
+    'para' => $event['para'],
+    'prioridade' => $event['prioridade'],
+    'data_inicio' => $data_inicio->format('Y-m-d'),
+    'hora_inicio' => $data_inicio->format('H:i'),
+    'data_fim' => $data_fim->format('Y-m-d'),
+    'hora_fim' => $data_fim->format('H:i'),
+    'status' => $event['status']
+];
 
 // Get available users for assignment
 try {
@@ -88,49 +74,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (empty($formData['data_inicio']) || empty($formData['data_fim'])) {
         $error = 'As datas de início e fim são obrigatórias.';
     } else {
-        try {
-            // Format dates and times for database
-            $data_inicio_completa = $formData['data_inicio'] . ' ' . $formData['hora_inicio'] . ':00';
-            $data_fim_completa = $formData['data_fim'] . ' ' . $formData['hora_fim'] . ':00';
-            
-            // Update event
-            $stmt = $databaseConnection->prepare(
-                "UPDATE sistema_avisos SET
-                    para = :para,
-                    prioridade = :prioridade,
-                    titulo = :titulo,
-                    descricao = :descricao,
-                    data_inicio = :data_inicio,
-                    data_fim = :data_fim,
-                    status = :status
-                WHERE id = :id"
-            );
-            
-            $stmt->bindParam(':para', $formData['para']);
-            $stmt->bindParam(':prioridade', $formData['prioridade']);
-            $stmt->bindParam(':titulo', $formData['titulo']);
-            $stmt->bindParam(':descricao', $formData['descricao']);
-            $stmt->bindParam(':data_inicio', $data_inicio_completa);
-            $stmt->bindParam(':data_fim', $data_fim_completa);
-            $stmt->bindParam(':status', $formData['status']);
-            $stmt->bindParam(':id', $event_id);
-            
-            $stmt->execute();
-            
+        // Update calendar event using function from admin_functions.php
+        $result = updateCalendarEvent($event_id, $formData);
+        
+        if ($result) {
             // Set success message and redirect
             $_SESSION['alert_message'] = 'Lembrete atualizado com sucesso!';
             $_SESSION['alert_type'] = 'success';
             
             header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar_View&id=' . $event_id);
             exit;
-            
-        } catch (PDOException $e) {
-            logError("Error updating event: " . $e->getMessage());
+        } else {
             $error = 'Ocorreu um erro ao atualizar o lembrete. Por favor, tente novamente.';
         }
     }
 }
 ?>
+
+<!-- HTML content remains unchanged -->
 
 <!-- Update Event Page -->
 <div class="admin-page event-update">

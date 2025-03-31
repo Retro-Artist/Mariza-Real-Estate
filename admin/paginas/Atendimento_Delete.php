@@ -22,25 +22,13 @@ $atendimento = [];
 $error = '';
 $confirmDelete = isset($_GET['confirm']) && $_GET['confirm'] === '1';
 
-// If not confirmed, get atendimento data for confirmation page
+// If not confirmed, get service request data for confirmation page
 if (!$confirmDelete) {
-    try {
-        $stmt = $databaseConnection->prepare("SELECT * FROM sistema_interacao WHERE id = :id LIMIT 1");
-        $stmt->bindParam(':id', $atendimento_id);
-        $stmt->execute();
-        
-        $atendimento = $stmt->fetch();
-        
-        if (!$atendimento) {
-            $_SESSION['alert_message'] = 'Atendimento não encontrado.';
-            $_SESSION['alert_type'] = 'error';
-            header('Location: ' . BASE_URL . '/admin/index.php?page=Atendimento_Admin');
-            exit;
-        }
-        
-    } catch (PDOException $e) {
-        logError("Error fetching atendimento data: " . $e->getMessage());
-        $_SESSION['alert_message'] = 'Erro ao buscar dados do atendimento.';
+    // Get service request using function from admin_functions.php
+    $atendimento = getServiceRequestById($atendimento_id);
+    
+    if (!$atendimento) {
+        $_SESSION['alert_message'] = 'Atendimento não encontrado.';
         $_SESSION['alert_type'] = 'error';
         header('Location: ' . BASE_URL . '/admin/index.php?page=Atendimento_Admin');
         exit;
@@ -48,21 +36,17 @@ if (!$confirmDelete) {
 }
 // If confirmed, process deletion
 else {
-    try {
-        // Delete atendimento
-        $stmt = $databaseConnection->prepare("DELETE FROM sistema_interacao WHERE id = :id");
-        $stmt->bindParam(':id', $atendimento_id);
-        $stmt->execute();
-        
+    // Delete service request using function from admin_functions.php
+    $result = deleteServiceRequest($atendimento_id);
+    
+    if ($result) {
         // Set success message and redirect
         $_SESSION['alert_message'] = 'Atendimento excluído com sucesso!';
         $_SESSION['alert_type'] = 'success';
         
         header('Location: ' . BASE_URL . '/admin/index.php?page=Atendimento_Admin');
         exit;
-        
-    } catch (PDOException $e) {
-        logError("Error deleting atendimento: " . $e->getMessage());
+    } else {
         $_SESSION['alert_message'] = 'Ocorreu um erro ao excluir o atendimento.';
         $_SESSION['alert_type'] = 'error';
         header('Location: ' . BASE_URL . '/admin/index.php?page=Atendimento_Admin');

@@ -15,37 +15,19 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $event_id = (int)$_GET['id'];
 
-// Get event data
-try {
-    $stmt = $databaseConnection->prepare(
-        "SELECT a.*, u.nome as criador_nome 
-         FROM sistema_avisos a
-         LEFT JOIN sistema_usuarios u ON a.id_usuario = u.id
-         WHERE a.id = :id LIMIT 1"
-    );
-    $stmt->bindParam(':id', $event_id);
-    $stmt->execute();
-    
-    $event = $stmt->fetch();
-    
-    if (!$event) {
-        $_SESSION['alert_message'] = 'Lembrete não encontrado.';
-        $_SESSION['alert_type'] = 'error';
-        header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar');
-        exit;
-    }
-    
-    // Format dates for display
-    $data_inicio = new DateTime($event['data_inicio']);
-    $data_fim = new DateTime($event['data_fim']);
-    
-} catch (PDOException $e) {
-    logError("Error fetching event details: " . $e->getMessage());
-    $_SESSION['alert_message'] = 'Erro ao buscar detalhes do lembrete.';
+// Get event data using function from admin_functions.php
+$event = getCalendarEventById($event_id);
+
+if (!$event) {
+    $_SESSION['alert_message'] = 'Lembrete não encontrado.';
     $_SESSION['alert_type'] = 'error';
     header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar');
     exit;
 }
+
+// Format dates for display
+$data_inicio = new DateTime($event['data_inicio']);
+$data_fim = new DateTime($event['data_fim']);
 
 // Process status update
 if (isset($_POST['update_status'])) {
@@ -86,6 +68,8 @@ switch ($event['prioridade']) {
         break;
 }
 ?>
+
+<!-- HTML content remains unchanged -->
 
 <div class="admin-page event-view">
     <!-- Page Header -->

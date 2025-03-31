@@ -9,7 +9,7 @@ if (!isset($_SESSION['admin_id'])) {
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     $_SESSION['alert_message'] = 'ID do imóvel não especificado.';
     $_SESSION['alert_type'] = 'error';
-    header('Location: ' . BASE_URL . '/admin/imoveis');
+    header('Location: ' . BASE_URL . '/admin/index.php?page=Property_Admin');
     exit;
 }
 
@@ -37,7 +37,7 @@ if (!$confirmDelete) {
         if (!$imovel) {
             $_SESSION['alert_message'] = 'Imóvel não encontrado.';
             $_SESSION['alert_type'] = 'error';
-            header('Location: ' . BASE_URL . '/admin/imoveis');
+            header('Location: ' . BASE_URL . '/admin/index.php?page=Property_Admin');
             exit;
         }
         
@@ -45,52 +45,26 @@ if (!$confirmDelete) {
         logError("Error fetching property data: " . $e->getMessage());
         $_SESSION['alert_message'] = 'Erro ao buscar dados do imóvel.';
         $_SESSION['alert_type'] = 'error';
-        header('Location: ' . BASE_URL . '/admin/imoveis');
+        header('Location: ' . BASE_URL . '/admin/index.php?page=Property_Admin');
         exit;
     }
 }
 // If confirmed, process deletion
 else {
-    try {
-        // Get property code before deleting for image cleanup
-        $stmt = $databaseConnection->prepare("SELECT codigo FROM sistema_imoveis WHERE id = :id LIMIT 1");
-        $stmt->bindParam(':id', $property_id);
-        $stmt->execute();
-        $propertyCode = $stmt->fetch()['codigo'] ?? '';
-        
-        // Delete property
-        $stmt = $databaseConnection->prepare("DELETE FROM sistema_imoveis WHERE id = :id");
-        $stmt->bindParam(':id', $property_id);
-        $stmt->execute();
-        
-        // Clean up images
-        if (!empty($propertyCode)) {
-            $uploadDir = __DIR__ . '/../../../uploads/imoveis/';
-            
-            // Look for all images with the property code
-            for ($i = 1; $i <= 12; $i++) {
-                $imageNumber = str_pad($i, 2, '0', STR_PAD_LEFT); // 01, 02, etc.
-                $fileName = $propertyCode . $imageNumber . '.jpg';
-                $filePath = $uploadDir . $fileName;
-                
-                if (file_exists($filePath)) {
-                    unlink($filePath);
-                }
-            }
-        }
-        
+    // Delete property using function from admin_functions.php
+    $result = deleteProperty($property_id);
+    
+    if ($result) {
         // Set success message and redirect
         $_SESSION['alert_message'] = 'Imóvel excluído com sucesso!';
         $_SESSION['alert_type'] = 'success';
         
-        header('Location: ' . BASE_URL . '/admin/imoveis');
+        header('Location: ' . BASE_URL . '/admin/index.php?page=Property_Admin');
         exit;
-        
-    } catch (PDOException $e) {
-        logError("Error deleting property: " . $e->getMessage());
+    } else {
         $_SESSION['alert_message'] = 'Ocorreu um erro ao excluir o imóvel.';
         $_SESSION['alert_type'] = 'error';
-        header('Location: ' . BASE_URL . '/admin/imoveis');
+        header('Location: ' . BASE_URL . '/admin/index.php?page=Property_Admin');
         exit;
     }
 }
@@ -101,7 +75,7 @@ else {
     <!-- Page Header -->
     <div class="admin-page__header">
         <h2 class="admin-page__title">Excluir Imóvel</h2>
-        <a href="<?= BASE_URL ?>/admin/imoveis" class="cancel-button">
+        <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin" class="cancel-button">
             <i class="fas fa-arrow-left"></i> Voltar
         </a>
     </div>
@@ -119,10 +93,10 @@ else {
         </div>
         
         <div class="confirmation-actions">
-            <a href="<?= BASE_URL ?>/admin/imoveis" class="cancel-button">
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin" class="cancel-button">
                 Cancelar
             </a>
-            <a href="<?= BASE_URL ?>/admin/imoveis/excluir?id=<?= $property_id ?>&confirm=1" class="delete-button">
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Delete&id=<?= $property_id ?>&confirm=1" class="delete-button">
                 <i class="fas fa-trash"></i> Sim, Excluir Imóvel
             </a>
         </div>
@@ -130,7 +104,7 @@ else {
 </div>
 
 <style>
-/* Confirmation message styles (same as in Category_Delete.php) */
+/* Confirmation message styles */
 .confirmation-message {
     text-align: center;
     padding: 20px;

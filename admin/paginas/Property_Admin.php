@@ -5,91 +5,35 @@ if (!isset($_SESSION['admin_id'])) {
     exit;
 }
 
-// Paginação
+// Pagination
 $paginaAtual = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
 $itensPorPagina = 10;
-$offset = ($paginaAtual - 1) * $itensPorPagina;
 
-// Filtros
-$filtros = [];
+// Process filters
+$filters = [];
 $filtroTipo = isset($_GET['tipo']) ? $_GET['tipo'] : '';
 $filtroCategoria = isset($_GET['categoria']) ? (int)$_GET['categoria'] : 0;
 $filtroBusca = isset($_GET['busca']) ? $_GET['busca'] : '';
 
+// Add non-empty filters to the array
 if (!empty($filtroTipo)) {
-    $filtros[] = "i.para = :tipo";
+    $filters['tipo'] = $filtroTipo;
 }
-
 if (!empty($filtroCategoria)) {
-    $filtros[] = "i.id_categoria = :categoria";
+    $filters['categoria'] = $filtroCategoria;
 }
-
 if (!empty($filtroBusca)) {
-    $filtros[] = "(i.titulo LIKE :busca OR i.codigo LIKE :busca OR i.ref LIKE :busca)";
+    $filters['busca'] = $filtroBusca;
 }
 
-// Construir a cláusula WHERE
-$whereClause = !empty($filtros) ? " AND " . implode(" AND ", $filtros) : "";
+// Get properties with pagination using function from admin_functions.php
+$propertyResult = getAdminProperties($filters, $paginaAtual, $itensPorPagina);
+$imoveis = $propertyResult['properties'];
+$totalRegistros = $propertyResult['total'];
+$totalPaginas = $propertyResult['totalPages'];
 
-// Get all properties
-try {
-    // Pegar total de registros para paginação
-    $sqlCount = "SELECT COUNT(*) as total FROM sistema_imoveis i WHERE 1=1" . $whereClause;
-    $stmtCount = $databaseConnection->prepare($sqlCount);
-    
-    // Bind parameters for count query
-    if (!empty($filtroTipo)) {
-        $stmtCount->bindParam(':tipo', $filtroTipo);
-    }
-    if (!empty($filtroCategoria)) {
-        $stmtCount->bindParam(':categoria', $filtroCategoria);
-    }
-    if (!empty($filtroBusca)) {
-        $termoBusca = "%" . $filtroBusca . "%";
-        $stmtCount->bindParam(':busca', $termoBusca);
-    }
-    
-    $stmtCount->execute();
-    $totalRegistros = $stmtCount->fetch()['total'];
-    $totalPaginas = ceil($totalRegistros / $itensPorPagina);
-    
-    // Pegar registros paginados
-    $sql = "SELECT i.*, c.categoria 
-            FROM sistema_imoveis i
-            LEFT JOIN sistema_imoveis_categorias c ON i.id_categoria = c.id
-            WHERE 1=1" . $whereClause . " 
-            ORDER BY i.data DESC, i.id DESC
-            LIMIT :limit OFFSET :offset";
-    
-    $stmt = $databaseConnection->prepare($sql);
-    
-    // Bind parameters for main query
-    if (!empty($filtroTipo)) {
-        $stmt->bindParam(':tipo', $filtroTipo);
-    }
-    if (!empty($filtroCategoria)) {
-        $stmt->bindParam(':categoria', $filtroCategoria);
-    }
-    if (!empty($filtroBusca)) {
-        $stmt->bindParam(':busca', $termoBusca);
-    }
-    
-    $stmt->bindParam(':limit', $itensPorPagina, PDO::PARAM_INT);
-    $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-    $stmt->execute();
-    
-    $imoveis = $stmt->fetchAll();
-    
-    // Get all categories for filter
-    $stmtCategorias = $databaseConnection->query("SELECT * FROM sistema_imoveis_categorias ORDER BY categoria ASC");
-    $categorias = $stmtCategorias->fetchAll();
-} catch (PDOException $e) {
-    logError("Error fetching properties: " . $e->getMessage());
-    $imoveis = [];
-    $categorias = [];
-    $totalRegistros = 0;
-    $totalPaginas = 1;
-}
+// Get all categories for filter
+$categorias = getAdminCategories();
 
 // Check for alert messages in session
 $alertMessage = '';

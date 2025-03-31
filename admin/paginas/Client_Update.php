@@ -17,65 +17,30 @@ $client_id = (int)$_GET['id'];
 
 // Initialize variables
 $error = '';
-$formData = [];
 
-// Get client data
-try {
-    $stmt = $databaseConnection->prepare(
-        "SELECT * FROM sistema_clientes WHERE id = :id LIMIT 1"
-    );
-    $stmt->bindParam(':id', $client_id);
-    $stmt->execute();
-    
-    $formData = $stmt->fetch();
-    
-    if (!$formData) {
-        $_SESSION['alert_message'] = 'Cliente não encontrado.';
-        $_SESSION['alert_type'] = 'error';
-        header('Location: ' . BASE_URL . '/admin/index.php?page=Client_Admin');
-        exit;
-    }
-} catch (PDOException $e) {
-    logError("Error fetching client data: " . $e->getMessage());
-    $_SESSION['alert_message'] = 'Erro ao buscar dados do cliente.';
+// Get client data using our function from admin_functions.php
+$formData = getAdminClientById($client_id);
+
+if (!$formData) {
+    $_SESSION['alert_message'] = 'Cliente não encontrado.';
     $_SESSION['alert_type'] = 'error';
     header('Location: ' . BASE_URL . '/admin/index.php?page=Client_Admin');
     exit;
 }
 
 // Get states
-try {
-    $stmt = $databaseConnection->query("SELECT * FROM sistema_estados ORDER BY nome ASC");
-    $estados = $stmt->fetchAll();
-} catch (PDOException $e) {
-    logError("Error fetching states: " . $e->getMessage());
-    $estados = [];
-}
+$estados = getStates();
 
 // Get cities based on selected state
 $cidades = [];
 if (!empty($formData['id_estado'])) {
-    try {
-        $stmt = $databaseConnection->prepare("SELECT * FROM sistema_cidades WHERE id_estado = :id_estado ORDER BY nome ASC");
-        $stmt->bindParam(':id_estado', $formData['id_estado']);
-        $stmt->execute();
-        $cidades = $stmt->fetchAll();
-    } catch (PDOException $e) {
-        logError("Error fetching cities: " . $e->getMessage());
-    }
+    $cidades = getCitiesByState($formData['id_estado']);
 }
 
 // Get neighborhoods based on selected city
 $bairros = [];
 if (!empty($formData['id_cidade'])) {
-    try {
-        $stmt = $databaseConnection->prepare("SELECT * FROM sistema_bairros WHERE id_cidade = :id_cidade ORDER BY bairro ASC");
-        $stmt->bindParam(':id_cidade', $formData['id_cidade']);
-        $stmt->execute();
-        $bairros = $stmt->fetchAll();
-    } catch (PDOException $e) {
-        logError("Error fetching neighborhoods: " . $e->getMessage());
-    }
+    $bairros = getNeighborhoodsByCity($formData['id_cidade']);
 }
 
 // Process form submission
@@ -125,61 +90,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // If no errors, update database
     if (empty($error)) {
-        try {
-            // Update client
-            $stmt = $databaseConnection->prepare(
-                "UPDATE sistema_clientes SET
-                    tipo = :tipo,
-                    nome_completo = :nome_completo,
-                    razao_social = :razao_social,
-                    cpf = :cpf,
-                    cnpj = :cnpj,
-                    rg = :rg,
-                    data_nascimento = :data_nascimento,
-                    profissao = :profissao,
-                    telefone1 = :telefone1,
-                    telefone2 = :telefone2,
-                    email = :email,
-                    endereco = :endereco,
-                    id_estado = :id_estado,
-                    id_cidade = :id_cidade,
-                    id_bairro = :id_bairro,
-                    observacoes = :observacoes,
-                    categoria = :categoria,
-                    principal = :principal
-                WHERE id = :id"
-            );
-            
-            $stmt->bindParam(':tipo', $tipo);
-            $stmt->bindParam(':nome_completo', $nome_completo);
-            $stmt->bindParam(':razao_social', $razao_social);
-            $stmt->bindParam(':cpf', $cpf);
-            $stmt->bindParam(':cnpj', $cnpj);
-            $stmt->bindParam(':rg', $rg);
-            $stmt->bindParam(':data_nascimento', $data_nascimento ? $data_nascimento : null);
-            $stmt->bindParam(':profissao', $profissao);
-            $stmt->bindParam(':telefone1', $telefone1);
-            $stmt->bindParam(':telefone2', $telefone2);
-            $stmt->bindParam(':email', $email);
-            $stmt->bindParam(':endereco', $endereco);
-            $stmt->bindParam(':id_estado', $id_estado ? $id_estado : null, PDO::PARAM_INT);
-            $stmt->bindParam(':id_cidade', $id_cidade ? $id_cidade : null, PDO::PARAM_INT);
-            $stmt->bindParam(':id_bairro', $id_bairro ? $id_bairro : null, PDO::PARAM_INT);
-            $stmt->bindParam(':observacoes', $observacoes);
-            $stmt->bindParam(':categoria', $categoria);
-            $stmt->bindParam(':principal', $principal);
-            $stmt->bindParam(':id', $client_id);
-            
-            $stmt->execute();
-            
+        // Prepare client data
+        $clientData = [
+            'tipo' => $tipo,
+            'nome_completo' => $nome_completo,
+            'razao_social' => $razao_social,
+            'cpf' => $cpf,
+            'cnpj' => $cnpj,
+            'rg' => $rg,
+            'data_nascimento' => $data_nascimento,
+            'profissao' => $profissao,
+            'telefone1' => $telefone1,
+            'telefone2' => $telefone2,
+            'email' => $email,
+            'endereco' => $endereco,
+            'id_estado' => $id_estado,
+            'id_cidade' => $id_cidade,
+            'id_bairro' => $id_bairro,
+            'observacoes' => $observacoes,
+            'categoria' => $categoria,
+            'principal' => $principal
+        ];
+        
+        // Update client using our function from admin_functions.php
+        $result = updateClient($client_id, $clientData);
+        
+        if ($result) {
             // Set success message and redirect
             $_SESSION['alert_message'] = 'Cliente atualizado com sucesso!';
             $_SESSION['alert_type'] = 'success';
             
             header('Location: ' . BASE_URL . '/admin/index.php?page=Client_Admin');
             exit;
-        } catch (PDOException $e) {
-            logError("Error updating client: " . $e->getMessage());
+        } else {
             $error = 'Ocorreu um erro ao atualizar o cliente. Por favor, tente novamente.';
         }
     }

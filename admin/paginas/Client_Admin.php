@@ -5,12 +5,11 @@ if (!isset($_SESSION['admin_id'])) {
     exit;
 }
 
-// Paginação
+// Pagination
 $paginaAtual = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
 $itensPorPagina = 10;
-$offset = ($paginaAtual - 1) * $itensPorPagina;
 
-// Filtros
+// Filters
 $filtros = [];
 $filtroTipo = isset($_GET['tipo']) ? $_GET['tipo'] : '';
 $filtroCidade = isset($_GET['cidade']) ? (int)$_GET['cidade'] : 0;
@@ -18,104 +17,56 @@ $filtroBairro = isset($_GET['bairro']) ? (int)$_GET['bairro'] : 0;
 $filtroBusca = isset($_GET['busca']) ? $_GET['busca'] : '';
 
 if (!empty($filtroTipo)) {
-    $filtros[] = "c.tipo = :tipo";
+    $filtros['tipo'] = $filtroTipo;
 }
 
 if (!empty($filtroCidade)) {
-    $filtros[] = "c.id_cidade = :cidade";
+    $filtros['cidade'] = $filtroCidade;
 }
 
 if (!empty($filtroBairro)) {
-    $filtros[] = "c.id_bairro = :bairro";
+    $filtros['bairro'] = $filtroBairro;
 }
 
 if (!empty($filtroBusca)) {
-    $filtros[] = "(c.nome_completo LIKE :busca OR c.razao_social LIKE :busca OR c.email LIKE :busca OR c.telefone1 LIKE :busca)";
+    $filtros['busca'] = $filtroBusca;
 }
 
-// Construir a cláusula WHERE
-$whereClause = !empty($filtros) ? " AND " . implode(" AND ", $filtros) : "";
+// Get clients with pagination using our function from admin_functions.php
+$clientResult = getAdminClients($filtros, $paginaAtual, $itensPorPagina);
+$clientes = $clientResult['clients'];
+$totalRegistros = $clientResult['total'];
+$totalPaginas = $clientResult['totalPages'];
 
-// Get all clients
+// Get data for filters
+// Get client types for filter
 try {
-    // Pegar total de registros para paginação
-    $sqlCount = "SELECT COUNT(*) as total FROM sistema_clientes c WHERE 1=1" . $whereClause;
-    $stmtCount = $databaseConnection->prepare($sqlCount);
-    
-    // Bind parameters for count query
-    if (!empty($filtroTipo)) {
-        $stmtCount->bindParam(':tipo', $filtroTipo);
-    }
-    if (!empty($filtroCidade)) {
-        $stmtCount->bindParam(':cidade', $filtroCidade);
-    }
-    if (!empty($filtroBairro)) {
-        $stmtCount->bindParam(':bairro', $filtroBairro);
-    }
-    if (!empty($filtroBusca)) {
-        $termoBusca = "%" . $filtroBusca . "%";
-        $stmtCount->bindParam(':busca', $termoBusca);
-    }
-    
-    $stmtCount->execute();
-    $totalRegistros = $stmtCount->fetch()['total'];
-    $totalPaginas = ceil($totalRegistros / $itensPorPagina);
-    
-    // Pegar registros paginados
-    $sql = "SELECT c.*, 
-                  e.nome as estado, 
-                  e.uf as uf,
-                  cid.nome as cidade, 
-                  b.bairro as bairro
-           FROM sistema_clientes c
-           LEFT JOIN sistema_estados e ON c.id_estado = e.id
-           LEFT JOIN sistema_cidades cid ON c.id_cidade = cid.id
-           LEFT JOIN sistema_bairros b ON c.id_bairro = b.id
-           WHERE 1=1" . $whereClause . " 
-           ORDER BY c.data_cadastro DESC, c.id DESC
-           LIMIT :limit OFFSET :offset";
-    
-    $stmt = $databaseConnection->prepare($sql);
-    
-    // Bind parameters for main query
-    if (!empty($filtroTipo)) {
-        $stmt->bindParam(':tipo', $filtroTipo);
-    }
-    if (!empty($filtroCidade)) {
-        $stmt->bindParam(':cidade', $filtroCidade);
-    }
-    if (!empty($filtroBairro)) {
-        $stmt->bindParam(':bairro', $filtroBairro);
-    }
-    if (!empty($filtroBusca)) {
-        $stmt->bindParam(':busca', $termoBusca);
-    }
-    
-    $stmt->bindParam(':limit', $itensPorPagina, PDO::PARAM_INT);
-    $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-    $stmt->execute();
-    
-    $clientes = $stmt->fetchAll();
-    
-    // Get tipos for filter
     $stmtTipos = $databaseConnection->query("SELECT DISTINCT tipo FROM sistema_clientes ORDER BY tipo ASC");
     $tipos = $stmtTipos->fetchAll(PDO::FETCH_COLUMN);
+} catch (PDOException $e) {
+    logError("Error fetching client types: " . $e->getMessage());
+    $tipos = [];
+}
 
-    // Get cidades for filter
+// Get states
+$estados = getStates();
+
+// Get cities for filter
+try {
     $stmtCidades = $databaseConnection->query("SELECT c.id, c.nome, e.uf FROM sistema_cidades c LEFT JOIN sistema_estados e ON c.id_estado = e.id ORDER BY c.nome ASC");
     $cidades = $stmtCidades->fetchAll();
+} catch (PDOException $e) {
+    logError("Error fetching cities: " . $e->getMessage());
+    $cidades = [];
+}
 
-    // Get bairros for filter
+// Get neighborhoods for filter
+try {
     $stmtBairros = $databaseConnection->query("SELECT id, bairro FROM sistema_bairros ORDER BY bairro ASC");
     $bairros = $stmtBairros->fetchAll();
 } catch (PDOException $e) {
-    logError("Error fetching clients: " . $e->getMessage());
-    $clientes = [];
-    $tipos = [];
-    $cidades = [];
+    logError("Error fetching neighborhoods: " . $e->getMessage());
     $bairros = [];
-    $totalRegistros = 0;
-    $totalPaginas = 1;
 }
 
 // Check for alert messages in session

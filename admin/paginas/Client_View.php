@@ -15,35 +15,11 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $client_id = (int)$_GET['id'];
 
-// Get client data
-try {
-    $stmt = $databaseConnection->prepare(
-        "SELECT c.*, 
-                e.nome as estado_nome, 
-                e.uf as estado_uf,
-                cid.nome as cidade_nome, 
-                b.bairro as bairro_nome
-         FROM sistema_clientes c
-         LEFT JOIN sistema_estados e ON c.id_estado = e.id
-         LEFT JOIN sistema_cidades cid ON c.id_cidade = cid.id
-         LEFT JOIN sistema_bairros b ON c.id_bairro = b.id
-         WHERE c.id = :id LIMIT 1"
-    );
-    $stmt->bindParam(':id', $client_id);
-    $stmt->execute();
-    
-    $cliente = $stmt->fetch();
-    
-    if (!$cliente) {
-        $_SESSION['alert_message'] = 'Cliente não encontrado.';
-        $_SESSION['alert_type'] = 'error';
-        header('Location: ' . BASE_URL . '/admin/index.php?page=Client_Admin');
-        exit;
-    }
+// Get client data using our function from admin_functions.php
+$cliente = getAdminClientById($client_id);
 
-} catch (PDOException $e) {
-    logError("Error fetching client data: " . $e->getMessage());
-    $_SESSION['alert_message'] = 'Erro ao buscar dados do cliente.';
+if (!$cliente) {
+    $_SESSION['alert_message'] = 'Cliente não encontrado.';
     $_SESSION['alert_type'] = 'error';
     header('Location: ' . BASE_URL . '/admin/index.php?page=Client_Admin');
     exit;
@@ -52,6 +28,8 @@ try {
 // Format the date of birth if exists
 $data_nascimento = !empty($cliente['data_nascimento']) ? date('d/m/Y', strtotime($cliente['data_nascimento'])) : '00/00/0000';
 ?>
+
+<!-- HTML content remains unchanged -->
 
 <div class="admin-page client-view">
     <!-- Page Header -->

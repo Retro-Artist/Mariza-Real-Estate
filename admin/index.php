@@ -6,6 +6,7 @@ session_start();
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/database.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/admin_functions.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['admin_id']) && basename($_SERVER['PHP_SELF']) != 'Admin_Login.php') {
@@ -87,7 +88,6 @@ switch ($page) {
     case 'Calendar_Delete':
         include 'paginas/Calendar_Delete.php';
         break;
-
 
     // Service Request Management pages
     case 'Atendimento_Admin':

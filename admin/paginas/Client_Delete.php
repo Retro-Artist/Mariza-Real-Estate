@@ -9,67 +9,50 @@ if (!isset($_SESSION['admin_id'])) {
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     $_SESSION['alert_message'] = 'ID do cliente não especificado.';
     $_SESSION['alert_type'] = 'error';
-    header('Location: ' . BASE_URL . '/admin/Client_Admin.php');
+    header('Location: ' . BASE_URL . '/admin/index.php?page=Client_Admin');
     exit;
 }
 
 $client_id = (int)$_GET['id'];
 
 // Initialize variables
-$client = [];
 $error = '';
 $confirmDelete = isset($_GET['confirm']) && $_GET['confirm'] === '1';
 
 // If not confirmed, get client data for confirmation page
 if (!$confirmDelete) {
-    try {
-        $stmt = $databaseConnection->prepare(
-            "SELECT * FROM sistema_clientes WHERE id = :id LIMIT 1"
-        );
-        $stmt->bindParam(':id', $client_id);
-        $stmt->execute();
-        
-        $client = $stmt->fetch();
-        
-        if (!$client) {
-            $_SESSION['alert_message'] = 'Cliente não encontrado.';
-            $_SESSION['alert_type'] = 'error';
-            header('Location: ' . BASE_URL . '/admin/Client_Admin.php');
-            exit;
-        }
-        
-    } catch (PDOException $e) {
-        logError("Error fetching client data: " . $e->getMessage());
-        $_SESSION['alert_message'] = 'Erro ao buscar dados do cliente.';
+    // Get client data using our function from admin_functions.php
+    $client = getAdminClientById($client_id);
+    
+    if (!$client) {
+        $_SESSION['alert_message'] = 'Cliente não encontrado.';
         $_SESSION['alert_type'] = 'error';
-        header('Location: ' . BASE_URL . '/admin/Client_Admin.php');
+        header('Location: ' . BASE_URL . '/admin/index.php?page=Client_Admin');
         exit;
     }
 }
 // If confirmed, process deletion
 else {
-    try {
-        // Delete client
-        $stmt = $databaseConnection->prepare("DELETE FROM sistema_clientes WHERE id = :id");
-        $stmt->bindParam(':id', $client_id);
-        $stmt->execute();
-        
+    // Delete client using our function from admin_functions.php
+    $result = deleteClient($client_id);
+    
+    if ($result) {
         // Set success message and redirect
         $_SESSION['alert_message'] = 'Cliente excluído com sucesso!';
         $_SESSION['alert_type'] = 'success';
         
-        header('Location: ' . BASE_URL . '/admin/Client_Admin.php');
+        header('Location: ' . BASE_URL . '/admin/index.php?page=Client_Admin');
         exit;
-        
-    } catch (PDOException $e) {
-        logError("Error deleting client: " . $e->getMessage());
+    } else {
         $_SESSION['alert_message'] = 'Ocorreu um erro ao excluir o cliente.';
         $_SESSION['alert_type'] = 'error';
-        header('Location: ' . BASE_URL . '/admin/Client_Admin.php');
+        header('Location: ' . BASE_URL . '/admin/index.php?page=Client_Admin');
         exit;
     }
 }
 ?>
+
+<!-- HTML content remains unchanged -->
 
 <!-- Delete Client Confirmation Page -->
 <div class="admin-page client-delete">

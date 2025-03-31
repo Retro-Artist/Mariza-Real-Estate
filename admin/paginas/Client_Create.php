@@ -29,13 +29,7 @@ $formData = [
 ];
 
 // Get states
-try {
-    $stmt = $databaseConnection->query("SELECT * FROM sistema_estados ORDER BY nome ASC");
-    $estados = $stmt->fetchAll();
-} catch (PDOException $e) {
-    logError("Error fetching states: " . $e->getMessage());
-    $estados = [];
-}
+$estados = getStates();
 
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -86,57 +80,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // If no errors, save to database
     if (empty($error)) {
-        try {
-            // Get current date and time
-            $data_cadastro = date('Y-m-d');
-            $hora_cadastro = date('H:i:s');
-            $id_usuario = $_SESSION['admin_id'];
-            
-            // Insert new client
-            $stmt = $databaseConnection->prepare(
-                "INSERT INTO sistema_clientes (
-                    tipo, nome_completo, razao_social, cpf, cnpj, rg, data_nascimento, profissao,
-                    telefone1, telefone2, email, endereco, id_estado, id_cidade, id_bairro,
-                    data_cadastro, hora_cadastro, id_usuario, observacoes, categoria, principal
-                ) VALUES (
-                    :tipo, :nome_completo, :razao_social, :cpf, :cnpj, :rg, :data_nascimento, :profissao,
-                    :telefone1, :telefone2, :email, :endereco, :id_estado, :id_cidade, :id_bairro,
-                    :data_cadastro, :hora_cadastro, :id_usuario, :observacoes, :categoria, :principal
-                )"
-            );
-            
-            $stmt->bindParam(':tipo', $formData['tipo']);
-            $stmt->bindParam(':nome_completo', $formData['nome_completo']);
-            $stmt->bindParam(':razao_social', $formData['razao_social']);
-            $stmt->bindParam(':cpf', $formData['cpf']);
-            $stmt->bindParam(':cnpj', $formData['cnpj']);
-            $stmt->bindParam(':rg', $formData['rg']);
-            $stmt->bindParam(':data_nascimento', $formData['data_nascimento'] ? $formData['data_nascimento'] : null);
-            $stmt->bindParam(':profissao', $formData['profissao']);
-            $stmt->bindParam(':telefone1', $formData['telefone1']);
-            $stmt->bindParam(':telefone2', $formData['telefone2']);
-            $stmt->bindParam(':email', $formData['email']);
-            $stmt->bindParam(':endereco', $formData['endereco']);
-            $stmt->bindParam(':id_estado', $formData['id_estado'] ? $formData['id_estado'] : null, PDO::PARAM_INT);
-            $stmt->bindParam(':id_cidade', $formData['id_cidade'] ? $formData['id_cidade'] : null, PDO::PARAM_INT);
-            $stmt->bindParam(':id_bairro', $formData['id_bairro'] ? $formData['id_bairro'] : null, PDO::PARAM_INT);
-            $stmt->bindParam(':data_cadastro', $data_cadastro);
-            $stmt->bindParam(':hora_cadastro', $hora_cadastro);
-            $stmt->bindParam(':id_usuario', $id_usuario);
-            $stmt->bindParam(':observacoes', $formData['observacoes']);
-            $stmt->bindParam(':categoria', $formData['categoria']);
-            $stmt->bindParam(':principal', $formData['principal']);
-            
-            $stmt->execute();
-            
+        // Create client using our function from admin_functions.php
+        $clientId = createClient($formData);
+        
+        if ($clientId) {
             // Set success message and redirect
             $_SESSION['alert_message'] = 'Cliente adicionado com sucesso!';
             $_SESSION['alert_type'] = 'success';
             
             header('Location: ' . BASE_URL . '/admin/index.php?page=Client_Admin');
             exit;
-        } catch (PDOException $e) {
-            logError("Error creating client: " . $e->getMessage());
+        } else {
             $error = 'Ocorreu um erro ao adicionar o cliente. Por favor, tente novamente.';
         }
     }
@@ -145,27 +99,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Get cities based on selected state
 $cidades = [];
 if (!empty($formData['id_estado'])) {
-    try {
-        $stmt = $databaseConnection->prepare("SELECT * FROM sistema_cidades WHERE id_estado = :id_estado ORDER BY nome ASC");
-        $stmt->bindParam(':id_estado', $formData['id_estado']);
-        $stmt->execute();
-        $cidades = $stmt->fetchAll();
-    } catch (PDOException $e) {
-        logError("Error fetching cities: " . $e->getMessage());
-    }
+    $cidades = getCitiesByState($formData['id_estado']);
 }
 
 // Get neighborhoods based on selected city
 $bairros = [];
 if (!empty($formData['id_cidade'])) {
-    try {
-        $stmt = $databaseConnection->prepare("SELECT * FROM sistema_bairros WHERE id_cidade = :id_cidade ORDER BY bairro ASC");
-        $stmt->bindParam(':id_cidade', $formData['id_cidade']);
-        $stmt->execute();
-        $bairros = $stmt->fetchAll();
-    } catch (PDOException $e) {
-        logError("Error fetching neighborhoods: " . $e->getMessage());
-    }
+    $bairros = getNeighborhoodsByCity($formData['id_cidade']);
 }
 ?>
 

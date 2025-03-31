@@ -1,86 +1,22 @@
 <?php
-// admin/paginas/Admin_Dashboard.php
-
 // Security check
 if (!isset($_SESSION['admin_id'])) {
     header('Location: ' . BASE_URL . '/admin/Admin_Login.php');
     exit;
 }
 
-// Get some basic statistics for the dashboard
-try {
-    // Count total properties
-    $stmt = $databaseConnection->query("SELECT COUNT(*) as total FROM sistema_imoveis WHERE status = 'ativo'");
-    $totalImoveis = $stmt->fetch()['total'];
-    
-    // Count properties by type (venda/aluguel)
-    $stmt = $databaseConnection->query(
-        "SELECT para, COUNT(*) as total FROM sistema_imoveis 
-         WHERE status = 'ativo' 
-         GROUP BY para"
-    );
-    $imoveisPorTipo = $stmt->fetchAll();
-    
-    // Count total categories
-    $stmt = $databaseConnection->query("SELECT COUNT(*) as total FROM sistema_imoveis_categorias");
-    $totalCategorias = $stmt->fetch()['total'];
-    
-    // Count total clients
-    $stmt = $databaseConnection->query("SELECT COUNT(*) as total FROM sistema_clientes");
-    $totalClientes = $stmt->fetch()['total'];
-    
-    // Get latest properties
-    $stmt = $databaseConnection->query(
-        "SELECT i.id, i.titulo, i.para, i.valor, i.data, c.categoria 
-         FROM sistema_imoveis i
-         LEFT JOIN sistema_imoveis_categorias c ON i.id_categoria = c.id
-         WHERE i.status = 'ativo'
-         ORDER BY i.data DESC, i.hora DESC
-         LIMIT 5"
-    );
-    $ultimosImoveis = $stmt->fetchAll();
+// Get dashboard statistics using our function from admin_functions.php
+$dashboardStats = getDashboardStats();
 
-    // Get latest calendar events
-    $stmt = $databaseConnection->query(
-        "SELECT * FROM sistema_avisos 
-         WHERE status = 'Pendente' 
-         ORDER BY data_inicio ASC
-         LIMIT 5"
-    );
-    $ultimosLembretes = $stmt->fetchAll();
-
-    // Get latest service requests
-    $stmt = $databaseConnection->query(
-        "SELECT * FROM sistema_interacao
-         WHERE status = 'Pendente' 
-         ORDER BY data DESC, hora DESC
-         LIMIT 5"
-    );
-    $ultimosAtendimentos = $stmt->fetchAll();
-    
-} catch (PDOException $e) {
-    logError("Dashboard error: " . $e->getMessage());
-    // Initialize with default values in case of error
-    $totalImoveis = 0;
-    $imoveisPorTipo = [];
-    $totalCategorias = 0;
-    $totalClientes = 0;
-    $ultimosImoveis = [];
-    $ultimosLembretes = [];
-    $ultimosAtendimentos = [];
-}
-
-// Calculate properties by type for easy display
-$imoveisVenda = 0;
-$imoveisAluguel = 0;
-
-foreach ($imoveisPorTipo as $tipo) {
-    if ($tipo['para'] === 'venda') {
-        $imoveisVenda = $tipo['total'];
-    } elseif ($tipo['para'] === 'aluguel') {
-        $imoveisAluguel = $tipo['total'];
-    }
-}
+// Extract statistics for easier use in template
+$totalImoveis = $dashboardStats['totalImoveis'];
+$imoveisVenda = $dashboardStats['imoveisVenda'];
+$imoveisAluguel = $dashboardStats['imoveisAluguel'];
+$totalCategorias = $dashboardStats['totalCategorias'];
+$totalClientes = $dashboardStats['totalClientes'];
+$ultimosImoveis = $dashboardStats['ultimosImoveis'];
+$ultimosLembretes = $dashboardStats['ultimosLembretes'];
+$ultimosAtendimentos = $dashboardStats['ultimosAtendimentos'];
 ?>
 
 <!-- Dashboard Content -->

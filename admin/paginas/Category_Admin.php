@@ -5,16 +5,8 @@ if (!isset($_SESSION['admin_id'])) {
     exit;
 }
 
-// Get all categories
-try {
-    $stmt = $databaseConnection->query(
-        "SELECT * FROM sistema_imoveis_categorias ORDER BY categoria ASC"
-    );
-    $categorias = $stmt->fetchAll();
-} catch (PDOException $e) {
-    logError("Error fetching categories: " . $e->getMessage());
-    $categorias = [];
-}
+// Get all categories using our function from admin_functions.php
+$categorias = getAdminCategories();
 
 // Check for alert messages in session
 $alertMessage = '';
