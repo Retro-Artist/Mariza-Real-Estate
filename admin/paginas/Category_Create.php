@@ -84,14 +84,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </form>
 </div>
-
-<style>
-/* Additional styles for form */
-.form-text {
-    font-size: var(--font-xs);
-    color: var(--admin-text);
-    opacity: 0.7;
-    margin-top: 5px;
-    display: block;
-}
-</style>

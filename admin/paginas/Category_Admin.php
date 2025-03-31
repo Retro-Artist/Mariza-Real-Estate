@@ -80,27 +80,3 @@ if (isset($_SESSION['alert_message'])) {
         <?php endif; ?>
     </div>
 </div>
-
-<style>
-/* Additional styles for category admin page */
-.admin-page__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.admin-page__title {
-    font-size: var(--font-xl);
-    font-family: var(--font-secondary);
-    margin: 0;
-}
-
-.admin-card {
-    background-color: var(--admin-card-bg);
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    padding: 20px;
-    margin-bottom: 30px;
-}
-</style>

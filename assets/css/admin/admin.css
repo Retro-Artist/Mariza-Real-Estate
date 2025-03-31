@@ -4,11 +4,11 @@
 /* Import admin components */
 @import 'admin/shared-components.css';
 @import 'admin/dashboard.css';
-@import 'admin/property-management.css';
-@import 'admin/category-management.css';
-@import 'admin/client-management.css';
+@import 'admin/property.css';
+@import 'admin/category.css';
+@import 'admin/client.css';
 @import 'admin/calendar.css';
-@import 'admin/service-requests.css';
+@import 'admin/service.css';
 @import 'admin/login.css';
 
 /* Admin Area Base Styles */

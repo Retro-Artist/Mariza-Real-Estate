@@ -542,67 +542,6 @@ if (!empty($formData['id_cidade'])) {
     </form>
 </div>
 
-<style>
-/* Additional styles for property form */
-.form-section {
-    background-color: var(--admin-card-bg);
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    padding: 20px;
-    margin-bottom: 20px;
-}
-
-.form-section__title {
-    font-size: var(--font-lg);
-    margin-top: 0;
-    margin-bottom: 20px;
-    font-family: var(--font-secondary);
-}
-
-.form-group--large {
-    flex: 2;
-}
-
-.form-group--full {
-    flex: 1 0 100%;
-}
-
-.form-group--checkbox {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.checkbox-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.checkbox-container input[type="checkbox"] {
-    width: auto;
-}
-
-.checkbox-container label {
-    margin-bottom: 0;
-    cursor: pointer;
-}
-
-.required {
-    color: var(--admin-red);
-}
-
-.form-control-file {
-    padding: 8px 0;
-}
-
-@media (max-width: 768px) {
-    .form-group,
-    .form-group--large {
-        flex: 1 0 100%;
-    }
-}
-</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

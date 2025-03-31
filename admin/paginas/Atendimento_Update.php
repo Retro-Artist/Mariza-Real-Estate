@@ -170,25 +170,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </form>
 </div>
-
-<style>
-/* Atendimento Update Styles */
-.form-group--half {
-    flex: 1;
-    min-width: 250px;
-}
-
-.form-group--full {
-    flex: 1 0 100%;
-}
-
-.required {
-    color: var(--admin-red);
-}
-
-.read-only-value {
-    padding: 10px 0;
-    font-weight: 500;
-    color: #666;
-}
-</style>
