@@ -74,7 +74,7 @@ switch ($page) {
 
     // Calendar pages
     case 'Calendar':
-        include 'paginas/Calendar.php';
+        include 'paginas/Calendar_Admin.php';
         break;
     case 'Calendar_Create':
         include 'paginas/Calendar_Create.php';

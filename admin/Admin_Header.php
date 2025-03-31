@@ -143,7 +143,7 @@ $current_page = isset($page) ? $page : 'dashboard';
                         case 'Client_Delete':
                             echo 'Excluir Cliente';
                             break;
-                        case 'Calendar':
+                        case 'Calendar_Admin':
                             echo 'Calendário';
                             break;
                         case 'Calendar_Create':
