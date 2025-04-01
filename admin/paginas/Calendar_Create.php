@@ -1,8 +1,12 @@
 <?php
 // Security check
 if (!isset($_SESSION['admin_id'])) {
-    header('Location: ' . BASE_URL . '/admin/Admin_Login.php');
-    exit;
+    // Ao invés de usar header() diretamente, vamos armazenar a URL de redirecionamento
+    $redirect_url = BASE_URL . '/admin/Admin_Login.php';
+    // Será usado posteriormente para redirecionamento via JavaScript
+    $need_redirect = true;
+} else {
+    $need_redirect = false;
 }
 
 // Initialize variables
@@ -27,6 +31,11 @@ try {
     logError("Error fetching users: " . $e->getMessage());
     $usuarios = [];
 }
+
+// Variável para armazenar mensagens de sucesso e redirecionamento
+$success_message = '';
+$redirect_after_save = false;
+$redirect_url = '';
 
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -53,20 +62,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $newEventId = createCalendarEvent($formData);
         
         if ($newEventId) {
-            // Set success message and redirect
-            $_SESSION['alert_message'] = 'Lembrete adicionado com sucesso!';
+            // Preparar redirecionamento para depois que a página for renderizada
+            $success_message = 'Lembrete adicionado com sucesso!';
+            $_SESSION['alert_message'] = $success_message;
             $_SESSION['alert_type'] = 'success';
             
-            header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar');
-            exit;
+            $redirect_after_save = true;
+            $redirect_url = BASE_URL . '/admin/index.php?page=Calendar';
         } else {
             $error = 'Ocorreu um erro ao adicionar o lembrete. Por favor, tente novamente.';
         }
     }
 }
-?>
 
-<!-- HTML content remains unchanged -->
+// Se for necessário um redirecionamento imediato (check de segurança), fazemos isso no final do script
+?>
 
 <!-- Add Event Page -->
 <div class="admin-page event-create">
@@ -83,6 +93,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php if (!empty($error)): ?>
             <div class="alert-message alert-message--error">
                 <?= htmlspecialchars($error) ?>
+            </div>
+        <?php endif; ?>
+        
+        <?php if (!empty($success_message)): ?>
+            <div class="alert-message alert-message--success">
+                <?= htmlspecialchars($success_message) ?>
             </div>
         <?php endif; ?>
         
@@ -171,3 +187,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </form>
 </div>
+
+<?php if ($need_redirect): ?>
+<script>
+    // Redirecionamento via JavaScript se a verificação de segurança falhar
+    window.location.href = "<?= $redirect_url ?>";
+</script>
+<?php endif; ?>
+
+<?php if ($redirect_after_save): ?>
+<script>
+    // Redirecionar após um breve intervalo para que o usuário possa ver a mensagem de sucesso
+    setTimeout(function() {
+        window.location.href = "<?= $redirect_url ?>";
+    }, 1500);
+</script>
+<?php endif; ?>

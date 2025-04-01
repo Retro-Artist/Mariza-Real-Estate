@@ -1,96 +1,111 @@
 <?php
 // Security check
 if (!isset($_SESSION['admin_id'])) {
-    header('Location: ' . BASE_URL . '/admin/Admin_Login.php');
-    exit;
+    // Ao invés de usar header() diretamente, vamos armazenar a URL de redirecionamento
+    $redirect_url = BASE_URL . '/admin/Admin_Login.php';
+    // Será usado posteriormente para redirecionamento via JavaScript
+    $need_redirect = true;
+} else {
+    $need_redirect = false;
 }
 
 // Check if ID is provided
 if (!isset($_GET['id']) || empty($_GET['id'])) {
+    // Armazenar a mensagem de erro e URL para redirecionamento posterior
     $_SESSION['alert_message'] = 'ID do lembrete não especificado.';
     $_SESSION['alert_type'] = 'error';
-    header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar');
-    exit;
+    $redirect_url = BASE_URL . '/admin/index.php?page=Calendar';
+    $need_redirect = true;
 }
 
-$event_id = (int)$_GET['id'];
+if (!$need_redirect) {
+    $event_id = (int)$_GET['id'];
 
-// Initialize variables
-$error = '';
+    // Initialize variables
+    $error = '';
 
-// Get event data using function from admin_functions.php
-$event = getCalendarEventById($event_id);
+    // Get event data using function from admin_functions.php
+    $event = getCalendarEventById($event_id);
 
-if (!$event) {
-    $_SESSION['alert_message'] = 'Lembrete não encontrado.';
-    $_SESSION['alert_type'] = 'error';
-    header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar');
-    exit;
+    if (!$event) {
+        $_SESSION['alert_message'] = 'Lembrete não encontrado.';
+        $_SESSION['alert_type'] = 'error';
+        $redirect_url = BASE_URL . '/admin/index.php?page=Calendar';
+        $need_redirect = true;
+    }
 }
 
-// Format dates for form inputs
-$data_inicio = new DateTime($event['data_inicio']);
-$data_fim = new DateTime($event['data_fim']);
+// Variável para armazenar mensagens de sucesso e redirecionamento
+$success_message = '';
+$redirect_after_save = false;
 
-$formData = [
-    'titulo' => $event['titulo'],
-    'descricao' => $event['descricao'],
-    'para' => $event['para'],
-    'prioridade' => $event['prioridade'],
-    'data_inicio' => $data_inicio->format('Y-m-d'),
-    'hora_inicio' => $data_inicio->format('H:i'),
-    'data_fim' => $data_fim->format('Y-m-d'),
-    'hora_fim' => $data_fim->format('H:i'),
-    'status' => $event['status']
-];
+if (!$need_redirect) {
+    // Format dates for form inputs
+    $data_inicio = new DateTime($event['data_inicio']);
+    $data_fim = new DateTime($event['data_fim']);
 
-// Get available users for assignment
-try {
-    $stmt = $databaseConnection->query("SELECT id, nome FROM sistema_usuarios ORDER BY nome ASC");
-    $usuarios = $stmt->fetchAll();
-} catch (PDOException $e) {
-    logError("Error fetching users: " . $e->getMessage());
-    $usuarios = [];
-}
-
-// Process form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Get form data
     $formData = [
-        'titulo' => trim($_POST['titulo'] ?? ''),
-        'descricao' => trim($_POST['descricao'] ?? ''),
-        'para' => trim($_POST['para'] ?? ''),
-        'prioridade' => trim($_POST['prioridade'] ?? 'Normal'),
-        'data_inicio' => trim($_POST['data_inicio'] ?? ''),
-        'hora_inicio' => trim($_POST['hora_inicio'] ?? ''),
-        'data_fim' => trim($_POST['data_fim'] ?? ''),
-        'hora_fim' => trim($_POST['hora_fim'] ?? ''),
-        'status' => trim($_POST['status'] ?? 'Pendente')
+        'titulo' => $event['titulo'],
+        'descricao' => $event['descricao'],
+        'para' => $event['para'],
+        'prioridade' => $event['prioridade'],
+        'data_inicio' => $data_inicio->format('Y-m-d'),
+        'hora_inicio' => $data_inicio->format('H:i'),
+        'data_fim' => $data_fim->format('Y-m-d'),
+        'hora_fim' => $data_fim->format('H:i'),
+        'status' => $event['status']
     ];
-    
-    // Validate form data
-    if (empty($formData['titulo'])) {
-        $error = 'O título do lembrete é obrigatório.';
-    } elseif (empty($formData['data_inicio']) || empty($formData['data_fim'])) {
-        $error = 'As datas de início e fim são obrigatórias.';
-    } else {
-        // Update calendar event using function from admin_functions.php
-        $result = updateCalendarEvent($event_id, $formData);
+
+    // Get available users for assignment
+    try {
+        $stmt = $databaseConnection->query("SELECT id, nome FROM sistema_usuarios ORDER BY nome ASC");
+        $usuarios = $stmt->fetchAll();
+    } catch (PDOException $e) {
+        logError("Error fetching users: " . $e->getMessage());
+        $usuarios = [];
+    }
+
+    // Process form submission
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Get form data
+        $formData = [
+            'titulo' => trim($_POST['titulo'] ?? ''),
+            'descricao' => trim($_POST['descricao'] ?? ''),
+            'para' => trim($_POST['para'] ?? ''),
+            'prioridade' => trim($_POST['prioridade'] ?? 'Normal'),
+            'data_inicio' => trim($_POST['data_inicio'] ?? ''),
+            'hora_inicio' => trim($_POST['hora_inicio'] ?? ''),
+            'data_fim' => trim($_POST['data_fim'] ?? ''),
+            'hora_fim' => trim($_POST['hora_fim'] ?? ''),
+            'status' => trim($_POST['status'] ?? 'Pendente')
+        ];
         
-        if ($result) {
-            // Set success message and redirect
-            $_SESSION['alert_message'] = 'Lembrete atualizado com sucesso!';
-            $_SESSION['alert_type'] = 'success';
-            
-            header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar_View&id=' . $event_id);
-            exit;
+        // Validate form data
+        if (empty($formData['titulo'])) {
+            $error = 'O título do lembrete é obrigatório.';
+        } elseif (empty($formData['data_inicio']) || empty($formData['data_fim'])) {
+            $error = 'As datas de início e fim são obrigatórias.';
         } else {
-            $error = 'Ocorreu um erro ao atualizar o lembrete. Por favor, tente novamente.';
+            // Update calendar event using function from admin_functions.php
+            $result = updateCalendarEvent($event_id, $formData);
+            
+            if ($result) {
+                // Preparar redirecionamento para depois que a página for renderizada
+                $success_message = 'Lembrete atualizado com sucesso!';
+                $_SESSION['alert_message'] = $success_message;
+                $_SESSION['alert_type'] = 'success';
+                
+                $redirect_after_save = true;
+                $redirect_url = BASE_URL . '/admin/index.php?page=Calendar_View&id=' . $event_id;
+            } else {
+                $error = 'Ocorreu um erro ao atualizar o lembrete. Por favor, tente novamente.';
+            }
         }
     }
 }
 ?>
 
+<?php if (!$need_redirect): ?>
 <!-- HTML content remains unchanged -->
 
 <!-- Update Event Page -->
@@ -108,6 +123,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php if (!empty($error)): ?>
             <div class="alert-message alert-message--error">
                 <?= htmlspecialchars($error) ?>
+            </div>
+        <?php endif; ?>
+        
+        <?php if (!empty($success_message)): ?>
+            <div class="alert-message alert-message--success">
+                <?= htmlspecialchars($success_message) ?>
             </div>
         <?php endif; ?>
         
@@ -196,3 +217,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </form>
 </div>
+<?php endif; ?>
+
+<?php if ($need_redirect): ?>
+<script>
+    // Redirecionamento via JavaScript se a verificação de segurança falhar
+    window.location.href = "<?= $redirect_url ?>";
+</script>
+<?php endif; ?>
+
+<?php if ($redirect_after_save): ?>
+<script>
+    // Redirecionar após um breve intervalo para que o usuário possa ver a mensagem de sucesso
+    setTimeout(function() {
+        window.location.href = "<?= $redirect_url ?>";
+    }, 1500);
+</script>
+<?php endif; ?>

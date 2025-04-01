@@ -101,77 +101,7 @@ $current_page = isset($page) ? $page : 'dashboard';
         <main class="admin-main">
             <!-- Top Bar -->
             <header class="admin-topbar">
-                <h1 class="admin-topbar__title">
-                    <?php
-                    switch ($current_page) {
-                        case 'dashboard':
-                            echo 'Dashboard';
-                            break;
-                        case 'Property_Admin':
-                            echo 'Gerenciar Imóveis';
-                            break;
-                        case 'Property_Create':
-                            echo 'Adicionar Imóvel';
-                            break;
-                        case 'Property_Update':
-                            echo 'Editar Imóvel';
-                            break;
-                        case 'Property_Delete':
-                            echo 'Excluir Imóvel';
-                            break;
-                        case 'Category_Admin':
-                            echo 'Gerenciar Categorias';
-                            break;
-                        case 'Category_Create':
-                            echo 'Adicionar Categoria';
-                            break;
-                        case 'Category_Update':
-                            echo 'Editar Categoria';
-                            break;
-                        case 'Category_Delete':
-                            echo 'Excluir Categoria';
-                            break;
-                        case 'Client_Admin':
-                            echo 'Gerenciar Clientes';
-                            break;
-                        case 'Client_Create':
-                            echo 'Adicionar Cliente';
-                            break;
-                        case 'Client_Update':
-                            echo 'Editar Cliente';
-                            break;
-                        case 'Client_Delete':
-                            echo 'Excluir Cliente';
-                            break;
-                        case 'Calendar_Admin':
-                            echo 'Calendário';
-                            break;
-                        case 'Calendar_Create':
-                            echo 'Adicionar Evento';
-                            break;
-                        case 'Calendar_Update':
-                            echo 'Editar Evento';
-                            break;
-                        case 'Calendar_View':
-                            echo 'Visualizar Evento';
-                            break;
-                        case 'Atendimento_Admin':
-                            echo 'Gerenciar Atendimentos';
-                            break;
-                        case 'Atendimento_Create':
-                            echo 'Adicionar Atendimento';
-                            break;
-                        case 'Atendimento_Update':
-                            echo 'Editar Atendimento';
-                            break;
-                        case 'Atendimento_View':
-                            echo 'Visualizar Atendimento';
-                            break;
-                        default:
-                            echo 'Painel Administrativo';
-                    }
-                    ?>
-                </h1>
+                <h1 class="admin-topbar__title"> Logo </h1>
 
                 <div class="admin-topbar__right">
                     <div class="admin-topbar__user">

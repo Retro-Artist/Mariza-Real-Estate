@@ -96,6 +96,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Toggle between client types (pessoa física/jurídica)
     initializeClientTypeToggle();
+    
+    // Initialize calendar features if we're on the calendar page
+    initializeCalendarFeatures();
 });
 
 /**
@@ -216,4 +219,34 @@ function initializeClientTypeToggle() {
     // Add event listeners
     pessoaFisicaRadio.addEventListener('change', toggleClientType);
     pessoaJuridicaRadio.addEventListener('change', toggleClientType);
+}
+
+/**
+ * Initialize calendar features if we're on the calendar page
+ */
+function initializeCalendarFeatures() {
+    // Check if we're on the calendar page
+    const calendarPage = document.querySelector('.calendar-page');
+    if (!calendarPage) return;
+    
+    // Check if calendar functions script is already loaded
+    if (typeof initCalendarDots !== 'function') {
+        // Load the script dynamically
+        const script = document.createElement('script');
+        script.src = `${window.location.origin}/assets/scripts/calendar-functions.js`;
+        script.onload = function() {
+            // Initialize calendar functions once script is loaded
+            if (typeof initCalendarDots === 'function') {
+                initCalendarDots();
+                initLightbox();
+                checkWindowSize();
+            }
+        };
+        document.body.appendChild(script);
+    } else {
+        // Script already loaded, initialize functions directly
+        initCalendarDots();
+        initLightbox();
+        checkWindowSize();
+    }
 }

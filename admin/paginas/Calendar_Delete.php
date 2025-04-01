@@ -1,58 +1,64 @@
 <?php
 // Security check
 if (!isset($_SESSION['admin_id'])) {
-    header('Location: ' . BASE_URL . '/admin/Admin_Login.php');
-    exit;
+    // Ao invés de usar header() diretamente, armazenamos para redirecionamento via JavaScript
+    $redirect_url = BASE_URL . '/admin/Admin_Login.php';
+    $need_redirect = true;
+} else {
+    $need_redirect = false;
 }
 
 // Check if ID is provided
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     $_SESSION['alert_message'] = 'ID do lembrete não especificado.';
     $_SESSION['alert_type'] = 'error';
-    header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar');
-    exit;
+    $redirect_url = BASE_URL . '/admin/index.php?page=Calendar';
+    $need_redirect = true;
 }
 
-$event_id = (int)$_GET['id'];
+if (!$need_redirect) {
+    $event_id = (int)$_GET['id'];
 
-// Initialize variables
-$event = [];
-$error = '';
-$confirmDelete = isset($_GET['confirm']) && $_GET['confirm'] === '1';
+    // Initialize variables
+    $event = [];
+    $error = '';
+    $confirmDelete = isset($_GET['confirm']) && $_GET['confirm'] === '1';
 
-// If not confirmed, get event data for confirmation page
-if (!$confirmDelete) {
-    // Get event data using function from admin_functions.php
-    $event = getCalendarEventById($event_id);
-    
-    if (!$event) {
-        $_SESSION['alert_message'] = 'Lembrete não encontrado.';
-        $_SESSION['alert_type'] = 'error';
-        header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar');
-        exit;
-    }
-}
-// If confirmed, process deletion
-else {
-    // Delete event using function from admin_functions.php
-    $result = deleteCalendarEvent($event_id);
-    
-    if ($result) {
-        // Set success message and redirect
-        $_SESSION['alert_message'] = 'Lembrete excluído com sucesso!';
-        $_SESSION['alert_type'] = 'success';
+    // If not confirmed, get event data for confirmation page
+    if (!$confirmDelete) {
+        // Get event data using function from admin_functions.php
+        $event = getCalendarEventById($event_id);
         
-        header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar');
-        exit;
-    } else {
-        $_SESSION['alert_message'] = 'Ocorreu um erro ao excluir o lembrete.';
-        $_SESSION['alert_type'] = 'error';
-        header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar');
-        exit;
+        if (!$event) {
+            $_SESSION['alert_message'] = 'Lembrete não encontrado.';
+            $_SESSION['alert_type'] = 'error';
+            $redirect_url = BASE_URL . '/admin/index.php?page=Calendar';
+            $need_redirect = true;
+        }
+    }
+    // If confirmed, process deletion
+    else {
+        // Delete event using function from admin_functions.php
+        $result = deleteCalendarEvent($event_id);
+        
+        if ($result) {
+            // Set success message and prepare for redirect
+            $_SESSION['alert_message'] = 'Lembrete excluído com sucesso!';
+            $_SESSION['alert_type'] = 'success';
+            
+            $redirect_url = BASE_URL . '/admin/index.php?page=Calendar';
+            $need_redirect = true;
+        } else {
+            $_SESSION['alert_message'] = 'Ocorreu um erro ao excluir o lembrete.';
+            $_SESSION['alert_type'] = 'error';
+            $redirect_url = BASE_URL . '/admin/index.php?page=Calendar';
+            $need_redirect = true;
+        }
     }
 }
 ?>
 
+<?php if (!$need_redirect && isset($event) && $event): ?>
 <!-- Delete Event Confirmation Page -->
 <div class="admin-page event-delete">
     <!-- Page Header -->
@@ -82,3 +88,11 @@ else {
         </div>
     </div>
 </div>
+<?php endif; ?>
+
+<?php if ($need_redirect): ?>
+<script>
+    // Redirecionamento via JavaScript
+    window.location.href = "<?= $redirect_url ?>";
+</script>
+<?php endif; ?>

@@ -2,6 +2,9 @@
 // Start session
 session_start();
 
+// Iniciar output buffering - adicione esta linha no topo de index.php
+ob_start();
+
 // Include configuration
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/database.php';
@@ -110,6 +113,8 @@ switch ($page) {
         include 'paginas/Admin_Dashboard.php';
         break;
 }
-
 // Include footer
 include 'Admin_Footer.php';
+
+// Liberar o output buffer no final do script
+ob_end_flush();

@@ -8,6 +8,7 @@
 @import 'category.css';
 @import 'client.css';
 @import 'calendar.css';
+@import 'calendar-custom.css'; /* Our new custom calendar styles */
 @import 'service.css';
 @import 'login.css';
 

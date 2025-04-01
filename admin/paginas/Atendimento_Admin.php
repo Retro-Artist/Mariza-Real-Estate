@@ -167,30 +167,57 @@ if (isset($_SESSION['alert_message'])) {
                 </table>
             </div>
             
-            <!-- Pagination -->
-            <?php if ($totalPaginas > 1): ?>
-                <div class="pagination">
-                    <?php if ($paginaAtual > 1): ?>
-                        <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento_Admin&pagina=<?= $paginaAtual-1 ?><?= !empty($filtroStatus) ? '&status='.$filtroStatus : '' ?><?= !empty($filtroLocal) ? '&local='.$filtroLocal : '' ?><?= !empty($filtroBusca) ? '&busca='.$filtroBusca : '' ?>" class="pagination__item">
-                            <i class="fas fa-angle-left"></i>
-                        </a>
-                    <?php endif; ?>
-                    
-                    <?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
-                        <?php if ($i == $paginaAtual): ?>
-                            <span class="pagination__item pagination__item--active"><?= $i ?></span>
-                        <?php else: ?>
-                            <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento_Admin&pagina=<?= $i ?><?= !empty($filtroStatus) ? '&status='.$filtroStatus : '' ?><?= !empty($filtroLocal) ? '&local='.$filtroLocal : '' ?><?= !empty($filtroBusca) ? '&busca='.$filtroBusca : '' ?>" class="pagination__item"><?= $i ?></a>
-                        <?php endif; ?>
-                    <?php endfor; ?>
-                    
-                    <?php if ($paginaAtual < $totalPaginas): ?>
-                        <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento_Admin&pagina=<?= $paginaAtual+1 ?><?= !empty($filtroStatus) ? '&status='.$filtroStatus : '' ?><?= !empty($filtroLocal) ? '&local='.$filtroLocal : '' ?><?= !empty($filtroBusca) ? '&busca='.$filtroBusca : '' ?>" class="pagination__item">
-                            <i class="fas fa-angle-right"></i>
-                        </a>
-                    <?php endif; ?>
-                </div>
-            <?php endif; ?>
+<!-- Pagination -->
+<?php if ($totalPaginas > 1): ?>
+    <div class="pagination">
+        <?php if ($paginaAtual > 1): ?>
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento_Admin&pagina=<?= $paginaAtual-1 ?><?= !empty($filtroStatus) ? '&status='.$filtroStatus : '' ?><?= !empty($filtroLocal) ? '&local='.$filtroLocal : '' ?><?= !empty($filtroBusca) ? '&busca='.$filtroBusca : '' ?>" class="pagination__item">
+                <i class="fas fa-angle-left"></i>
+            </a>
+        <?php endif; ?>
+        
+        <?php
+        // Determine range of page numbers to display
+        $maxVisiblePages = 7; // Show 7 page numbers max
+        $startPage = max(1, $paginaAtual - floor($maxVisiblePages/2));
+        $endPage = min($totalPaginas, $startPage + $maxVisiblePages - 1);
+        
+        // Adjust start page if we're near the end
+        if ($endPage == $totalPaginas) {
+            $startPage = max(1, $endPage - $maxVisiblePages + 1);
+        }
+        
+        // Always show first page
+        if ($startPage > 1) {
+            echo '<a href="'.BASE_URL.'/admin/index.php?page=Atendimento_Admin&pagina=1'.(!empty($filtroStatus) ? '&status='.$filtroStatus : '').(!empty($filtroLocal) ? '&local='.$filtroLocal : '').(!empty($filtroBusca) ? '&busca='.$filtroBusca : '').'" class="pagination__item">1</a>';
+            if ($startPage > 2) {
+                echo '<span class="pagination__item pagination__item--ellipsis">...</span>';
+            }
+        }
+        
+        // Display page numbers within range
+        for ($i = $startPage; $i <= $endPage; $i++) {
+            $activeClass = ($i === $paginaAtual) ? 'pagination__item--active' : '';
+            echo '<a href="'.BASE_URL.'/admin/index.php?page=Atendimento_Admin&pagina='.$i.(!empty($filtroStatus) ? '&status='.$filtroStatus : '').(!empty($filtroLocal) ? '&local='.$filtroLocal : '').(!empty($filtroBusca) ? '&busca='.$filtroBusca : '').'" class="pagination__item '.$activeClass.'">'.$i.'</a>';
+        }
+        
+        // Always show last page
+        if ($endPage < $totalPaginas) {
+            if ($endPage < $totalPaginas - 1) {
+                echo '<span class="pagination__item pagination__item--ellipsis">...</span>';
+            }
+            echo '<a href="'.BASE_URL.'/admin/index.php?page=Atendimento_Admin&pagina='.$totalPaginas.(!empty($filtroStatus) ? '&status='.$filtroStatus : '').(!empty($filtroLocal) ? '&local='.$filtroLocal : '').(!empty($filtroBusca) ? '&busca='.$filtroBusca : '').'" class="pagination__item">'.$totalPaginas.'</a>';
+        }
+        ?>
+        
+        <?php if ($paginaAtual < $totalPaginas): ?>
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento_Admin&pagina=<?= $paginaAtual+1 ?><?= !empty($filtroStatus) ? '&status='.$filtroStatus : '' ?><?= !empty($filtroLocal) ? '&local='.$filtroLocal : '' ?><?= !empty($filtroBusca) ? '&busca='.$filtroBusca : '' ?>" class="pagination__item">
+                <i class="fas fa-angle-right"></i>
+            </a>
+        <?php endif; ?>
+    </div>
+<?php endif; ?>
+
         <?php endif; ?>
     </div>
 </div>
