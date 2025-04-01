@@ -1,0 +1,195 @@
+/* ===================================
+   Dashboard Styles
+   =================================== */
+
+/* Dashboard Layout */
+.dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+  
+  /* Statistics Cards */
+  .dashboard__stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+  }
+  
+  .stat-card {
+    background-color: var(--admin-card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .stat-card__icon {
+    width: 50px;
+    height: 50px;
+    background-color: var(--admin-primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-lg);
+    margin-right: 15px;
+  }
+  
+  .stat-card__icon--blue {
+    background-color: var(--admin-blue);
+  }
+  
+  .stat-card__icon--green {
+    background-color: var(--admin-green);
+  }
+  
+  .stat-card__icon--orange {
+    background-color: var(--admin-orange);
+  }
+  
+  .stat-card__icon--red {
+    background-color: var(--admin-red);
+  }
+  
+  .stat-card__content {
+    flex: 1;
+  }
+  
+  .stat-card__title {
+    font-size: var(--font-sm);
+    color: var(--admin-text);
+    margin: 0 0 5px 0;
+    opacity: 0.8;
+  }
+  
+  .stat-card__value {
+    font-size: var(--font-xl);
+    font-weight: bold;
+    color: var(--admin-text);
+    margin: 0;
+    font-family: var(--font-secondary);
+  }
+  
+  /* Dashboard Sections */
+  .dashboard__section-title {
+    font-size: var(--font-lg);
+    font-family: var(--font-secondary);
+    margin-bottom: 20px;
+    position: relative;
+    padding-bottom: 10px;
+  }
+  
+  .dashboard__section-title:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background-color: var(--admin-primary);
+  }
+  
+  /* Quick Actions */
+  .dashboard__actions {
+    background-color: var(--admin-card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 20px;
+  }
+  
+  .quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
+  }
+  
+  .quick-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    color: var(--admin-text);
+    border: 1px solid var(--admin-border);
+    transition: var(--transition);
+    text-align: center;
+  }
+  
+  .quick-action i {
+    font-size: var(--font-2xl);
+    color: var(--admin-primary);
+    margin-bottom: 10px;
+  }
+  
+  .quick-action:hover {
+    background-color: var(--admin-primary);
+    color: white;
+    transform: translateY(-5px);
+  }
+  
+  .quick-action:hover i {
+    color: white;
+  }
+  
+  /* Recent Sections */
+  .dashboard__recent {
+    background-color: var(--admin-card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 20px;
+  }
+  
+  .dashboard__see-all {
+    text-align: right;
+    margin-top: 15px;
+  }
+  
+  .see-all-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--admin-primary);
+    text-decoration: none;
+    font-size: var(--font-sm);
+  }
+  
+  .see-all-link:hover {
+    color: var(--admin-primary-dark);
+  }
+  
+  .see-all-link i {
+    font-size: var(--font-sm);
+  }
+  
+  /* Responsive */
+  @media (max-width: 992px) {
+    .dashboard__stats {
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .dashboard__stats {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+    
+    .quick-actions {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .dashboard__stats {
+      grid-template-columns: 1fr;
+    }
+    
+    .quick-actions {
+      grid-template-columns: 1fr 1fr;
+    }
+  }

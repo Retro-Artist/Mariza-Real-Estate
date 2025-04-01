@@ -1,0 +1,127 @@
+/* ===================================
+   Service Request Page Styles
+   =================================== */
+
+/* Service List Page */
+.atendimento-admin .filter-form {
+    margin-bottom: 20px;
+  }
+  
+  .badge--site {
+    background-color: rgba(52, 152, 219, 0.2);
+    color: #2980b9;
+  }
+  
+  .badge--whatsapp {
+    background-color: rgba(46, 204, 113, 0.2);
+    color: #27ae60;
+  }
+  
+  .badge--telefone {
+    background-color: rgba(155, 89, 182, 0.2);
+    color: #8e44ad;
+  }
+  
+  .badge--pessoal {
+    background-color: rgba(243, 156, 18, 0.2);
+    color: #d35400;
+  }
+  
+  /* Service Detail View */
+  .atendimento-header {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--admin-border);
+  }
+  
+  .atendimento-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .atendimento-id {
+    font-size: var(--font-lg);
+    font-weight: 600;
+    color: var(--admin-text);
+  }
+  
+  .atendimento-date {
+    color: #6c757d;
+    font-size: var(--font-sm);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .atendimento-badges {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .atendimento-details {
+    margin-bottom: 30px;
+  }
+  
+  .detail-section {
+    margin-bottom: 25px;
+  }
+  
+  .message-content {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: var(--border-radius);
+    line-height: 1.6;
+    white-space: pre-line;
+  }
+  
+  .status-update {
+    margin-bottom: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--admin-border);
+  }
+  
+  .status-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 15px;
+  }
+  
+  .atendimento-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding-top: 20px;
+    border-top: 1px solid var(--admin-border);
+  }
+  
+  .no-data {
+    color: #999;
+    font-style: italic;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .atendimento-header {
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .status-form {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .atendimento-actions {
+      flex-direction: column;
+    }
+    
+    .atendimento-actions .btn {
+      width: 100%;
+      text-align: center;
+    }
+  }
