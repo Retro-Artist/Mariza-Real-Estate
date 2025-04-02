@@ -5,7 +5,7 @@ if (!isset($_SESSION['admin_id'])) {
 }
 
 // Get current page for highlighting active menu item
-$current_page = isset($page) ? $page : 'dashboard';
+$current_page = isset($page) ? $page : 'Calendar';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -43,47 +43,50 @@ $current_page = isset($page) ? $page : 'dashboard';
 
             <nav class="admin-sidebar__nav">
                 <ul class="admin-sidebar__menu">
-                    <li class="admin-sidebar__item <?= $current_page === 'dashboard' ? 'active' : '' ?>">
-                        <a href="<?= BASE_URL ?>/admin/index.php?page=dashboard" class="admin-sidebar__link">
+                    <!-- Calendário como item primário do menu -->
+                    <li class="admin-sidebar__item <?= $current_page === 'Calendar' || strpos($current_page, 'Calendar_') === 0 ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>/admin/index.php?page=Calendar" class="admin-sidebar__link">
                             <i class="fas fa-calendar-alt"></i>
-                            <span>Calendário</span>
-                        </a>
-                    </li>
-
-                    <li class="admin-sidebar__item <?= strpos($current_page, 'Lembrete_') === 0 || strpos($current_page, 'Calendar_') === 0 ? 'active' : '' ?>">
-                        <a href="<?= BASE_URL ?>/admin/index.php?page=Lembrete_Create" class="admin-sidebar__link">
-                            <i class="fas fa-sticky-note"></i>
-                            <span>Lembretes</span>
+                            <span>Gerenciar Calendário</span>
                         </a>
                     </li>
 
                     <li class="admin-sidebar__item <?= strpos($current_page, 'Property_') === 0 ? 'active' : '' ?>">
                         <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin" class="admin-sidebar__link">
                             <i class="fas fa-home"></i>
-                            <span>Imóveis</span>
+                            <span>Gerenciar Imóveis</span>
                         </a>
                     </li>
 
                     <li class="admin-sidebar__item <?= strpos($current_page, 'Category_') === 0 ? 'active' : '' ?>">
                         <a href="<?= BASE_URL ?>/admin/index.php?page=Category_Admin" class="admin-sidebar__link">
                             <i class="fas fa-tags"></i>
-                            <span>Categorias</span>
+                            <span>Gerenciar Categorias</span>
                         </a>
                     </li>
 
                     <li class="admin-sidebar__item <?= strpos($current_page, 'Client_') === 0 ? 'active' : '' ?>">
                         <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Admin" class="admin-sidebar__link">
                             <i class="fas fa-users"></i>
-                            <span>Clientes</span>
+                            <span>Gerenciar Clientes</span>
                         </a>
                     </li>
 
                     <li class="admin-sidebar__item <?= strpos($current_page, 'Atendimento') === 0 ? 'active' : '' ?>">
                         <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento_Admin" class="admin-sidebar__link">
                             <i class="fas fa-headset"></i>
-                            <span>Atendimentos</span>
+                            <span>Atendimentos do Site</span>
                         </a>
                     </li>
+
+                    <?php if ($_SESSION['admin_level'] === 'Administrador'): ?>
+                        <li class="admin-sidebar__item <?= strpos($current_page, 'User_') === 0 ? 'active' : '' ?>">
+                            <a href="<?= BASE_URL ?>/admin/index.php?page=User_Admin" class="admin-sidebar__link">
+                                <i class="fas fa-users-cog"></i>
+                                <span>Usuários</span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
 
                     <li class="admin-sidebar__divider"></li>
 
@@ -101,7 +104,7 @@ $current_page = isset($page) ? $page : 'dashboard';
         <main class="admin-main">
             <!-- Top Bar -->
             <header class="admin-topbar">
-                <h1 class="admin-topbar__title"> Logo </h1>
+                <h1 class="admin-topbar__title"> <?= SITE_NAME ?> </h1>
 
                 <div class="admin-topbar__right">
                     <div class="admin-topbar__user">

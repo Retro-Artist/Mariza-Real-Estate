@@ -18,16 +18,29 @@ if (!isset($_SESSION['admin_id']) && basename($_SERVER['PHP_SELF']) != 'Admin_Lo
     exit;
 }
 
-// Get the requested page from URL or set default
-$page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
+// Get the requested page from URL or set default to calendar (instead of dashboard)
+$page = isset($_GET['page']) ? $_GET['page'] : 'Calendar';
 
 // Include header
 include 'Admin_Header.php';
 
 // Routing for admin pages
 switch ($page) {
-    case 'dashboard':
-        include 'paginas/Admin_Dashboard.php';
+    // Calendar pages (now primary)
+    case 'Calendar':
+        include 'paginas/Calendar_Admin.php';
+        break;
+    case 'Calendar_Create':
+        include 'paginas/Calendar_Create.php';
+        break;
+    case 'Calendar_Update':
+        include 'paginas/Calendar_Update.php';
+        break;
+    case 'Calendar_View':
+        include 'paginas/Calendar_View.php';
+        break;
+    case 'Calendar_Delete':
+        include 'paginas/Calendar_Delete.php';
         break;
 
     // Category pages
@@ -42,6 +55,20 @@ switch ($page) {
         break;
     case 'Category_Delete':
         include 'paginas/Category_Delete.php';
+        break;
+
+    // User pages
+    case 'User_Admin':
+        include 'paginas/User_Admin.php';
+        break;
+    case 'User_Create':
+        include 'paginas/User_Create.php';
+        break;
+    case 'User_Update':
+        include 'paginas/User_Update.php';
+        break;
+    case 'User_Delete':
+        include 'paginas/User_Delete.php';
         break;
 
     // Property pages
@@ -75,23 +102,6 @@ switch ($page) {
         include 'paginas/Client_View.php';
         break;
 
-    // Calendar pages
-    case 'Calendar':
-        include 'paginas/Calendar_Admin.php';
-        break;
-    case 'Calendar_Create':
-        include 'paginas/Calendar_Create.php';
-        break;
-    case 'Calendar_Update':
-        include 'paginas/Calendar_Update.php';
-        break;
-    case 'Calendar_View':
-        include 'paginas/Calendar_View.php';
-        break;
-    case 'Calendar_Delete':
-        include 'paginas/Calendar_Delete.php';
-        break;
-
     // Service Request Management pages
     case 'Atendimento_Admin':
         include 'paginas/Atendimento_Admin.php';
@@ -109,8 +119,14 @@ switch ($page) {
         include 'paginas/Atendimento_Delete.php';
         break;
 
+    // For backwards compatibility, redirect dashboard to calendar
+    case 'dashboard':
+        include 'paginas/Calendar_Admin.php';
+        break;
+
+    // Default case
     default:
-        include 'paginas/Admin_Dashboard.php';
+        include 'paginas/Calendar_Admin.php';
         break;
 }
 // Include footer

@@ -1465,4 +1465,254 @@ function deleteCalendarEvent(int $eventId): bool
     }
 }
 
+// ===================================
+// User Admin Functions
+// ===================================
 
+/**
+ * Get user list with pagination and filters
+ * 
+ * @param array $filters Filter options
+ * @param int $page Current page number
+ * @param int $perPage Items per page
+ * @return array Contains 'users', 'total' and 'totalPages'
+ */
+function getAdminUsers(array $filters = [], int $page = 1, int $perPage = 10): array
+{
+    global $databaseConnection;
+
+    $result = [
+        'users' => [],
+        'total' => 0,
+        'totalPages' => 0
+    ];
+
+    try {
+        $whereConditions = [];
+        $params = [];
+
+        // Apply filters
+        if (!empty($filters['nivel'])) {
+            $whereConditions[] = "nivel = :nivel";
+            $params[':nivel'] = $filters['nivel'];
+        }
+
+        if (!empty($filters['busca'])) {
+            $whereConditions[] = "(nome LIKE :busca OR email LIKE :busca)";
+            $params[':busca'] = '%' . $filters['busca'] . '%';
+        }
+
+        $where = !empty($whereConditions) ? "WHERE " . implode(" AND ", $whereConditions) : "";
+
+        // Count total records for pagination
+        $countSql = "SELECT COUNT(*) as total FROM sistema_usuarios " . $where;
+        $countStmt = $databaseConnection->prepare($countSql);
+
+        foreach ($params as $key => $value) {
+            $countStmt->bindValue($key, $value);
+        }
+
+        $countStmt->execute();
+        $result['total'] = $countStmt->fetch()['total'];
+        $result['totalPages'] = ceil($result['total'] / $perPage);
+
+        // Calculate offset
+        $offset = ($page - 1) * $perPage;
+
+        // Get paginated records
+        $sql = "SELECT * FROM sistema_usuarios
+                $where
+                ORDER BY nome ASC
+                LIMIT :limit OFFSET :offset";
+
+        $stmt = $databaseConnection->prepare($sql);
+
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+
+        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $result['users'] = $stmt->fetchAll();
+
+        return $result;
+    } catch (PDOException $e) {
+        logError("Error fetching admin users: " . $e->getMessage());
+        return $result;
+    }
+}
+
+/**
+ * Get user details by ID
+ * 
+ * @param int $userId User ID
+ * @return array|null User data or null if not found
+ */
+function getAdminUserById(int $userId): ?array
+{
+    global $databaseConnection;
+
+    try {
+        $stmt = $databaseConnection->prepare(
+            "SELECT * FROM sistema_usuarios WHERE id = :id LIMIT 1"
+        );
+        $stmt->bindParam(':id', $userId);
+        $stmt->execute();
+
+        $user = $stmt->fetch();
+
+        if (!$user) {
+            return null;
+        }
+
+        return $user;
+    } catch (PDOException $e) {
+        logError("Error fetching admin user: " . $e->getMessage());
+        return null;
+    }
+}
+
+/**
+ * Create a new user
+ * 
+ * @param array $userData User data
+ * @return int|false New user ID or false on failure
+ */
+function createUser(array $userData): int|false
+{
+    global $databaseConnection;
+
+    try {
+        // Check if email already exists
+        $stmt = $databaseConnection->prepare(
+            "SELECT id FROM sistema_usuarios WHERE email = :email LIMIT 1"
+        );
+        $stmt->bindParam(':email', $userData['email']);
+        $stmt->execute();
+
+        if ($stmt->rowCount() > 0) {
+            return false;
+        }
+
+        // Hash password
+        $hashedPassword = password_hash($userData['senha'], PASSWORD_DEFAULT);
+
+        // Insert new user
+        $stmt = $databaseConnection->prepare(
+            "INSERT INTO sistema_usuarios (nome, email, senha, nivel) 
+             VALUES (:nome, :email, :senha, :nivel)"
+        );
+
+        $stmt->bindParam(':nome', $userData['nome']);
+        $stmt->bindParam(':email', $userData['email']);
+        $stmt->bindParam(':senha', $hashedPassword);
+        $stmt->bindParam(':nivel', $userData['nivel']);
+
+        $stmt->execute();
+
+        return $databaseConnection->lastInsertId();
+    } catch (PDOException $e) {
+        logError("Error creating user: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Update an existing user
+ * 
+ * @param int $userId User ID
+ * @param array $userData Updated user data
+ * @return bool Success or failure
+ */
+function updateUser(int $userId, array $userData): bool
+{
+    global $databaseConnection;
+
+    try {
+        // Check if email already exists (excluding current user)
+        $stmt = $databaseConnection->prepare(
+            "SELECT id FROM sistema_usuarios WHERE email = :email AND id != :id LIMIT 1"
+        );
+        $stmt->bindParam(':email', $userData['email']);
+        $stmt->bindParam(':id', $userId);
+        $stmt->execute();
+
+        if ($stmt->rowCount() > 0) {
+            return false;
+        }
+
+        // Update user with or without password change
+        if (!empty($userData['senha'])) {
+            // Hash new password
+            $hashedPassword = password_hash($userData['senha'], PASSWORD_DEFAULT);
+            
+            // Update with new password
+            $stmt = $databaseConnection->prepare(
+                "UPDATE sistema_usuarios 
+                 SET nome = :nome, email = :email, senha = :senha, nivel = :nivel
+                 WHERE id = :id"
+            );
+            $stmt->bindParam(':senha', $hashedPassword);
+        } else {
+            // Update without changing password
+            $stmt = $databaseConnection->prepare(
+                "UPDATE sistema_usuarios 
+                 SET nome = :nome, email = :email, nivel = :nivel
+                 WHERE id = :id"
+            );
+        }
+
+        $stmt->bindParam(':nome', $userData['nome']);
+        $stmt->bindParam(':email', $userData['email']);
+        $stmt->bindParam(':nivel', $userData['nivel']);
+        $stmt->bindParam(':id', $userId);
+
+        return $stmt->execute();
+    } catch (PDOException $e) {
+        logError("Error updating user: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Delete a user
+ * 
+ * @param int $userId User ID
+ * @return bool Success or failure
+ */
+function deleteUser(int $userId): bool
+{
+    global $databaseConnection;
+
+    try {
+        // Prevent deleting the last administrator
+        $stmt = $databaseConnection->prepare(
+            "SELECT COUNT(*) as count FROM sistema_usuarios WHERE nivel = 'Administrador'"
+        );
+        $stmt->execute();
+        $adminCount = $stmt->fetch()['count'];
+
+        $stmt = $databaseConnection->prepare(
+            "SELECT nivel FROM sistema_usuarios WHERE id = :id"
+        );
+        $stmt->bindParam(':id', $userId);
+        $stmt->execute();
+        $user = $stmt->fetch();
+
+        // If trying to delete the last admin, return false
+        if ($user && $user['nivel'] === 'Administrador' && $adminCount <= 1) {
+            return false;
+        }
+
+        // Delete user
+        $stmt = $databaseConnection->prepare("DELETE FROM sistema_usuarios WHERE id = :id");
+        $stmt->bindParam(':id', $userId);
+
+        return $stmt->execute();
+    } catch (PDOException $e) {
+        logError("Error deleting user: " . $e->getMessage());
+        return false;
+    }
+}

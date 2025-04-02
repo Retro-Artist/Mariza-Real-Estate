@@ -4,12 +4,12 @@
 @import 'shared-components.css';
 @import 'header.css';
 @import 'property.css';
-@import 'dashboard.css';
 @import 'category.css';
 @import 'client.css';
 @import 'calendar.css';
 @import 'atendimento.css';
 @import 'login.css';
+@import 'user.css';
 
 /* Admin Area Base Styles */
 :root {

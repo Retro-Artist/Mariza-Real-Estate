@@ -98,11 +98,14 @@ if (isset($_SESSION['alert_message'])) {
                            placeholder="Título, código ou referência" value="<?= htmlspecialchars($filtroBusca) ?>">
                 </div>
                 
-                <div class="form-group form-group--submit">
-                    <button type="submit" class="primary-button">
-                        <i class="fas fa-search"></i> Filtrar
-                    </button>
-                    <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin" class="cancel-button">Limpar</a>
+                <div class="form-group filter-buttons">
+                    <label class="invisible">Ações</label>
+                    <div class="button-group">
+                        <button type="submit" class="primary-button">
+                            <i class="fas fa-search"></i> Filtrar
+                        </button>
+                        <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin" class="cancel-button">Limpar</a>
+                    </div>
                 </div>
             </div>
         </form>

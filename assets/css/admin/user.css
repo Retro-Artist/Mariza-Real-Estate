@@ -1,0 +1,39 @@
+/* ===================================
+   User Management Styles
+   =================================== */
+
+   .user-admin .badge--blue {
+    background-color: rgba(52, 152, 219, 0.15);
+    color: var(--admin-blue);
+  }
+  
+  .user-admin .badge--green {
+    background-color: rgba(46, 204, 113, 0.15);
+    color: var(--admin-green);
+  }
+  
+  .action-button--disabled {
+    background-color: #e0e0e0;
+    color: #999;
+    cursor: not-allowed;
+  }
+  
+  .action-button--disabled:hover {
+    opacity: 1;
+    transform: none;
+  }
+  
+  /* User Forms */
+  .user-create .form-text,
+  .user-update .form-text {
+    font-size: var(--font-xs);
+    color: #6c757d;
+    margin-top: 5px;
+  }
+  
+  /* Warning Text */
+  .warning-text {
+    color: var(--admin-red);
+    font-weight: 500;
+    margin-top: 15px;
+  }

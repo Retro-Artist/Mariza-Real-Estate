@@ -10,7 +10,8 @@ require_once __DIR__ . '/../includes/admin_functions.php';
 
 // Check if already logged in
 if (isset($_SESSION['admin_id'])) {
-    header('Location: ' . BASE_URL . '/admin/');
+    // Redirecionar para o calendário em vez de dashboard
+    header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar');
     exit;
 }
 
@@ -36,8 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['admin_name'] = $user['nome'];
             $_SESSION['admin_level'] = $user['nivel'];
             
-            // Redirect to admin dashboard
-            header('Location: ' . BASE_URL . '/admin/');
+            // Redirect to calendar (foi dashboard)
+            header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar');
             exit;
         } else {
             // Login failed
