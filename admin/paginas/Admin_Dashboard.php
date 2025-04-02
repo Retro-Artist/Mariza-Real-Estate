@@ -5,259 +5,239 @@ if (!isset($_SESSION['admin_id'])) {
     exit;
 }
 
-// Get current month and year
-$month = isset($_GET['month']) ? intval($_GET['month']) : date('n');
-$year = isset($_GET['year']) ? intval($_GET['year']) : date('Y');
+// Get dashboard statistics using our function from admin_functions.php
+$dashboardStats = getDashboardStats();
 
-// Make sure month is between 1-12
-if ($month < 1) {
-    $month = 12;
-    $year--;
-} elseif ($month > 12) {
-    $month = 1;
-    $year++;
-}
-
-// Get first day of the month
-$firstDayOfMonth = mktime(0, 0, 0, $month, 1, $year);
-$numberDays = date('t', $firstDayOfMonth);
-$firstDayOfWeek = date('w', $firstDayOfMonth);
-
-// Month names for display
-$monthNames = [
-    1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'Março', 4 => 'Abril',
-    5 => 'Maio', 6 => 'Junho', 7 => 'Julho', 8 => 'Agosto',
-    9 => 'Setembro', 10 => 'Outubro', 11 => 'Novembro', 12 => 'Dezembro'
-];
-
-// Get events for this month using function from admin_functions.php
-$events = getMonthEvents($month, $year);
-
-// Organize events by day
-$eventsByDay = [];
-foreach ($events as $event) {
-    $eventStart = new DateTime($event['data_inicio']);
-    $eventEnd = new DateTime($event['data_fim']);
-    
-    // Create a period from start to end date
-    $interval = new DateInterval('P1D');
-    $dateRange = new DatePeriod($eventStart, $interval, $eventEnd->modify('+1 day'));
-    
-    // Add event to each day in the range
-    foreach ($dateRange as $date) {
-        $day = $date->format('j');
-        if ($date->format('n') == $month && $date->format('Y') == $year) {
-            if (!isset($eventsByDay[$day])) {
-                $eventsByDay[$day] = [];
-            }
-            $eventsByDay[$day][] = $event;
-        }
-    }
-}
-
-// Get the 6 most recent reminders
-try {
-    $stmt = $databaseConnection->prepare(
-        "SELECT * FROM sistema_avisos 
-         ORDER BY data_inicio DESC 
-         LIMIT 6"
-    );
-    $stmt->execute();
-    $recentReminders = $stmt->fetchAll();
-} catch (PDOException $e) {
-    logError("Error fetching recent reminders: " . $e->getMessage());
-    $recentReminders = [];
-}
-
-// Previous and next month links
-$prevMonth = $month - 1;
-$prevYear = $year;
-if ($prevMonth < 1) {
-    $prevMonth = 12;
-    $prevYear--;
-}
-
-$nextMonth = $month + 1;
-$nextYear = $year;
-if ($nextMonth > 12) {
-    $nextMonth = 1;
-    $nextYear++;
-}
+// Extract statistics for easier use in template
+$totalImoveis = $dashboardStats['totalImoveis'];
+$imoveisVenda = $dashboardStats['imoveisVenda'];
+$imoveisAluguel = $dashboardStats['imoveisAluguel'];
+$totalCategorias = $dashboardStats['totalCategorias'];
+$totalClientes = $dashboardStats['totalClientes'];
+$ultimosImoveis = $dashboardStats['ultimosImoveis'];
+$ultimosLembretes = $dashboardStats['ultimosLembretes'];
+$ultimosAtendimentos = $dashboardStats['ultimosAtendimentos'];
 ?>
 
-<div class="admin-page calendar-page">
-    <div class="admin-page__header">
-        <h2 class="admin-page__title">Calendário</h2>
-        <a href="<?= BASE_URL ?>/admin/index.php?page=Calendar_Create" class="primary-button">
-            <i class="fas fa-plus"></i> Novo Lembrete
-        </a>
-    </div>
-    
-    <div class="calendar-layout">
-        <!-- Calendar Column -->
-        <div class="calendar-column">
-            <div class="admin-card">
-                <div class="calendar-header">
-                    <div class="calendar-nav">
-                        <a href="<?= BASE_URL ?>/admin/index.php?page=Calendar&month=<?= $prevMonth ?>&year=<?= $prevYear ?>" class="calendar-nav__arrow">
-                            <i class="fas fa-chevron-left"></i>
-                        </a>
-                        <h3 class="calendar-nav__title"><?= $monthNames[$month] ?> <?= $year ?></h3>
-                        <a href="<?= BASE_URL ?>/admin/index.php?page=Calendar&month=<?= $nextMonth ?>&year=<?= $nextYear ?>" class="calendar-nav__arrow">
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="calendar">
-                    <div class="calendar__weekdays">
-                        <div class="calendar__day-name">Dom</div>
-                        <div class="calendar__day-name">Seg</div>
-                        <div class="calendar__day-name">Ter</div>
-                        <div class="calendar__day-name">Qua</div>
-                        <div class="calendar__day-name">Qui</div>
-                        <div class="calendar__day-name">Sex</div>
-                        <div class="calendar__day-name">Sáb</div>
-                    </div>
-                    
-                    <div class="calendar__days">
-                        <?php
-                        // Fill empty cells for days before the first day of month
-                        for ($i = 0; $i < $firstDayOfWeek; $i++) {
-                            echo '<div class="calendar__day calendar__day--empty"></div>';
-                        }
-                        
-                        // Output days of the month
-                        for ($day = 1; $day <= $numberDays; $day++) {
-                            $isToday = ($day == date('j') && $month == date('n') && $year == date('Y'));
-                            $dayClass = $isToday ? 'calendar__day calendar__day--today' : 'calendar__day';
-                            
-                            echo '<div class="' . $dayClass . '">';
-                            echo '<div class="calendar__day-number">' . $day . '</div>';
-                            
-                            // Output events for this day
-                            if (isset($eventsByDay[$day]) && !empty($eventsByDay[$day])) {
-                                echo '<div class="calendar__events">';
-                                foreach ($eventsByDay[$day] as $event) {
-                                    $priorityClass = '';
-                                    switch ($event['prioridade']) {
-                                        case 'Urgente':
-                                            $priorityClass = 'event--urgent';
-                                            break;
-                                        case 'Alta':
-                                            $priorityClass = 'event--high';
-                                            break;
-                                        case 'Normal':
-                                            $priorityClass = 'event--normal';
-                                            break;
-                                        case 'Baixa':
-                                            $priorityClass = 'event--low';
-                                            break;
-                                    }
-                                    
-                                    echo '<a href="' . BASE_URL . '/admin/index.php?page=Calendar_View&id=' . $event['id'] . '" ';
-                                    echo 'class="calendar__event ' . $priorityClass . '">';
-                                    echo htmlspecialchars($event['titulo']);
-                                    echo '</a>';
-                                }
-                                echo '</div>';
-                            }
-                            
-                            echo '</div>';
-                        }
-                        
-                        // Fill empty cells after the last day of the month
-                        $totalCells = $firstDayOfWeek + $numberDays;
-                        $remaining = 7 - ($totalCells % 7);
-                        if ($remaining < 7) {
-                            for ($i = 0; $i < $remaining; $i++) {
-                                echo '<div class="calendar__day calendar__day--empty"></div>';
-                            }
-                        }
-                        ?>
-                    </div>
-                </div>
+<!-- Dashboard Content -->
+<div class="dashboard">
+    <!-- Statistics Cards -->
+    <div class="dashboard__stats">
+        <div class="stat-card">
+            <div class="stat-card__icon">
+                <i class="fas fa-home"></i>
             </div>
-            
-            <!-- Legend for event priorities -->
-            <div class="admin-card calendar-legend">
-                <h3>Legenda de Prioridades</h3>
-                <div class="legend-items">
-                    <div class="legend-item">
-                        <div class="legend-color event--urgent"></div>
-                        <div class="legend-label">Urgente</div>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color event--high"></div>
-                        <div class="legend-label">Alta</div>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color event--normal"></div>
-                        <div class="legend-label">Normal</div>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color event--low"></div>
-                        <div class="legend-label">Baixa</div>
-                    </div>
-                </div>
+            <div class="stat-card__content">
+                <h3 class="stat-card__title">Total de Imóveis</h3>
+                <p class="stat-card__value"><?= $totalImoveis ?></p>
             </div>
         </div>
         
-        <!-- Recent Reminders Column -->
-        <div class="reminders-column">
-            <div class="admin-card">
-                <h3 class="card-title">Lembretes Recentes</h3>
-                
-                <?php if (empty($recentReminders)): ?>
-                    <div class="empty-state">
-                        <p>Nenhum lembrete cadastrado.</p>
-                    </div>
-                <?php else: ?>
-                    <div class="reminders-list">
-                        <?php foreach ($recentReminders as $reminder): ?>
+        <div class="stat-card">
+            <div class="stat-card__icon stat-card__icon--blue">
+                <i class="fas fa-tags"></i>
+            </div>
+            <div class="stat-card__content">
+                <h3 class="stat-card__title">Categorias</h3>
+                <p class="stat-card__value"><?= $totalCategorias ?></p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-card__icon stat-card__icon--orange">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-card__content">
+                <h3 class="stat-card__title">Clientes</h3>
+                <p class="stat-card__value"><?= $totalClientes ?></p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-card__icon stat-card__icon--green">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="stat-card__content">
+                <h3 class="stat-card__title">Imóveis para Venda</h3>
+                <p class="stat-card__value"><?= $imoveisVenda ?></p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-card__icon stat-card__icon--red">
+                <i class="fas fa-key"></i>
+            </div>
+            <div class="stat-card__content">
+                <h3 class="stat-card__title">Imóveis para Aluguel</h3>
+                <p class="stat-card__value"><?= $imoveisAluguel ?></p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="dashboard__actions">
+        <h2 class="dashboard__section-title">Ações Rápidas</h2>
+        
+        <div class="quick-actions">
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Create" class="quick-action">
+                <i class="fas fa-plus-circle"></i>
+                <span>Adicionar Imóvel</span>
+            </a>
+            
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Category_Create" class="quick-action">
+                <i class="fas fa-folder-plus"></i>
+                <span>Adicionar Categoria</span>
+            </a>
+            
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Create" class="quick-action">
+                <i class="fas fa-user-plus"></i>
+                <span>Adicionar Cliente</span>
+            </a>
+            
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Calendar_Create" class="quick-action">
+                <i class="fas fa-calendar-plus"></i>
+                <span>Adicionar Lembrete</span>
+            </a>
+            
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento_Create" class="quick-action">
+                <i class="fas fa-headset"></i>
+                <span>Registrar Atendimento</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Latest Properties -->
+    <div class="dashboard__recent">
+        <h2 class="dashboard__section-title">Imóveis Recentes</h2>
+        
+        <?php if (empty($ultimosImoveis)): ?>
+            <div class="empty-state">
+                <p>Nenhum imóvel cadastrado ainda.</p>
+                <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Create" class="primary-button">
+                    Adicionar Imóvel
+                </a>
+            </div>
+        <?php else: ?>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Título</th>
+                            <th>Categoria</th>
+                            <th>Tipo</th>
+                            <th>Valor</th>
+                            <th>Data</th>
+                            <th width="150">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($ultimosImoveis as $imovel): ?>
+                            <tr>
+                                <td><?= $imovel['id'] ?></td>
+                                <td><?= htmlspecialchars($imovel['titulo']) ?></td>
+                                <td><?= htmlspecialchars($imovel['categoria'] ?? 'N/A') ?></td>
+                                <td>
+                                    <span class="badge <?= $imovel['para'] === 'venda' ? 'badge--green' : 'badge--blue' ?>">
+                                        <?= ucfirst($imovel['para']) ?>
+                                    </span>
+                                </td>
+                                <td><?= formatCurrency($imovel['valor']) ?></td>
+                                <td><?= formatDate($imovel['data']) ?></td>
+                                <td class="actions">
+                                    <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Update&id=<?= $imovel['id'] ?>" class="action-button action-button--edit" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="<?= BASE_URL ?>/imovel/<?= $imovel['id'] ?>" class="action-button action-button--view" title="Visualizar" target="_blank">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="dashboard__see-all">
+                <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin" class="see-all-link">
+                    Ver todos os imóveis <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- Latest Calendar Events -->
+    <div class="dashboard__recent">
+        <h2 class="dashboard__section-title">Lembretes Recentes</h2>
+        
+        <?php if (empty($ultimosLembretes)): ?>
+            <div class="empty-state">
+                <p>Nenhum lembrete pendente encontrado.</p>
+                <a href="<?= BASE_URL ?>/admin/index.php?page=Calendar_Create" class="primary-button">
+                    Adicionar Lembrete
+                </a>
+            </div>
+        <?php else: ?>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Para</th>
+                            <th>Prioridade</th>
+                            <th>Data Início</th>
+                            <th>Data Fim</th>
+                            <th width="100">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($ultimosLembretes as $lembrete): ?>
                             <?php 
-                                $reminderDate = new DateTime($reminder['data_inicio']);
+                                $data_inicio = new DateTime($lembrete['data_inicio']);
+                                $data_fim = new DateTime($lembrete['data_fim']);
                                 
                                 $priorityClass = '';
-                                switch ($reminder['prioridade']) {
+                                switch ($lembrete['prioridade']) {
                                     case 'Urgente':
-                                        $priorityClass = 'priority--urgent';
+                                        $priorityClass = 'badge--urgent';
                                         break;
                                     case 'Alta':
-                                        $priorityClass = 'priority--high';
+                                        $priorityClass = 'badge--high';
                                         break;
                                     case 'Normal':
-                                        $priorityClass = 'priority--normal';
+                                        $priorityClass = 'badge--normal';
                                         break;
                                     case 'Baixa':
-                                        $priorityClass = 'priority--low';
+                                        $priorityClass = 'badge--low';
                                         break;
                                 }
                             ?>
-                            <div class="reminder-item">
-                                <div class="reminder-header">
-                                    <div class="reminder-priority <?= $priorityClass ?>"></div>
-                                    <span class="reminder-date"><?= $reminderDate->format('d/m/Y') ?></span>
-                                    <span class="reminder-status status--<?= strtolower($reminder['status']) ?>">
-                                        <?= htmlspecialchars($reminder['status']) ?>
+                            <tr>
+                                <td><?= htmlspecialchars($lembrete['titulo']) ?></td>
+                                <td><?= htmlspecialchars($lembrete['para']) ?></td>
+                                <td>
+                                    <span class="badge <?= $priorityClass ?>">
+                                        <?= htmlspecialchars($lembrete['prioridade']) ?>
                                     </span>
-                                </div>
-                                <h4 class="reminder-title">
-                                    <a href="<?= BASE_URL ?>/admin/index.php?page=Calendar_View&id=<?= $reminder['id'] ?>">
-                                        <?= htmlspecialchars($reminder['titulo']) ?>
+                                </td>
+                                <td><?= $data_inicio->format('d/m/Y H:i') ?></td>
+                                <td><?= $data_fim->format('d/m/Y H:i') ?></td>
+                                <td class="actions">
+                                    <a href="<?= BASE_URL ?>/admin/index.php?page=Calendar_View&id=<?= $lembrete['id'] ?>" class="action-button action-button--view" title="Visualizar">
+                                        <i class="fas fa-eye"></i>
                                     </a>
-                                </h4>
-                            </div>
+                                </td>
+                            </tr>
                         <?php endforeach; ?>
-                    </div>
-                    
-                    <div class="reminders-actions">
-                        <a href="<?= BASE_URL ?>/admin/index.php?page=Calendar" class="see-all-link">
-                            Ver todos os lembretes <i class="fas fa-arrow-right"></i>
-                        </a>
-                    </div>
-                <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
-        </div>
+            
+            <div class="dashboard__see-all">
+                <a href="<?= BASE_URL ?>/admin/index.php?page=Calendar" class="see-all-link">
+                    Ver todos os lembretes <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        <?php endif; ?>
     </div>
 </div>

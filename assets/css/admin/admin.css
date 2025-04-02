@@ -3,8 +3,8 @@
 /* Import admin components */
 @import 'shared-components.css';
 @import 'header.css';
-@import 'dashboard.css';
 @import 'property.css';
+@import 'dashboard.css';
 @import 'category.css';
 @import 'client.css';
 @import 'calendar.css';

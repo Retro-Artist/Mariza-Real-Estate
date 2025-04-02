@@ -1,120 +1,77 @@
 <?php
-// Start session
+// Iniciar a sessão
 session_start();
 
-// Iniciar output buffering - adicione esta linha no topo de index.php
-ob_start();
-
-// Include configuration
+// Incluir configurações e funções
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/database.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/admin_functions.php';
 
-// Check if user is logged in
-if (!isset($_SESSION['admin_id']) && basename($_SERVER['PHP_SELF']) != 'Admin_Login.php') {
-    // Redirect to login page if not logged in
+// Verificar se o administrador está logado
+$isLoggedIn = isset($_SESSION['admin_id']) && !empty($_SESSION['admin_id']);
+
+// Se não estiver logado e não estiver na página de login, redirecionar
+if (!$isLoggedIn && !isset($_GET['page']) && $_GET['page'] !== 'login') {
     header('Location: ' . BASE_URL . '/admin/Admin_Login.php');
     exit;
 }
 
-// Get the requested page from URL or set default
+// Obter a página atual da URL
 $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
 
-// Include header
-include 'Admin_Header.php';
+// Definir o mapeamento de páginas para arquivos PHP
+$pages = [
+    // Dashboard (agora é o calendário)
+    'dashboard' => 'Admin_Dashboard.php',
+    
+    // Páginas de Lembretes (antigos calendários)
+    'Lembrete_Create' => 'paginas/Lembrete_Create.php',
+    'Lembrete_Update' => 'paginas/Lembrete_Update.php',
+    'Lembrete_View' => 'paginas/Lembrete_View.php',
+    'Lembrete_Delete' => 'paginas/Lembrete_Delete.php',
+    
+    // Outras páginas
+    'Category_Admin' => 'paginas/Category_Admin.php',
+    'Category_Create' => 'paginas/Category_Create.php',
+    'Category_Update' => 'paginas/Category_Update.php',
+    'Category_Delete' => 'paginas/Category_Delete.php',
+    
+    'Property_Admin' => 'paginas/Property_Admin.php',
+    'Property_Create' => 'paginas/Property_Create.php',
+    'Property_Update' => 'paginas/Property_Update.php',
+    'Property_Delete' => 'paginas/Property_Delete.php',
+    
+    'Client_Admin' => 'paginas/Client_Admin.php',
+    'Client_Create' => 'paginas/Client_Create.php',
+    'Client_Update' => 'paginas/Client_Update.php',
+    'Client_Delete' => 'paginas/Client_Delete.php',
+    'Client_View' => 'paginas/Client_View.php',
+    
+    'Atendimento_Admin' => 'paginas/Atendimento_Admin.php',
+    'Atendimento_Create' => 'paginas/Atendimento_Create.php', 
+    'Atendimento_Update' => 'paginas/Atendimento_Update.php',
+    'Atendimento_Delete' => 'paginas/Atendimento_Delete.php',
+    'Atendimento_View' => 'paginas/Atendimento_View.php'
+];
 
-// Routing for admin pages
-switch ($page) {
-    case 'dashboard':
-        include 'paginas/Admin_Dashboard.php';
-        break;
-
-    // Category pages
-    case 'Category_Admin':
-        include 'paginas/Category_Admin.php';
-        break;
-    case 'Category_Create':
-        include 'paginas/Category_Create.php';
-        break;
-    case 'Category_Update':
-        include 'paginas/Category_Update.php';
-        break;
-    case 'Category_Delete':
-        include 'paginas/Category_Delete.php';
-        break;
-
-    // Property pages
-    case 'Property_Admin':
-        include 'paginas/Property_Admin.php';
-        break;
-    case 'Property_Create':
-        include 'paginas/Property_Create.php';
-        break;
-    case 'Property_Update':
-        include 'paginas/Property_Update.php';
-        break;
-    case 'Property_Delete':
-        include 'paginas/Property_Delete.php';
-        break;
-
-    // Client pages
-    case 'Client_Admin':
-        include 'paginas/Client_Admin.php';
-        break;
-    case 'Client_Create':
-        include 'paginas/Client_Create.php';
-        break;
-    case 'Client_Update':
-        include 'paginas/Client_Update.php';
-        break;
-    case 'Client_Delete':
-        include 'paginas/Client_Delete.php';
-        break;
-    case 'Client_View':
-        include 'paginas/Client_View.php';
-        break;
-
-    // Calendar pages
-    case 'Calendar':
-        include 'paginas/Calendar_Admin.php';
-        break;
-    case 'Calendar_Create':
-        include 'paginas/Calendar_Create.php';
-        break;
-    case 'Calendar_Update':
-        include 'paginas/Calendar_Update.php';
-        break;
-    case 'Calendar_View':
-        include 'paginas/Calendar_View.php';
-        break;
-    case 'Calendar_Delete':
-        include 'paginas/Calendar_Delete.php';
-        break;
-
-    // Service Request Management pages
-    case 'Atendimento_Admin':
-        include 'paginas/Atendimento_Admin.php';
-        break;
-    case 'Atendimento_Create':
-        include 'paginas/Atendimento_Create.php';
-        break;
-    case 'Atendimento_View':
-        include 'paginas/Atendimento_View.php';
-        break;
-    case 'Atendimento_Update':
-        include 'paginas/Atendimento_Update.php';
-        break;
-    case 'Atendimento_Delete':
-        include 'paginas/Atendimento_Delete.php';
-        break;
-
-    default:
-        include 'paginas/Admin_Dashboard.php';
-        break;
+// Verificar se a página solicitada existe no mapeamento
+if (!array_key_exists($page, $pages)) {
+    // Página não encontrada, redirecionar para o dashboard
+    header('Location: ' . BASE_URL . '/admin/index.php?page=dashboard');
+    exit;
 }
-// Include footer
-include 'Admin_Footer.php';
 
-// Liberar o output buffer no final do script
-ob_end_flush();
+// Incluir cabeçalho se o usuário estiver logado
+if ($isLoggedIn) {
+    include_once 'Admin_Header.php';
+}
+
+// Incluir o arquivo da página
+include_once $pages[$page];
+
+// Incluir rodapé se o usuário estiver logado
+if ($isLoggedIn) {
+    include_once 'Admin_Footer.php';
+}
+?>

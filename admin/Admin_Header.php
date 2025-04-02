@@ -45,8 +45,15 @@ $current_page = isset($page) ? $page : 'dashboard';
                 <ul class="admin-sidebar__menu">
                     <li class="admin-sidebar__item <?= $current_page === 'dashboard' ? 'active' : '' ?>">
                         <a href="<?= BASE_URL ?>/admin/index.php?page=dashboard" class="admin-sidebar__link">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span>Dashboard</span>
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Calendário</span>
+                        </a>
+                    </li>
+
+                    <li class="admin-sidebar__item <?= strpos($current_page, 'Lembrete_') === 0 || strpos($current_page, 'Calendar_') === 0 ? 'active' : '' ?>">
+                        <a href="<?= BASE_URL ?>/admin/index.php?page=Lembrete_Create" class="admin-sidebar__link">
+                            <i class="fas fa-sticky-note"></i>
+                            <span>Lembretes</span>
                         </a>
                     </li>
 
@@ -68,13 +75,6 @@ $current_page = isset($page) ? $page : 'dashboard';
                         <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Admin" class="admin-sidebar__link">
                             <i class="fas fa-users"></i>
                             <span>Clientes</span>
-                        </a>
-                    </li>
-
-                    <li class="admin-sidebar__item <?= strpos($current_page, 'Calendar') === 0 ? 'active' : '' ?>">
-                        <a href="<?= BASE_URL ?>/admin/index.php?page=Calendar" class="admin-sidebar__link">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span>Calendário</span>
                         </a>
                     </li>
 

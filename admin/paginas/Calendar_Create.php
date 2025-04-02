@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['alert_type'] = 'success';
             
             $redirect_after_save = true;
-            $redirect_url = BASE_URL . '/admin/index.php?page=Calendar';
+            $redirect_url = BASE_URL . '/admin/index.php?page=dashboard';
         } else {
             $error = 'Ocorreu um erro ao adicionar o lembrete. Por favor, tente novamente.';
         }
@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Page Header -->
     <div class="admin-page__header">
         <h2 class="admin-page__title">Adicionar Lembrete</h2>
-        <a href="<?= BASE_URL ?>/admin/index.php?page=Calendar" class="cancel-button">
+        <a href="<?= BASE_URL ?>/admin/index.php?page=dashboard" class="cancel-button">
             <i class="fas fa-arrow-left"></i> Voltar
         </a>
     </div>
@@ -180,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         
         <div class="form-actions">
-            <a href="<?= BASE_URL ?>/admin/index.php?page=Calendar" class="cancel-button">Cancelar</a>
+            <a href="<?= BASE_URL ?>/admin/index.php?page=dashboard" class="cancel-button">Cancelar</a>
             <button type="submit" class="primary-button">
                 <i class="fas fa-save"></i> Salvar Lembrete
             </button>
