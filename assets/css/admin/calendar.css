@@ -276,6 +276,126 @@
     flex: 1;
     min-width: 200px;
   }
+
+  /* Calendar Layout - Horizontal side-by-side */
+.calendar-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+}
+
+.calendar-column {
+  min-width: 0;
+}
+
+.reminders-column {
+  min-width: 0;
+}
+
+/* Recent Reminders List */
+.reminders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.reminder-item {
+  padding: 12px 15px;
+  border-radius: var(--border-radius);
+  background-color: #f8f9fa;
+  border-left: 3px solid var(--admin-primary);
+}
+
+.reminder-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: var(--font-xs);
+  color: #6c757d;
+}
+
+.reminder-priority {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--admin-primary);
+}
+
+.reminder-priority.priority--urgent {
+  background-color: var(--admin-red);
+}
+
+.reminder-priority.priority--high {
+  background-color: var(--admin-orange);
+}
+
+.reminder-priority.priority--normal {
+  background-color: var(--admin-blue);
+}
+
+.reminder-priority.priority--low {
+  background-color: var(--admin-green);
+}
+
+.reminder-date {
+  margin-right: auto;
+}
+
+.reminder-status {
+  font-size: var(--font-xs);
+  font-weight: 500;
+}
+
+.status--pendente {
+  color: var(--admin-orange);
+}
+
+.status--concluído {
+  color: var(--admin-green);
+}
+
+.reminder-title {
+  font-size: var(--font-sm);
+  margin: 0;
+  font-weight: 500;
+}
+
+.reminder-title a {
+  color: var(--admin-text);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.reminder-title a:hover {
+  color: var(--admin-primary);
+}
+
+.reminders-actions {
+  text-align: right;
+  margin-top: 10px;
+}
+
+.see-all-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--admin-primary);
+  font-size: var(--font-sm);
+  text-decoration: none;
+}
+
+.see-all-link:hover {
+  text-decoration: underline;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+  .calendar-layout {
+    grid-template-columns: 1fr;
+  }
+}
   
   /* Responsive Calendar */
   @media (max-width: 992px) {
