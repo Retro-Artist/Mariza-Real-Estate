@@ -59,7 +59,6 @@ if (isset($_SESSION['alert_message'])) {
     
     <!-- Page Header with Add Button -->
     <div class="admin-page__header">
-        <h2 class="admin-page__title">Gerenciar Imóveis</h2>
         <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Create" class="primary-button">
             <i class="fas fa-plus"></i> Novo Imóvel
         </a>

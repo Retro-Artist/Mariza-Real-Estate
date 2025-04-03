@@ -86,13 +86,6 @@ if ($nextMonth > 12) {
 ?>
 
 <div class="admin-page calendar-page">
-    <div class="admin-page__header">
-        <h2 class="admin-page__title">Calendário</h2>
-        <a href="<?= BASE_URL ?>/admin/index.php?page=Calendar_Create" class="primary-button">
-            <i class="fas fa-plus"></i> Novo Lembrete
-        </a>
-    </div>
-    
     <div class="calendar-layout">
         <!-- Calendar Column -->
         <div class="calendar-column">
