@@ -1,0 +1,150 @@
+/* Enhanced Calendar Day Styles */
+
+/* Calendar grid */
+.calendar__days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-top: 10px;
+}
+
+/* Day cells */
+.calendar__day {
+    position: relative;
+    min-height: 80px;
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    overflow: hidden;
+    border: 1px solid #e9ecef;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Empty days */
+.calendar__day--empty {
+    background-color: #f1f3f5;
+    border: 1px solid #e9ecef;
+    cursor: default;
+}
+
+/* Today's day */
+.calendar__day--today {
+    background-color: #e3f2fd;
+    border: 1px solid #90caf9;
+}
+
+/* Day number */
+.calendar__day-number {
+    font-weight: 600;
+    margin-bottom: 5px;
+    font-size: 1rem;
+}
+
+/* Hover effects */
+.calendar__day:not(.calendar__day--empty):hover {
+    background-color: #e3f2fd;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-color: #90caf9;
+    cursor: pointer;
+}
+
+/* Click effect */
+.calendar__day:not(.calendar__day--empty):active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Events container */
+.calendar__events {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 60px;
+    overflow-y: auto;
+}
+
+/* Individual event */
+.calendar__event {
+    padding: 3px 6px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: white;
+    text-decoration: none;
+}
+
+/* Event priority colors */
+.event--urgent {
+    background-color: #e74c3c;
+}
+
+.event--high {
+    background-color: #f39c12;
+}
+
+.event--normal {
+    background-color: #3498db;
+}
+
+.event--low {
+    background-color: #2ecc71;
+}
+
+/* Event hover effect */
+.calendar__event:hover {
+    filter: brightness(1.1);
+}
+
+/* Event indicator */
+.calendar__day-indicator {
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 3px;
+}
+
+.calendar__day-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+/* Priority indicators */
+.calendar__day-dot.priority--urgent {
+    background-color: #e74c3c;
+}
+
+.calendar__day-dot.priority--high {
+    background-color: #f39c12;
+}
+
+.calendar__day-dot.priority--normal {
+    background-color: #3498db;
+}
+
+.calendar__day-dot.priority--low {
+    background-color: #2ecc71;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .calendar__day {
+        min-height: 60px;
+        padding: 5px;
+    }
+    
+    .calendar__events {
+        max-height: 40px;
+    }
+    
+    .calendar__event {
+        font-size: 0.7rem;
+        padding: 2px 4px;
+    }
+}

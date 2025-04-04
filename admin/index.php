@@ -18,6 +18,50 @@ if (!isset($_SESSION['admin_id']) && basename($_SERVER['PHP_SELF']) != 'Admin_Lo
     exit;
 }
 
+// Process quick reminder creation (from modal)
+if (isset($_POST['action']) && $_POST['action'] === 'quick_create_reminder') {
+    $formData = [
+        'titulo' => trim($_POST['titulo'] ?? ''),
+        'descricao' => trim($_POST['descricao'] ?? ''),
+        'para' => trim($_POST['para'] ?? ''),
+        'prioridade' => trim($_POST['prioridade'] ?? 'Normal'),
+        'data_inicio' => trim($_POST['selected_date'] ?? ''),
+        'hora_inicio' => trim($_POST['hora_inicio'] ?? ''),
+        'data_fim' => trim($_POST['data_fim'] ?? ''),
+        'hora_fim' => trim($_POST['hora_fim'] ?? ''),
+        'status' => 'Pendente'
+    ];
+    
+    // Basic validation
+    if (!empty($formData['titulo']) && !empty($formData['data_inicio']) && !empty($formData['data_fim'])) {
+        // Create calendar event
+        $newEventId = createCalendarEvent($formData);
+        
+        if ($newEventId) {
+            // Set success message
+            $_SESSION['alert_message'] = 'Lembrete adicionado com sucesso!';
+            $_SESSION['alert_type'] = 'success';
+        } else {
+            // Set error message
+            $_SESSION['alert_message'] = 'Ocorreu um erro ao adicionar o lembrete.';
+            $_SESSION['alert_type'] = 'error';
+        }
+    } else {
+        // Set validation error message
+        $_SESSION['alert_message'] = 'Por favor, preencha todos os campos obrigatórios.';
+        $_SESSION['alert_type'] = 'error';
+    }
+    
+    // Get the current month/year from the selected date
+    $selectedDate = new DateTime($formData['data_inicio']);
+    $month = $selectedDate->format('n');
+    $year = $selectedDate->format('Y');
+    
+    // Redirect back to calendar with appropriate month/year
+    header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar&month=' . $month . '&year=' . $year);
+    exit;
+}
+
 // Get the requested page from URL or set default to calendar (instead of dashboard)
 $page = isset($_GET['page']) ? $_GET['page'] : 'Calendar';
 
