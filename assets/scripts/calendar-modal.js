@@ -1,127 +1,151 @@
 /**
- * Calendar Modal Handler
- * 
- * This script manages the modal interactions for calendar day clicks
- * and form submissions for creating reminders directly from the calendar.
+ * Calendar Modal Interaction Script
+ * Handles showing reminders when clicking on calendar days
  */
-
 document.addEventListener('DOMContentLoaded', function() {
-    // Get references to modal elements
-    const calendarModal = document.getElementById('calendar-day-modal');
-    const modalClose = document.querySelector('.calendar-modal__close');
-    const modalTitle = document.querySelector('.calendar-modal__title');
-    const calendarForm = document.getElementById('calendar-reminder-form');
-    const selectedDateInput = document.getElementById('selected_date');
-    const selectedDateEnd = document.getElementById('data_fim');
-    
-    // Check if the modal exists
-    if (!calendarModal) {
-        console.error('Calendar modal not found in the document');
-        return;
-    }
-    
-    console.log('Calendar modal initialized');
-    
-    // Get all calendar day elements that can be clicked
+    // Elements
+    const modal = document.getElementById('calendar-day-modal');
+    const modalClose = modal.querySelector('.calendar-modal__close');
+    const modalTitle = modal.querySelector('.calendar-modal__title');
     const calendarDays = document.querySelectorAll('.calendar__day:not(.calendar__day--empty)');
+    const remindersList = document.getElementById('day-reminders-list');
+    const selectedDateInput = document.getElementById('selected_date');
+    const newReminderBtn = document.getElementById('new-reminder-btn');
+    const reminderForm = document.getElementById('calendar-reminder-form');
     
-    console.log(`Found ${calendarDays.length} clickable calendar days`);
-    
-    // Add click event to each calendar day
+    // Format date for display (Day, Month DD, YYYY)
+    function formatDateForDisplay(year, month, day) {
+        const date = new Date(year, month - 1, day);
+        return date.toLocaleDateString('pt-BR', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+    }
+
+    // Handle day click
     calendarDays.forEach(day => {
-        day.addEventListener('click', function(event) {
-            // Prevent event from bubbling to parent elements
-            event.stopPropagation();
-            
-            console.log('Calendar day clicked');
-            
-            // Get the day number and current month/year from the page
+        day.addEventListener('click', function() {
+            // Get day number from the clicked day
             const dayNumber = this.querySelector('.calendar__day-number').textContent;
-            const monthYear = document.querySelector('.calendar-nav__title').textContent.trim();
             
-            console.log(`Day: ${dayNumber}, Month/Year: ${monthYear}`);
+            // Get current month and year from URL or page
+            const urlParams = new URLSearchParams(window.location.search);
+            const month = urlParams.get('month') || new Date().getMonth() + 1;
+            const year = urlParams.get('year') || new Date().getFullYear();
             
-            // Parse month and year
-            const [monthName, year] = monthYear.split(' ');
-            const monthNumber = getMonthNumber(monthName);
+            // Format date for display and form input
+            const formattedDisplayDate = formatDateForDisplay(year, month, dayNumber);
+            const formattedInputDate = `${year}-${month.toString().padStart(2, '0')}-${dayNumber.toString().padStart(2, '0')}`;
             
-            // Format the date for display and form
-            const formattedDate = formatDate(year, monthNumber, dayNumber);
+            // Update modal title with formatted date
+            modalTitle.textContent = `Lembretes para ${formattedDisplayDate}`;
             
-            console.log(`Formatted date: ${formattedDate}`);
+            // Set the selected date in the form
+            if (selectedDateInput) {
+                selectedDateInput.value = formattedInputDate;
+                
+                // Also set the end date to match start date
+                const dataFimInput = document.getElementById('data_fim');
+                if (dataFimInput) {
+                    dataFimInput.value = formattedInputDate;
+                }
+            }
             
-            // Update modal title and form inputs
-            modalTitle.textContent = `Novo Lembrete para ${dayNumber} de ${monthName}`;
-            selectedDateInput.value = formattedDate;
-            selectedDateEnd.value = formattedDate;
+            // Collect all events for this day from the data attributes
+            const dayEvents = JSON.parse(this.getAttribute('data-events') || '[]');
+            
+            // Clear previous reminders
+            remindersList.innerHTML = '';
+            
+            // If there are no events, show a message
+            if (dayEvents.length === 0) {
+                remindersList.innerHTML = `
+                    <div class="no-reminders">
+                        <p>Nenhum lembrete para este dia.</p>
+                    </div>
+                `;
+            } else {
+                // Add each event to the list
+                dayEvents.forEach(event => {
+                    let priorityClass = '';
+                    switch (event.prioridade) {
+                        case 'Urgente': priorityClass = 'priority--urgent'; break;
+                        case 'Alta': priorityClass = 'priority--high'; break;
+                        case 'Normal': priorityClass = 'priority--normal'; break;
+                        case 'Baixa': priorityClass = 'priority--low'; break;
+                    }
+                    
+                    const eventTime = new Date(event.data_inicio).toLocaleTimeString('pt-BR', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    const reminderItem = document.createElement('div');
+                    reminderItem.className = `reminder-list-item ${priorityClass}`;
+                    reminderItem.innerHTML = `
+                        <div class="reminder-list-item__time">${eventTime}</div>
+                        <div class="reminder-list-item__title">${event.titulo}</div>
+                        <a href="${BASE_URL}/admin/index.php?page=Calendar_View&id=${event.id}" 
+                           class="reminder-list-item__link">
+                            Ver detalhes
+                        </a>
+                    `;
+                    
+                    remindersList.appendChild(reminderItem);
+                });
+            }
+            
+            // Reset the form display
+            if (reminderForm && newReminderBtn) {
+                reminderForm.style.display = 'none';
+                newReminderBtn.style.display = 'block';
+            }
             
             // Show the modal
-            calendarModal.classList.add('active');
+            modal.classList.add('active');
             document.body.classList.add('modal-open');
-            
-            console.log('Modal displayed');
         });
     });
+    
+    // Toggle form visibility when clicking "Add New Reminder"
+    if (newReminderBtn) {
+        newReminderBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            reminderForm.style.display = 'block';
+            this.style.display = 'none';
+        });
+    }
+    
+    // Hide form when clicking the cancel button
+    const cancelReminderBtn = document.getElementById('cancel-reminder-btn');
+    if (cancelReminderBtn) {
+        cancelReminderBtn.addEventListener('click', function() {
+            reminderForm.style.display = 'none';
+            newReminderBtn.style.display = 'block';
+        });
+    }
     
     // Close modal when clicking the close button
-    if (modalClose) {
-        modalClose.addEventListener('click', function(event) {
-            event.preventDefault();
-            calendarModal.classList.remove('active');
-            document.body.classList.remove('modal-open');
-            console.log('Modal closed via close button');
-        });
-    } else {
-        console.error('Modal close button not found');
-    }
+    modalClose.addEventListener('click', function() {
+        modal.classList.remove('active');
+        document.body.classList.remove('modal-open');
+    });
     
     // Close modal when clicking outside
-    window.addEventListener('click', function(event) {
-        if (event.target === calendarModal) {
-            calendarModal.classList.remove('active');
+    modal.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            modal.classList.remove('active');
             document.body.classList.remove('modal-open');
-            console.log('Modal closed by clicking outside');
         }
     });
     
-    /**
-     * Helper function to get month number from name
-     */
-    function getMonthNumber(monthName) {
-        const months = {
-            'Janeiro': '01',
-            'Fevereiro': '02',
-            'Março': '03',
-            'Abril': '04',
-            'Maio': '05',
-            'Junho': '06',
-            'Julho': '07',
-            'Agosto': '08',
-            'Setembro': '09',
-            'Outubro': '10',
-            'Novembro': '11',
-            'Dezembro': '12'
-        };
-        return months[monthName] || '01';
+    // Prevent propagation of clicks inside the modal content
+    const modalContent = modal.querySelector('.calendar-modal__content');
+    if (modalContent) {
+        modalContent.addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
     }
-    
-    /**
-     * Helper function to format date as YYYY-MM-DD
-     */
-    function formatDate(year, month, day) {
-        // Ensure day is two digits
-        const dayFormatted = day.toString().padStart(2, '0');
-        return `${year}-${month}-${dayFormatted}`;
-    }
-    
-    // Initialize time fields with current time if they're empty
-    const timeInputs = document.querySelectorAll('input[type="time"]');
-    timeInputs.forEach(input => {
-        if (!input.value) {
-            const now = new Date();
-            const hours = now.getHours().toString().padStart(2, '0');
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            input.value = `${hours}:${minutes}`;
-        }
-    });
 });

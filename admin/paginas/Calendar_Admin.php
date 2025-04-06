@@ -240,38 +240,29 @@ if ($nextMonth > 12) {
                         for ($day = 1; $day <= $numberDays; $day++) {
                             $isToday = ($day == date('j') && $month == date('n') && $year == date('Y'));
                             $dayClass = $isToday ? 'calendar__day calendar__day--today' : 'calendar__day';
-
-                            echo '<div class="' . $dayClass . '">';
+                            
+                            // Check if this day has events
+                            $hasEvents = isset($eventsByDay[$day]) && !empty($eventsByDay[$day]);
+                            
+                            // Start of day div
+                            echo '<div class="' . $dayClass . '"';
+                            
+                            // Add data-events attribute if there are events for this day
+                            if ($hasEvents) {
+                                // Encode events as JSON for the data attribute
+                                // We need to escape any single quotes to prevent breaking the attribute
+                                $eventsJson = json_encode($eventsByDay[$day]);
+                                echo ' data-events=\'' . $eventsJson . '\'';
+                            }
+                            
+                            echo '>';
+                            
+                            // Day number
                             echo '<div class="calendar__day-number">' . $day . '</div>';
 
-                            // Output events for this day
-                            if (isset($eventsByDay[$day]) && !empty($eventsByDay[$day])) {
-                                echo '<div class="calendar__events">';
-                                foreach ($eventsByDay[$day] as $event) {
-                                    $priorityClass = '';
-                                    switch ($event['prioridade']) {
-                                        case 'Urgente':
-                                            $priorityClass = 'event--urgent';
-                                            break;
-                                        case 'Alta':
-                                            $priorityClass = 'event--high';
-                                            break;
-                                        case 'Normal':
-                                            $priorityClass = 'event--normal';
-                                            break;
-                                        case 'Baixa':
-                                            $priorityClass = 'event--low';
-                                            break;
-                                    }
-
-                                    echo '<a href="' . BASE_URL . '/admin/index.php?page=Calendar_View&id=' . $event['id'] . '" ';
-                                    echo 'class="calendar__event ' . $priorityClass . '">';
-                                    echo htmlspecialchars($event['titulo']);
-                                    echo '</a>';
-                                }
-                                echo '</div>';
-
-                                // Add indicator dot
+                            // For days with events, show a dot or count
+                            if ($hasEvents) {
+                                // Determine the highest priority for the dot color
                                 $highestPriority = 'normal';
                                 foreach ($eventsByDay[$day] as $event) {
                                     if ($event['prioridade'] === 'Urgente') {
@@ -283,13 +274,17 @@ if ($nextMonth > 12) {
                                         $highestPriority = 'low';
                                     }
                                 }
-
-                                echo '<div class="calendar__day-indicator">';
-                                echo '<div class="calendar__day-dot priority--' . $highestPriority . '"></div>';
+                                
+                                // Count events and show the appropriate indicator
+                                $eventCount = count($eventsByDay[$day]);
+                                
+                                // For all event counts, use the calendar__event-count and always show the number
+                                echo '<div class="calendar__event-count priority--' . $highestPriority . '">';
+                                echo $eventCount; // Always show the count, even for a single event
                                 echo '</div>';
                             }
 
-                            echo '</div>';
+                            echo '</div>'; // End of day div
                         }
 
                         // Fill empty cells after the last day of the month
@@ -401,12 +396,24 @@ if ($nextMonth > 12) {
 <div class="calendar-modal" id="calendar-day-modal">
     <div class="calendar-modal__content">
         <div class="calendar-modal__header">
-            <h3 class="calendar-modal__title">Novo Lembrete</h3>
+            <h3 class="calendar-modal__title">Lembretes para o dia</h3>
             <button class="calendar-modal__close">&times;</button>
         </div>
         <div class="calendar-modal__body">
-            <!-- Quick Reminder Form -->
-            <form method="POST" action="<?= BASE_URL ?>/admin/index.php" id="calendar-reminder-form" class="admin-form">
+            <!-- List of reminders for the selected day -->
+            <div id="day-reminders-list" class="day-reminders-list">
+                <!-- Reminders will be added here via JavaScript -->
+            </div>
+            
+            <!-- Add New Reminder Option -->
+            <div class="calendar-modal__footer">
+                <a href="#" class="primary-button" id="new-reminder-btn">
+                    <i class="fas fa-plus"></i> Adicionar Novo Lembrete
+                </a>
+            </div>
+            
+            <!-- Quick Reminder Form (hidden by default) -->
+            <form method="POST" action="<?= BASE_URL ?>/admin/index.php" id="calendar-reminder-form" class="admin-form" style="display: none; margin-top: 20px;">
                 <input type="hidden" name="action" value="quick_create_reminder">
                 <input type="hidden" name="selected_date" id="selected_date" value="">
 
@@ -462,6 +469,7 @@ if ($nextMonth > 12) {
                 </div>
 
                 <div class="form-actions">
+                    <button type="button" id="cancel-reminder-btn" class="cancel-button">Cancelar</button>
                     <button type="submit" class="primary-button">
                         <i class="fas fa-save"></i> Salvar Lembrete
                     </button>
@@ -470,6 +478,14 @@ if ($nextMonth > 12) {
         </div>
     </div>
 </div>
+
+<!-- JavaScript now moved to calendar-modal.js -->
+
+<!-- Define BASE_URL for JavaScript -->
+<script>
+    // Define BASE_URL for JavaScript to use
+    const BASE_URL = '<?= BASE_URL ?>';
+</script>
 
 <!-- Load the calendar modal script -->
 <script src="<?= BASE_URL ?>/assets/scripts/calendar-modal.js"></script>
