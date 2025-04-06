@@ -47,10 +47,15 @@ $eventsByDay = [];
 foreach ($events as $event) {
     $eventStart = new DateTime($event['data_inicio']);
     $eventEnd = new DateTime($event['data_fim']);
-
-    // Create a period from start to end date
+    
+    // FIX: Create a date period that correctly ends on the end date (inclusive)
+    // without adding an extra day
     $interval = new DateInterval('P1D');
-    $dateRange = new DatePeriod($eventStart, $interval, $eventEnd->modify('+1 day'));
+    // Clone the end date to avoid modifying the original
+    $endDateClone = clone $eventEnd;
+    // Add 1 second to make the end date inclusive when iterating with DatePeriod
+    $endDateClone->modify('+1 second');
+    $dateRange = new DatePeriod($eventStart, $interval, $endDateClone);
 
     // Add event to each day in the range
     foreach ($dateRange as $date) {
