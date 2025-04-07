@@ -225,11 +225,38 @@
     padding: 0 15px;
 }
 
-.reminder-list-item__link {
-    margin-left: auto;
-    color: var(--admin-primary);
-    font-size: var(--font-sm);
-    white-space: nowrap;
+.reminder-list-item__actions {
+    display: flex;
+    gap: 8px;
+}
+
+.reminder-list-item__actions .action-button {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.reminder-list-item__actions .action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+}
+
+.reminder-list-item__actions .action-button--view {
+    background-color: var(--admin-blue);
+}
+
+.reminder-list-item__actions .action-button--edit {
+    background-color: var(--admin-primary);
+}
+
+.reminder-list-item__actions .action-button--delete {
+    background-color: var(--admin-red);
 }
 
 .no-reminders {

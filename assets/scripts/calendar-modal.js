@@ -87,10 +87,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     reminderItem.innerHTML = `
                         <div class="reminder-list-item__time">${eventTime}</div>
                         <div class="reminder-list-item__title">${event.titulo}</div>
-                        <a href="${BASE_URL}/admin/index.php?page=Calendar_View&id=${event.id}" 
-                           class="reminder-list-item__link">
-                            Ver detalhes
-                        </a>
+                        <div class="reminder-list-item__actions">
+                            <a href="${BASE_URL}/admin/index.php?page=Calendar_View&id=${event.id}" 
+                               class="action-button action-button--view" title="Visualizar">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="${BASE_URL}/admin/index.php?page=Calendar_Update&id=${event.id}" 
+                               class="action-button action-button--edit" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="${BASE_URL}/admin/index.php?page=Calendar_Delete&id=${event.id}" 
+                               class="action-button action-button--delete" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
                     `;
                     
                     remindersList.appendChild(reminderItem);

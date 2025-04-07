@@ -444,9 +444,9 @@ if ($nextMonth > 12) {
                         <label for="modal_prioridade">Prioridade</label>
                         <select id="modal_prioridade" name="prioridade" class="form-control">
                             <option value="Baixa">Baixa</option>
-                            <option value="Normal" selected>Normal</option>
+                            <option value="Normal">Normal</option>
                             <option value="Alta">Alta</option>
-                            <option value="Urgente">Urgente</option>
+                            <option value="Urgente" selected>Urgente</option>
                         </select>
                     </div>
                 </div>
@@ -489,19 +489,3 @@ if ($nextMonth > 12) {
 
 <!-- Load the calendar modal script -->
 <script src="<?= BASE_URL ?>/assets/scripts/calendar-modal.js"></script>
-
-<script>
-    // Debug listener to check if calendar days are clickable
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('Calendar days setup in progress...');
-        const days = document.querySelectorAll('.calendar__day:not(.calendar__day--empty)');
-
-        console.log(`Found ${days.length} calendar days`);
-
-        days.forEach(day => {
-            day.addEventListener('click', function() {
-                console.log('Day clicked:', this.querySelector('.calendar__day-number').textContent);
-            });
-        });
-    });
-</script>
