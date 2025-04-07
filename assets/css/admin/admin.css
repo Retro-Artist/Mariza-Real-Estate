@@ -10,6 +10,7 @@
 @import 'atendimento.css';
 @import 'login.css';
 @import 'user.css';
+@import 'location.css';
 
 /* Admin Area Base Styles */
 :root {

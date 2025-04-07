@@ -1,0 +1,183 @@
+/* ===================================
+   Location Management Styles
+   =================================== */
+
+/* Shared styles for city and neighborhood pages */
+.city-admin,
+.neighborhood-admin,
+.city-create,
+.city-update,
+.neighborhood-create,
+.neighborhood-update,
+.city-delete,
+.neighborhood-delete {
+  /* Inherits most styles from shared-components.css */
+
+  /* Filters and Search Form */
+  .filter-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+
+  .filter-form .form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: flex-end;
+  }
+
+  .filter-form .form-group {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .filter-form .form-group--submit {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Location Tables */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--admin-table-border);
+  }
+
+  .data-table th {
+    background-color: var(--admin-table-header);
+    font-weight: 600;
+  }
+
+  .data-table tr:nth-child(even) {
+    background-color: var(--admin-table-stripe);
+  }
+
+  .data-table tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+
+  /* Action Buttons */
+  .actions {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+  }
+
+  .action-button {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-decoration: none;
+    transition: var(--transition);
+  }
+
+  .action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  .action-button--edit {
+    background-color: var(--admin-blue);
+  }
+
+  .action-button--delete {
+    background-color: var(--admin-red);
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .empty-state p {
+    margin-bottom: 20px;
+    color: #666;
+  }
+
+  /* No Data Text */
+  .no-data {
+    color: #999;
+    font-style: italic;
+  }
+
+  /* Confirmation Messages */
+  .confirmation-message {
+    text-align: center;
+    padding: 30px 20px;
+  }
+
+  .confirmation-icon {
+    font-size: 48px;
+    color: var(--admin-red);
+    margin-bottom: 20px;
+  }
+
+  .confirmation-message h3 {
+    font-size: var(--font-lg);
+    margin-bottom: 20px;
+  }
+
+  .confirmation-message p {
+    margin-bottom: 15px;
+  }
+
+  .warning-text {
+    color: var(--admin-red);
+    font-weight: 500;
+    margin-top: 20px;
+  }
+
+  .confirmation-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+  }
+
+  /* Page-specific styles */
+  .city-create .form-text,
+  .city-update .form-text,
+  .neighborhood-create .form-text,
+  .neighborhood-update .form-text {
+    font-size: var(--font-xs);
+    color: #6c757d;
+    margin-top: 5px;
+  }
+
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .filter-form .form-row {
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .filter-form .form-group {
+      width: 100%;
+    }
+
+    .confirmation-actions {
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .confirmation-actions .cancel-button,
+    .confirmation-actions .delete-button {
+      width: 100%;
+      text-align: center;
+    }
+  }
+}

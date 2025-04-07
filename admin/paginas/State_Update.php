@@ -1,0 +1,211 @@
+<?php
+// Security check
+if (!isset($_SESSION['admin_id'])) {
+    // Instead of using header() directly, store the URL for later redirection via JavaScript
+    $redirect_url = BASE_URL . '/admin/Admin_Login.php';
+    $need_redirect = true;
+} else {
+    $need_redirect = false;
+}
+
+// Check if ID is provided
+if (!isset($_GET['id']) || empty($_GET['id'])) {
+    $_SESSION['alert_message'] = 'ID do estado não especificado.';
+    $_SESSION['alert_type'] = 'error';
+    $redirect_url = BASE_URL . '/admin/index.php?page=State_Admin';
+    $need_redirect = true;
+}
+
+// If security check and ID check pass, proceed with page logic
+if (!$need_redirect) {
+    $state_id = (int)$_GET['id'];
+    
+    // Initialize variables
+    $error = '';
+    $success_message = '';
+    $redirect_after_save = false;
+    
+    // Get state data
+    try {
+        $stmt = $databaseConnection->prepare(
+            "SELECT * FROM sistema_estados WHERE id = :id LIMIT 1"
+        );
+        $stmt->bindParam(':id', $state_id);
+        $stmt->execute();
+        
+        $state = $stmt->fetch();
+        
+        if (!$state) {
+            $_SESSION['alert_message'] = 'Estado não encontrado.';
+            $_SESSION['alert_type'] = 'error';
+            $redirect_url = BASE_URL . '/admin/index.php?page=State_Admin';
+            $need_redirect = true;
+        }
+    } catch (PDOException $e) {
+        logError("Error fetching state data: " . $e->getMessage());
+        $_SESSION['alert_message'] = 'Erro ao buscar dados do estado.';
+        $_SESSION['alert_type'] = 'error';
+        $redirect_url = BASE_URL . '/admin/index.php?page=State_Admin';
+        $need_redirect = true;
+    }
+}
+
+// If checks pass and state data is retrieved, continue with the form
+if (!$need_redirect && isset($state)) {
+    // Initialize form data with current state values
+    $formData = [
+        'nome' => $state['nome'],
+        'uf' => $state['uf'],
+        'latitude' => $state['latitude'],
+        'longitude' => $state['longitude']
+    ];
+    
+    // Process form submission
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Get form data
+        $formData = [
+            'nome' => trim($_POST['nome'] ?? ''),
+            'uf' => strtoupper(trim($_POST['uf'] ?? '')),
+            'latitude' => trim($_POST['latitude'] ?? ''),
+            'longitude' => trim($_POST['longitude'] ?? '')
+        ];
+        
+        // Validate form data
+        if (empty($formData['nome'])) {
+            $error = 'O nome do estado é obrigatório.';
+        } elseif (empty($formData['uf'])) {
+            $error = 'A sigla UF do estado é obrigatória.';
+        } elseif (strlen($formData['uf']) != 2) {
+            $error = 'A sigla UF deve conter exatamente 2 caracteres.';
+        } else {
+            // Check if state already exists (excluding current state)
+            try {
+                $stmt = $databaseConnection->prepare(
+                    "SELECT COUNT(*) as count FROM sistema_estados 
+                     WHERE (LOWER(nome) = LOWER(:nome) OR UPPER(uf) = UPPER(:uf)) AND id != :id"
+                );
+                $stmt->bindValue(':nome', $formData['nome']);
+                $stmt->bindValue(':uf', $formData['uf']);
+                $stmt->bindValue(':id', $state_id);
+                $stmt->execute();
+                
+                $stateExists = $stmt->fetch()['count'] > 0;
+                
+                if ($stateExists) {
+                    $error = 'Já existe um estado com este nome ou sigla UF.';
+                } else {
+                    // Update state
+                    $stmt = $databaseConnection->prepare(
+                        "UPDATE sistema_estados SET 
+                         nome = :nome, 
+                         uf = :uf, 
+                         latitude = :latitude, 
+                         longitude = :longitude
+                         WHERE id = :id"
+                    );
+                    
+                    $stmt->bindValue(':nome', $formData['nome']);
+                    $stmt->bindValue(':uf', $formData['uf']);
+                    $stmt->bindValue(':latitude', $formData['latitude']);
+                    $stmt->bindValue(':longitude', $formData['longitude']);
+                    $stmt->bindValue(':id', $state_id);
+                    
+                    $stmt->execute();
+                    
+                    // Set success message and prepare for redirect
+                    $success_message = 'Estado atualizado com sucesso!';
+                    $_SESSION['alert_message'] = $success_message;
+                    $_SESSION['alert_type'] = 'success';
+                    
+                    $redirect_after_save = true;
+                    $redirect_url = BASE_URL . '/admin/index.php?page=State_Admin';
+                }
+            } catch (PDOException $e) {
+                logError("Error updating state: " . $e->getMessage());
+                $error = 'Ocorreu um erro ao atualizar o estado. Por favor, tente novamente.';
+            }
+        }
+    }
+}
+?>
+
+<?php if (!$need_redirect && isset($state)): ?>
+<div class="admin-page state-update">
+    <!-- Page Header -->
+    <div class="admin-page__header">
+        <h2 class="admin-page__title">Editar Estado</h2>
+        <a href="<?= BASE_URL ?>/admin/index.php?page=State_Admin" class="cancel-button">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </div>
+    
+    <!-- State Form -->
+    <form method="POST" action="" class="admin-form">
+        <?php if (!empty($error)): ?>
+            <div class="alert-message alert-message--error">
+                <?= htmlspecialchars($error) ?>
+            </div>
+        <?php endif; ?>
+        
+        <?php if (!empty($success_message)): ?>
+            <div class="alert-message alert-message--success">
+                <?= htmlspecialchars($success_message) ?>
+            </div>
+        <?php endif; ?>
+        
+        <div class="form-section">
+            <h3 class="form-section__title">Informações do Estado</h3>
+            
+            <div class="form-row">
+                <div class="form-group form-group--large">
+                    <label for="nome">Nome do Estado <span class="required">*</span></label>
+                    <input type="text" id="nome" name="nome" class="form-control" value="<?= htmlspecialchars($formData['nome']) ?>" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="uf">UF <span class="required">*</span></label>
+                    <input type="text" id="uf" name="uf" class="form-control" value="<?= htmlspecialchars($formData['uf']) ?>" maxlength="2" style="text-transform: uppercase;" required>
+                    <div class="form-text">Sigla de 2 letras (ex: SP)</div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="latitude">Latitude</label>
+                    <input type="text" id="latitude" name="latitude" class="form-control" value="<?= htmlspecialchars($formData['latitude']) ?>">
+                    <div class="form-text">Exemplo: -23.5505</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="longitude">Longitude</label>
+                    <input type="text" id="longitude" name="longitude" class="form-control" value="<?= htmlspecialchars($formData['longitude']) ?>">
+                    <div class="form-text">Exemplo: -46.6333</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <a href="<?= BASE_URL ?>/admin/index.php?page=State_Admin" class="cancel-button">Cancelar</a>
+            <button type="submit" class="primary-button">
+                <i class="fas fa-save"></i> Salvar Alterações
+            </button>
+        </div>
+    </form>
+</div>
+<?php endif; ?>
+
+<?php if ($need_redirect): ?>
+<script>
+    // JavaScript redirect if checks fail
+    window.location.href = "<?= $redirect_url ?>";
+</script>
+<?php endif; ?>
+
+<?php if (isset($redirect_after_save) && $redirect_after_save): ?>
+<script>
+    // Redirect after a brief delay to show the success message
+    setTimeout(function() {
+        window.location.href = "<?= $redirect_url ?>";
+    }, 1500);
+</script>
+<?php endif; ?>

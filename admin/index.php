@@ -87,6 +87,48 @@ switch ($page) {
         include 'paginas/Calendar_Delete.php';
         break;
 
+    // City management pages
+    case 'City_Admin':
+        include 'paginas/City_Admin.php';
+        break;
+    case 'City_Create':
+        include 'paginas/City_Create.php';
+        break;
+    case 'City_Update':
+        include 'paginas/City_Update.php';
+        break;
+    case 'City_Delete':
+        include 'paginas/City_Delete.php';
+        break;
+        
+    // State management pages
+    case 'State_Admin':
+        include 'paginas/State_Admin.php';
+        break;
+    case 'State_Create':
+        include 'paginas/State_Create.php';
+        break;
+    case 'State_Update':
+        include 'paginas/State_Update.php';
+        break;
+    case 'State_Delete':
+        include 'paginas/State_Delete.php';
+        break;
+        
+    // Neighborhood management pages
+    case 'Neighborhood_Admin':
+        include 'paginas/Neighborhood_Admin.php';
+        break;
+    case 'Neighborhood_Create':
+        include 'paginas/Neighborhood_Create.php';
+        break;
+    case 'Neighborhood_Update':
+        include 'paginas/Neighborhood_Update.php';
+        break;
+    case 'Neighborhood_Delete':
+        include 'paginas/Neighborhood_Delete.php';
+        break;
+
     // Category pages
     case 'Category_Admin':
         include 'paginas/Category_Admin.php';
