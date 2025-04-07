@@ -82,11 +82,24 @@ document.addEventListener('DOMContentLoaded', function() {
                         minute: '2-digit'
                     });
                     
+                    // Truncate description to 200 characters if needed
+                    let descriptionHtml = '';
+                    if (event.descricao && event.descricao.trim() !== '') {
+                        let description = event.descricao;
+                        if (description.length > 200) {
+                            description = description.substring(0, 200) + '...';
+                        }
+                        descriptionHtml = `<div class="reminder-list-item__description">${description}</div>`;
+                    }
+                    
                     const reminderItem = document.createElement('div');
                     reminderItem.className = `reminder-list-item ${priorityClass}`;
                     reminderItem.innerHTML = `
                         <div class="reminder-list-item__time">${eventTime}</div>
-                        <div class="reminder-list-item__title">${event.titulo}</div>
+                        <div class="reminder-list-item__content">
+                            <div class="reminder-list-item__title">${event.titulo}</div>
+                            ${descriptionHtml}
+                        </div>
                         <div class="reminder-list-item__actions">
                             <a href="${BASE_URL}/admin/index.php?page=Calendar_View&id=${event.id}" 
                                class="action-button action-button--view" title="Visualizar">

@@ -183,7 +183,7 @@
     background-color: #f8f9fa;
     border-left: 3px solid var(--admin-primary);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -217,12 +217,27 @@
     font-size: var(--font-xs);
     color: #777;
     width: 60px;
+    flex-shrink: 0;
+}
+
+.reminder-list-item__content {
+    flex: 1;
+    padding: 0 15px;
+    overflow: hidden;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
 }
 
 .reminder-list-item__title {
-    flex: 1;
     font-weight: 500;
-    padding: 0 15px;
+    margin-bottom: 4px;
+}
+
+.reminder-list-item__description {
+    font-size: var(--font-sm);
+    color: #666;
+    line-height: 1.4;
 }
 
 .reminder-list-item__actions {
