@@ -10,12 +10,26 @@ if ($_SESSION['admin_level'] !== 'Administrador' && $_SESSION['admin_level'] != 
 // Initialize variables
 $alertMessage = '';
 $alertType = '';
+$userId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+// Get user data
+$user = getAdminUserById($userId);
+
+// Redirect if user not found
+if (!$user) {
+    $_SESSION['alert_message'] = 'Usuário não encontrado.';
+    $_SESSION['alert_type'] = 'error';
+    header('Location: ' . BASE_URL . '/admin/index.php?page=User_Admin');
+    exit;
+}
+
+// Initialize form data with user data
 $formData = [
-    'nome' => '',
-    'email' => '',
+    'nome' => $user['nome'],
+    'email' => $user['email'],
     'senha' => '',
     'senha_confirm' => '',
-    'nivel' => 'Editor'
+    'nivel' => $user['nivel']
 ];
 
 // Process form submission
@@ -26,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'email' => trim($_POST['email'] ?? ''),
         'senha' => $_POST['senha'] ?? '',
         'senha_confirm' => $_POST['senha_confirm'] ?? '',
-        'nivel' => trim($_POST['nivel'] ?? 'Editor')
+        'nivel' => trim($_POST['nivel'] ?? '')
     ];
     
     // Validate form data
@@ -42,39 +56,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Por favor, informe um email válido.';
     }
     
-    if (empty($formData['senha'])) {
-        $errors[] = 'A senha é obrigatória.';
-    } elseif (strlen($formData['senha']) < 6) {
-        $errors[] = 'A senha deve ter pelo menos 6 caracteres.';
-    }
-    
-    if ($formData['senha'] !== $formData['senha_confirm']) {
-        $errors[] = 'As senhas não coincidem.';
+    // Only validate password if provided (optional on update)
+    if (!empty($formData['senha'])) {
+        if (strlen($formData['senha']) < 6) {
+            $errors[] = 'A senha deve ter pelo menos 6 caracteres.';
+        }
+        
+        if ($formData['senha'] !== $formData['senha_confirm']) {
+            $errors[] = 'As senhas não coincidem.';
+        }
     }
     
     if (empty($formData['nivel'])) {
         $errors[] = 'O nível de acesso é obrigatório.';
     }
     
-    // If no errors, create user
+    // Prevent changing own user level from Administrator to lower level
+    if ($userId === $_SESSION['admin_id'] && ($user['nivel'] === 'Administrador' || $user['nivel'] == '1') && 
+        $formData['nivel'] !== 'Administrador' && $formData['nivel'] != '1') {
+        $errors[] = 'Você não pode alterar seu próprio nível de acesso de Administrador para um nível inferior.';
+    }
+    
+    // If no errors, update user
     if (empty($errors)) {
         $userData = [
             'nome' => $formData['nome'],
             'email' => $formData['email'],
-            'senha' => $formData['senha'],
             'nivel' => $formData['nivel']
         ];
         
-        $userId = createUser($userData);
+        // Only include password if provided
+        if (!empty($formData['senha'])) {
+            $userData['senha'] = $formData['senha'];
+        }
         
-        if ($userId) {
-            // User created successfully
-            $_SESSION['alert_message'] = 'Usuário criado com sucesso!';
+        $success = updateUser($userId, $userData);
+        
+        if ($success) {
+            // User updated successfully
+            $_SESSION['alert_message'] = 'Usuário atualizado com sucesso!';
             $_SESSION['alert_type'] = 'success';
+            
+            // If updating own user, update session data
+            if ($userId === $_SESSION['admin_id']) {
+                $_SESSION['admin_name'] = $formData['nome'];
+                $_SESSION['admin_level'] = $formData['nivel'];
+            }
+            
             header('Location: ' . BASE_URL . '/admin/index.php?page=User_Admin');
             exit;
         } else {
-            $alertMessage = 'Erro ao criar usuário. O email informado pode já estar em uso.';
+            $alertMessage = 'Erro ao atualizar usuário. O email informado pode já estar em uso.';
             $alertType = 'error';
         }
     } else {
@@ -85,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 
 <div class="admin-page__header">
-    <h2 class="admin-page__title">Adicionar Novo Usuário</h2>
+    <h2 class="admin-page__title">Editar Usuário</h2>
     
     <div class="admin-page__actions">
         <a href="<?= BASE_URL ?>/admin/index.php?page=User_Admin" class="cancel-button">
@@ -100,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 <?php endif; ?>
 
-<div class="admin-form user-create">
+<div class="admin-form user-update">
     <form method="POST" action="">
         <div class="form-section">
             <h3 class="form-section__title">Informações do Usuário</h3>
@@ -121,27 +153,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             <div class="form-row">
                 <div class="form-group form-group--half">
-                    <label for="senha">Senha <span class="required">*</span></label>
-                    <input type="password" id="senha" name="senha" class="form-control" required>
-                    <div class="form-text">A senha deve ter pelo menos 6 caracteres</div>
+                    <label for="senha">Senha</label>
+                    <input type="password" id="senha" name="senha" class="form-control">
+                    <div class="form-text">Deixe em branco para manter a senha atual. A nova senha deve ter pelo menos 6 caracteres.</div>
                 </div>
                 
                 <div class="form-group form-group--half">
-                    <label for="senha_confirm">Confirmar Senha <span class="required">*</span></label>
-                    <input type="password" id="senha_confirm" name="senha_confirm" class="form-control" required>
+                    <label for="senha_confirm">Confirmar Senha</label>
+                    <input type="password" id="senha_confirm" name="senha_confirm" class="form-control">
                 </div>
             </div>
             
             <div class="form-row">
                 <div class="form-group">
                     <label for="nivel">Nível de Acesso <span class="required">*</span></label>
-                    <select id="nivel" name="nivel" class="form-control" required>
-                        <option value="Editor" <?= $formData['nivel'] === 'Editor' ? 'selected' : '' ?>>Editor</option>
-                        <option value="Administrador" <?= $formData['nivel'] === 'Administrador' ? 'selected' : '' ?>>Administrador</option>
+                    <select id="nivel" name="nivel" class="form-control" required
+                            <?= ($userId === $_SESSION['admin_id'] && ($user['nivel'] === 'Administrador' || $user['nivel'] == '1')) ? 'disabled' : '' ?>>
+                        <option value="0" <?= $formData['nivel'] === '0' || $formData['nivel'] === 'Editor' ? 'selected' : '' ?>>Editor</option>
+                        <option value="1" <?= $formData['nivel'] === '1' || $formData['nivel'] === 'Administrador' ? 'selected' : '' ?>>Administrador</option>
                     </select>
+                    
+                    <?php if ($userId === $_SESSION['admin_id'] && ($user['nivel'] === 'Administrador' || $user['nivel'] == '1')): ?>
+                        <!-- Hidden field to ensure value is submitted when select is disabled -->
+                        <input type="hidden" name="nivel" value="<?= $user['nivel'] == '1' ? '1' : 'Administrador' ?>">
+                    <?php endif; ?>
+                    
                     <div class="form-text">
                         <strong>Editor:</strong> Acesso limitado ao gerenciamento de imóveis, clientes e calendário.<br>
                         <strong>Administrador:</strong> Acesso completo a todas as funções do sistema, incluindo gerenciamento de usuários.
+                        
+                        <?php if ($userId === $_SESSION['admin_id'] && $user['nivel'] === 'Administrador'): ?>
+                            <br><span class="warning-text">Você não pode alterar seu próprio nível de acesso de Administrador para um nível inferior.</span>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

@@ -112,7 +112,7 @@ $current_page = isset($page) ? $page : 'Calendar';
                         </ul>
                     </li>
 
-                    <?php if ($_SESSION['admin_level'] === 'Administrador'): ?>
+                    <?php if ($_SESSION['admin_level'] === 'Administrador' || $_SESSION['admin_level'] == '1'): ?>
                         <li class="admin-sidebar__item <?= strpos($current_page, 'User_') === 0 ? 'active' : '' ?>">
                             <a href="<?= BASE_URL ?>/admin/index.php?page=User_Admin" class="admin-sidebar__link">
                                 <i class="fas fa-users-cog"></i>
