@@ -136,7 +136,6 @@ if (!$need_redirect) {
                         <tr>
                             <th>Nome</th>
                             <th>UF</th>
-                            <th>Localização</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
@@ -145,13 +144,6 @@ if (!$need_redirect) {
                             <tr>
                                 <td><?= htmlspecialchars($state['nome']) ?></td>
                                 <td><?= htmlspecialchars($state['uf']) ?></td>
-                                <td>
-                                    <?php if (!empty($state['latitude']) && !empty($state['longitude'])): ?>
-                                        Lat: <?= htmlspecialchars($state['latitude']) ?>, Long: <?= htmlspecialchars($state['longitude']) ?>
-                                    <?php else: ?>
-                                        <span class="no-data">Não informado</span>
-                                    <?php endif; ?>
-                                </td>
                                 <td>
                                     <div class="actions">
                                         <a href="<?= BASE_URL ?>/admin/index.php?page=State_Update&id=<?= $state['id'] ?>" class="action-button action-button--edit" title="Editar">

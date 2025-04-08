@@ -36,8 +36,6 @@ $formData = [
     'medida_frente' => '',
     'medida_fundo' => '',
     'medida_laterais' => '',
-    'latitude' => '',
-    'longitude' => '',
     'corretor_responsavel' => '',
     'nome_anunciante' => '',
     'telefone_anunciante' => '',
@@ -91,8 +89,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'medida_frente' => trim($_POST['medida_frente'] ?? ''),
         'medida_fundo' => trim($_POST['medida_fundo'] ?? ''),
         'medida_laterais' => trim($_POST['medida_laterais'] ?? ''),
-        'latitude' => trim($_POST['latitude'] ?? ''),
-        'longitude' => trim($_POST['longitude'] ?? ''),
         'corretor_responsavel' => (int)($_POST['corretor_responsavel'] ?? 0),
         'nome_anunciante' => trim($_POST['nome_anunciante'] ?? ''),
         'telefone_anunciante' => trim($_POST['telefone_anunciante'] ?? ''),
@@ -149,13 +145,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Get cities based on selected state
+// Get cities for the selected state
 $cidades = [];
 if (!empty($formData['id_estado'])) {
     $cidades = getCitiesByState($formData['id_estado']);
 }
 
-// Get neighborhoods based on selected city
+// Get neighborhoods for the selected city
 $bairros = [];
 if (!empty($formData['id_cidade'])) {
     $bairros = getNeighborhoodsByCity($formData['id_cidade']);
@@ -285,20 +281,6 @@ if (!empty($formData['id_cidade'])) {
                     <input type="text" id="endereco" name="endereco" class="form-control" 
                            value="<?= htmlspecialchars($formData['endereco']) ?>"
                            placeholder="Informe o endereço (Ex.: Rua Jorge Amado, n 354, Luis Eduardo Magalhães)">
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="latitude">Latitude</label>
-                    <input type="text" id="latitude" name="latitude" class="form-control" 
-                           value="<?= htmlspecialchars($formData['latitude']) ?>">
-                </div>
-                
-                <div class="form-group">
-                    <label for="longitude">Longitude</label>
-                    <input type="text" id="longitude" name="longitude" class="form-control" 
-                           value="<?= htmlspecialchars($formData['longitude']) ?>">
                 </div>
             </div>
             

@@ -19,9 +19,7 @@ if (!$need_redirect) {
     // Initialize form data with default values
     $formData = [
         'nome' => '',
-        'uf' => '',
-        'latitude' => '',
-        'longitude' => ''
+        'uf' => ''
     ];
     
     // Process form submission
@@ -29,9 +27,7 @@ if (!$need_redirect) {
         // Get form data
         $formData = [
             'nome' => trim($_POST['nome'] ?? ''),
-            'uf' => strtoupper(trim($_POST['uf'] ?? '')),
-            'latitude' => trim($_POST['latitude'] ?? ''),
-            'longitude' => trim($_POST['longitude'] ?? '')
+            'uf' => strtoupper(trim($_POST['uf'] ?? ''))
         ];
         
         // Validate form data
@@ -59,14 +55,12 @@ if (!$need_redirect) {
                 } else {
                     // Insert new state
                     $stmt = $databaseConnection->prepare(
-                        "INSERT INTO sistema_estados (nome, uf, latitude, longitude) 
-                         VALUES (:nome, :uf, :latitude, :longitude)"
+                        "INSERT INTO sistema_estados (nome, uf) 
+                         VALUES (:nome, :uf)"
                     );
                     
                     $stmt->bindValue(':nome', $formData['nome']);
                     $stmt->bindValue(':uf', $formData['uf']);
-                    $stmt->bindValue(':latitude', $formData['latitude']);
-                    $stmt->bindValue(':longitude', $formData['longitude']);
                     
                     $stmt->execute();
                     
@@ -124,20 +118,6 @@ if (!$need_redirect) {
                     <label for="uf">UF <span class="required">*</span></label>
                     <input type="text" id="uf" name="uf" class="form-control" value="<?= htmlspecialchars($formData['uf']) ?>" maxlength="2" style="text-transform: uppercase;" required>
                     <div class="form-text">Sigla de 2 letras (ex: SP)</div>
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="latitude">Latitude</label>
-                    <input type="text" id="latitude" name="latitude" class="form-control" value="<?= htmlspecialchars($formData['latitude']) ?>">
-                    <div class="form-text">Exemplo: -23.5505</div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="longitude">Longitude</label>
-                    <input type="text" id="longitude" name="longitude" class="form-control" value="<?= htmlspecialchars($formData['longitude']) ?>">
-                    <div class="form-text">Exemplo: -46.6333</div>
                 </div>
             </div>
         </div>

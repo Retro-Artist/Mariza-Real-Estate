@@ -23,10 +23,7 @@ if (!$need_redirect) {
     $formData = [
         'nome' => '',
         'id_estado' => '',
-        'cep' => '',
-        'latitude' => '',
-        'longitude' => '',
-        'zoom' => '12'  // Default zoom level
+        'cep' => ''
     ];
     
     // Process form submission
@@ -35,10 +32,7 @@ if (!$need_redirect) {
         $formData = [
             'nome' => trim($_POST['nome'] ?? ''),
             'id_estado' => intval($_POST['id_estado'] ?? 0),
-            'cep' => trim($_POST['cep'] ?? ''),
-            'latitude' => trim($_POST['latitude'] ?? ''),
-            'longitude' => trim($_POST['longitude'] ?? ''),
-            'zoom' => trim($_POST['zoom'] ?? '12')
+            'cep' => trim($_POST['cep'] ?? '')
         ];
         
         // Validate form data
@@ -64,16 +58,13 @@ if (!$need_redirect) {
                 } else {
                     // Insert new city
                     $stmt = $databaseConnection->prepare(
-                        "INSERT INTO sistema_cidades (nome, id_estado, cep, latitude, longitude, zoom) 
-                         VALUES (:nome, :id_estado, :cep, :latitude, :longitude, :zoom)"
+                        "INSERT INTO sistema_cidades (nome, id_estado, cep) 
+                         VALUES (:nome, :id_estado, :cep)"
                     );
                     
                     $stmt->bindValue(':nome', $formData['nome']);
                     $stmt->bindValue(':id_estado', $formData['id_estado']);
                     $stmt->bindValue(':cep', $formData['cep']);
-                    $stmt->bindValue(':latitude', $formData['latitude']);
-                    $stmt->bindValue(':longitude', $formData['longitude']);
-                    $stmt->bindValue(':zoom', $formData['zoom']);
                     
                     $stmt->execute();
                     
@@ -145,26 +136,6 @@ if (!$need_redirect) {
                     <label for="cep">CEP</label>
                     <input type="text" id="cep" name="cep" class="form-control" value="<?= htmlspecialchars($formData['cep']) ?>">
                     <div class="form-text">Formato: 00000-000</div>
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="latitude">Latitude</label>
-                    <input type="text" id="latitude" name="latitude" class="form-control" value="<?= htmlspecialchars($formData['latitude']) ?>">
-                    <div class="form-text">Exemplo: -23.5505</div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="longitude">Longitude</label>
-                    <input type="text" id="longitude" name="longitude" class="form-control" value="<?= htmlspecialchars($formData['longitude']) ?>">
-                    <div class="form-text">Exemplo: -46.6333</div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="zoom">Nível de Zoom do Mapa</label>
-                    <input type="text" id="zoom" name="zoom" class="form-control" value="<?= htmlspecialchars($formData['zoom']) ?>">
-                    <div class="form-text">Escala de 1 a 20 (padrão: 12)</div>
                 </div>
             </div>
         </div>

@@ -220,15 +220,13 @@ function createProperty(array $propertyData): int|false
                     valor, quartos, suites, banheiros, salas, cozinhas, garagem, area_servico,
                     area_total, area_construida, und_medida, endereco, descricao, ref,
                     codigo, status, data, hora, id_usuario, palavras_chaves, destaque,
-                    classificados, quadra_lote, medida_frente, medida_fundo, medida_laterais,
-                    latitude, longitude, corretor_responsavel, nome_anunciante, telefone_anunciante
+                    classificados, quadra_lote, medida_frente, medida_fundo, medida_laterais, corretor_responsavel, nome_anunciante, telefone_anunciante
                 ) VALUES (
                     :titulo, :para, :id_categoria, :id_estado, :id_cidade, :id_bairro,
                     :valor, :quartos, :suites, :banheiros, :salas, :cozinhas, :garagem, :area_servico,
                     :area_total, :area_construida, :und_medida, :endereco, :descricao, :ref,
                     :codigo, :status, :data, :hora, :id_usuario, :palavras_chaves, :destaque,
-                    :classificados, :quadra_lote, :medida_frente, :medida_fundo, :medida_laterais,
-                    :latitude, :longitude, :corretor_responsavel, :nome_anunciante, :telefone_anunciante
+                    :classificados, :quadra_lote, :medida_frente, :medida_fundo, :medida_laterais, :corretor_responsavel, :nome_anunciante, :telefone_anunciante
                 )";
 
         $stmt = $databaseConnection->prepare($sql);
@@ -266,8 +264,6 @@ function createProperty(array $propertyData): int|false
         $stmt->bindParam(':medida_frente', $propertyData['medida_frente']);
         $stmt->bindParam(':medida_fundo', $propertyData['medida_fundo']);
         $stmt->bindParam(':medida_laterais', $propertyData['medida_laterais']);
-        $stmt->bindParam(':latitude', $propertyData['latitude']);
-        $stmt->bindParam(':longitude', $propertyData['longitude']);
         $stmt->bindParam(':corretor_responsavel', $propertyData['corretor_responsavel']);
         $stmt->bindParam(':nome_anunciante', $propertyData['nome_anunciante']);
         $stmt->bindParam(':telefone_anunciante', $propertyData['telefone_anunciante']);
@@ -340,8 +336,6 @@ function updateProperty(int $propertyId, array $propertyData): bool
                     medida_frente = :medida_frente,
                     medida_fundo = :medida_fundo,
                     medida_laterais = :medida_laterais,
-                    latitude = :latitude,
-                    longitude = :longitude,
                     corretor_responsavel = :corretor_responsavel,
                     nome_anunciante = :nome_anunciante,
                     telefone_anunciante = :telefone_anunciante,
@@ -379,8 +373,6 @@ function updateProperty(int $propertyId, array $propertyData): bool
         $stmt->bindParam(':medida_frente', $propertyData['medida_frente']);
         $stmt->bindParam(':medida_fundo', $propertyData['medida_fundo']);
         $stmt->bindParam(':medida_laterais', $propertyData['medida_laterais']);
-        $stmt->bindParam(':latitude', $propertyData['latitude']);
-        $stmt->bindParam(':longitude', $propertyData['longitude']);
         $stmt->bindParam(':corretor_responsavel', $propertyData['corretor_responsavel']);
         $stmt->bindParam(':nome_anunciante', $propertyData['nome_anunciante']);
         $stmt->bindParam(':telefone_anunciante', $propertyData['telefone_anunciante']);

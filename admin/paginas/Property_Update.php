@@ -75,8 +75,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'medida_frente' => trim($_POST['medida_frente'] ?? ''),
         'medida_fundo' => trim($_POST['medida_fundo'] ?? ''),
         'medida_laterais' => trim($_POST['medida_laterais'] ?? ''),
-        'latitude' => trim($_POST['latitude'] ?? ''),
-        'longitude' => trim($_POST['longitude'] ?? ''),
         'corretor_responsavel' => (int)($_POST['corretor_responsavel'] ?? 0),
         'nome_anunciante' => trim($_POST['nome_anunciante'] ?? ''),
         'telefone_anunciante' => trim($_POST['telefone_anunciante'] ?? ''),
@@ -271,20 +269,6 @@ if (!empty($formData['id_cidade'])) {
                     <input type="text" id="endereco" name="endereco" class="form-control" 
                            value="<?= htmlspecialchars($formData['endereco']) ?>"
                            placeholder="Informe o endereço (Ex.: Rua Jorge Amado, n 354, Luis Eduardo Magalhães)">
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="latitude">Latitude</label>
-                    <input type="text" id="latitude" name="latitude" class="form-control" 
-                           value="<?= htmlspecialchars($formData['latitude']) ?>">
-                </div>
-                
-                <div class="form-group">
-                    <label for="longitude">Longitude</label>
-                    <input type="text" id="longitude" name="longitude" class="form-control" 
-                           value="<?= htmlspecialchars($formData['longitude']) ?>">
                 </div>
             </div>
             
@@ -637,4 +621,3 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-</script>
