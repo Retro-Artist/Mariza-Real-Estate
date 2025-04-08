@@ -125,12 +125,12 @@ if (!$need_redirect) {
             
             <div class="form-row">
                 <div class="form-group">
-                    <label for="search">Buscar por nome:</label>
+                    <label for="search">Buscar Cidades Cadastradas:</label>
                     <input type="text" id="search" name="search" class="form-control" value="<?= htmlspecialchars($searchFilter) ?>">
                 </div>
                 
                 <div class="form-group">
-                    <label for="state">Estado:</label>
+                    <label for="state">Filtrar Cidades por Estado:</label>
                     <select id="state" name="state" class="form-control">
                         <option value="">Todos os Estados</option>
                         <?php foreach ($states as $state): ?>

@@ -130,7 +130,7 @@ if (!$need_redirect) {
             <div class="confirmation-message">
                 <i class="fas fa-exclamation-triangle confirmation-icon"></i>
                 <h3>Tem certeza que deseja excluir este bairro?</h3>
-                <p>Você está prestes a excluir o bairro "<strong><?= htmlspecialchars($neighborhood['bairro']) ?></strong>" da cidade de <strong><?= htmlspecialchars($neighborhood['cidade_nome']) ?></strong> no estado de <strong><?= htmlspecialchars($neighborhood['estado_nome']) ?> (<?= htmlspecialchars($neighborhood['uf']) ?>)</strong>.</p>
+                <p>Você está prestes a excluir o bairro "<strong><?= htmlspecialchars($neighborhood['bairro']) ?></strong>" da cidade de <strong><?= isset($neighborhood['cidade_nome']) ? htmlspecialchars($neighborhood['cidade_nome']) : 'N/A' ?></strong> no estado de <strong><?= isset($neighborhood['estado_nome']) ? htmlspecialchars($neighborhood['estado_nome']) : 'N/A' ?> (<?= isset($neighborhood['uf']) ? htmlspecialchars($neighborhood['uf']) : 'N/A' ?>)</strong>.</p>
                 <p>Esta ação não pode ser desfeita.</p>
                 
                 <div class="warning-text">

@@ -41,10 +41,13 @@ if (!$need_redirect) {
         $cityFilter = intval($_GET['city']);
     }
     
-    // Get cities for the selected state (if any)
-    $cities = [];
-    if (!empty($stateFilter)) {
-        $cities = getCitiesByState($stateFilter);
+    // Get ALL cities for the dropdown
+    $allCities = [];
+    try {
+        $stmt = $databaseConnection->query("SELECT id, nome, id_estado FROM sistema_cidades ORDER BY nome ASC");
+        $allCities = $stmt->fetchAll();
+    } catch (PDOException $e) {
+        logError("Error fetching all cities: " . $e->getMessage());
     }
     
     // Build filter array
@@ -146,13 +149,13 @@ if (!$need_redirect) {
             
             <div class="form-row">
                 <div class="form-group">
-                    <label for="search">Buscar por nome:</label>
+                    <label for="search">Buscar Bairro por Nome:</label>
                     <input type="text" id="search" name="search" class="form-control" value="<?= htmlspecialchars($searchFilter) ?>">
                 </div>
                 
                 <div class="form-group">
-                    <label for="state">Estado:</label>
-                    <select id="state" name="state" class="form-control">
+                    <label for="state">Cidade por Estado:</label>
+                    <select id="state" name="state" class="form-control state-select">
                         <option value="">Todos os Estados</option>
                         <?php foreach ($states as $state): ?>
                             <option value="<?= $state['id'] ?>" <?= $stateFilter == $state['id'] ? 'selected' : '' ?>>
@@ -163,11 +166,13 @@ if (!$need_redirect) {
                 </div>
                 
                 <div class="form-group">
-                    <label for="city">Cidade:</label>
-                    <select id="city" name="city" class="form-control" <?= empty($cities) ? 'disabled' : '' ?>>
+                    <label for="city">Cidade do Bairro:</label>
+                    <select id="city" name="city" class="form-control city-select">
                         <option value="">Todas as Cidades</option>
-                        <?php foreach ($cities as $city): ?>
-                            <option value="<?= $city['id'] ?>" <?= $cityFilter == $city['id'] ? 'selected' : '' ?>>
+                        <?php foreach ($allCities as $city): ?>
+                            <option value="<?= $city['id'] ?>" 
+                                    data-state="<?= $city['id_estado'] ?>" 
+                                    <?= $cityFilter == $city['id'] ? 'selected' : '' ?>>
                                 <?= htmlspecialchars($city['nome']) ?>
                             </option>
                         <?php endforeach; ?>
@@ -282,68 +287,46 @@ if (!$need_redirect) {
 <!-- Script to handle dynamic city dropdown based on state selection -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const stateSelect = document.getElementById('state');
-    const citySelect = document.getElementById('city');
+    const stateSelect = document.querySelector('.state-select');
+    const citySelect = document.querySelector('.city-select');
+    const cityOptions = Array.from(citySelect.querySelectorAll('option'));
     
-    // Function to load cities for the selected state
-    function loadCities(stateId) {
-        // If no state selected, disable city dropdown
-        if (!stateId) {
-            citySelect.innerHTML = '<option value="">Todas as Cidades</option>';
-            citySelect.disabled = true;
+    // Function to filter cities based on the selected state
+    function filterCities() {
+        const selectedState = stateSelect.value;
+        
+        // Remove all options except the first one (All Cities)
+        while (citySelect.options.length > 1) {
+            citySelect.remove(1);
+        }
+        
+        // If no state selected, show all cities
+        if (!selectedState) {
+            cityOptions.forEach(option => {
+                if (option.value) { // Don't include the "All Cities" option again
+                    citySelect.appendChild(option.cloneNode(true));
+                }
+            });
             return;
         }
         
-        // Enable city dropdown
-        citySelect.disabled = true;
+        // Filter and add only cities from the selected state
+        const filteredCities = cityOptions.filter(option => {
+            return option.value === '' || option.dataset.state === selectedState;
+        });
         
-        // Show loading indicator
-        citySelect.innerHTML = '<option value="">Carregando...</option>';
-        
-        // Make AJAX request to get cities for the selected state
-        fetch('<?= BASE_URL ?>/admin/ajax/get_cidades.php?id_estado=' + stateId)
-            .then(response => response.json())
-            .then(data => {
-                // Check if there was an error
-                if (data.error) {
-                    console.error('Error loading cities:', data.error);
-                    citySelect.innerHTML = '<option value="">Erro ao carregar cidades</option>';
-                    return;
-                }
-                
-                // Populate city dropdown with the returned cities
-                let options = '<option value="">Todas as Cidades</option>';
-                
-                if (data.cidades && data.cidades.length > 0) {
-                    data.cidades.forEach(city => {
-                        // Check if this city was previously selected
-                        const selected = <?= empty($cityFilter) ? '0' : $cityFilter ?> == city.id ? 'selected' : '';
-                        options += `<option value="${city.id}" ${selected}>${city.nome}</option>`;
-                    });
-                    
-                    citySelect.innerHTML = options;
-                    citySelect.disabled = false;
-                } else {
-                    citySelect.innerHTML = '<option value="">Nenhuma cidade encontrada</option>';
-                    citySelect.disabled = true;
-                }
-            })
-            .catch(error => {
-                console.error('AJAX Error:', error);
-                citySelect.innerHTML = '<option value="">Erro ao carregar cidades</option>';
-                citySelect.disabled = true;
-            });
+        filteredCities.forEach(option => {
+            if (option.value !== '') { // Don't include the "All Cities" option again
+                citySelect.appendChild(option.cloneNode(true));
+            }
+        });
     }
     
-    // Event listener for state selection change
-    stateSelect.addEventListener('change', function() {
-        loadCities(this.value);
-    });
+    // Filter cities when page loads
+    filterCities();
     
-    // If a state is already selected on page load, load its cities
-    if (stateSelect.value) {
-        loadCities(stateSelect.value);
-    }
+    // Add change event to state select
+    stateSelect.addEventListener('change', filterCities);
 });
 </script>
 <?php endif; ?>
