@@ -52,16 +52,20 @@ $current_page = isset($page) ? $page : 'Calendar';
                     <li class="admin-sidebar__item <?= $current_page === 'Calendar' || strpos($current_page, 'Calendar_') === 0 ? 'active' : '' ?>">
                         <a href="<?= BASE_URL ?>/admin/index.php?page=Calendar" class="admin-sidebar__link">
                             <i class="fas fa-calendar-alt"></i>
-                            <span>Gerenciar Calendário</span>
+                            <span>Meus Lembretes</span>
                         </a>
                     </li>
+
+                    
 
                     <li class="admin-sidebar__item <?= strpos($current_page, 'Property_') === 0 ? 'active' : '' ?>">
                         <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin" class="admin-sidebar__link">
                             <i class="fas fa-home"></i>
-                            <span>Gerenciar Imóveis</span>
+                            <span>Cadastrar Imóveis</span>
                         </a>
                     </li>
+
+                    
 
                     <li class="admin-sidebar__item <?= strpos($current_page, 'Client_') === 0 ? 'active' : '' ?>">
                         <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Admin" class="admin-sidebar__link">
@@ -70,58 +74,63 @@ $current_page = isset($page) ? $page : 'Calendar';
                         </a>
                     </li>
 
+                    
+
                     <li class="admin-sidebar__item <?= strpos($current_page, 'Atendimento') === 0 ? 'active' : '' ?>">
                         <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento_Admin" class="admin-sidebar__link">
                             <i class="fas fa-headset"></i>
-                            <span>Atendimentos do Site</span>
+                            <span>Atender Clientes</span>
                         </a>
                     </li>
 
-                    <!-- Submenu Configurações -->
-                    <li class="admin-sidebar__item admin-sidebar__item--has-submenu <?= strpos($current_page, 'State_') === 0 || strpos($current_page, 'City_') === 0 || strpos($current_page, 'Neighborhood_') === 0 || strpos($current_page, 'Category_') === 0 ? 'active' : '' ?>">
-                        <a href="#" class="admin-sidebar__link admin-sidebar__link--toggle">
-                            <i class="fas fa-cogs"></i>
-                            <span>Configurações</span>
-                            <i class="fas fa-chevron-down admin-sidebar__submenu-icon"></i>
-                        </a>
-                        <ul class="admin-sidebar__submenu">
-                            <li class="admin-sidebar__submenu-item <?= strpos($current_page, 'Category_') === 0 ? 'active' : '' ?>">
-                                <a href="<?= BASE_URL ?>/admin/index.php?page=Category_Admin" class="admin-sidebar__submenu-link">
-                                    <i class="fas fa-tags"></i>
-                                    <span>Gerenciar Categorias</span>
-                                </a>
-                            </li>
-                            <li class="admin-sidebar__submenu-item <?= strpos($current_page, 'State_') === 0 ? 'active' : '' ?>">
-                                <a href="<?= BASE_URL ?>/admin/index.php?page=State_Admin" class="admin-sidebar__submenu-link">
-                                    <i class="fas fa-map"></i>
-                                    <span>Gerenciar Estados</span>
-                                </a>
-                            </li>
-                            <li class="admin-sidebar__submenu-item <?= strpos($current_page, 'City_') === 0 ? 'active' : '' ?>">
-                                <a href="<?= BASE_URL ?>/admin/index.php?page=City_Admin" class="admin-sidebar__submenu-link">
-                                    <i class="fas fa-city"></i>
-                                    <span>Gerenciar Cidades</span>
-                                </a>
-                            </li>
-                            <li class="admin-sidebar__submenu-item <?= strpos($current_page, 'Neighborhood_') === 0 ? 'active' : '' ?>">
-                                <a href="<?= BASE_URL ?>/admin/index.php?page=Neighborhood_Admin" class="admin-sidebar__submenu-link">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                    <span>Gerenciar Bairros</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
+                    
 
-                    <?php if ($_SESSION['admin_level'] == '1'): ?>
-                        <li class="admin-sidebar__item <?= strpos($current_page, 'User_') === 0 ? 'active' : '' ?>">
-                            <a href="<?= BASE_URL ?>/admin/index.php?page=User_Admin" class="admin-sidebar__link">
-                                <i class="fas fa-users-cog"></i>
-                                <span>Usuários</span>
-                            </a>
-                        </li>
-                    <?php endif; ?>
+<!-- Submenu Configurações -->
+<li class="admin-sidebar__item admin-sidebar__item--has-submenu <?= strpos($current_page, 'State_') === 0 || strpos($current_page, 'City_') === 0 || strpos($current_page, 'Neighborhood_') === 0 || strpos($current_page, 'Category_') === 0 || strpos($current_page, 'User_') === 0 ? 'active' : '' ?>">
+    <a href="#" class="admin-sidebar__link admin-sidebar__link--toggle">
+        <i class="fas fa-cogs"></i>
+        <span>Configurações</span>
+        <i class="fas fa-chevron-down admin-sidebar__submenu-icon"></i>
+    </a>
+    <ul class="admin-sidebar__submenu">
+        <li class="admin-sidebar__submenu-item <?= strpos($current_page, 'Category_') === 0 ? 'active' : '' ?>">
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Category_Admin" class="admin-sidebar__submenu-link">
+                <i class="fas fa-tags"></i>
+                <span>Meus Categorias</span>
+            </a>
+        </li>
+        <li class="admin-sidebar__submenu-item <?= strpos($current_page, 'State_') === 0 ? 'active' : '' ?>">
+            <a href="<?= BASE_URL ?>/admin/index.php?page=State_Admin" class="admin-sidebar__submenu-link">
+                <i class="fas fa-map"></i>
+                <span>Meus Estados</span>
+            </a>
+        </li>
+        <li class="admin-sidebar__submenu-item <?= strpos($current_page, 'City_') === 0 ? 'active' : '' ?>">
+            <a href="<?= BASE_URL ?>/admin/index.php?page=City_Admin" class="admin-sidebar__submenu-link">
+                <i class="fas fa-city"></i>
+                <span>Meus Cidades</span>
+            </a>
+        </li>
+        <li class="admin-sidebar__submenu-item <?= strpos($current_page, 'Neighborhood_') === 0 ? 'active' : '' ?>">
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Neighborhood_Admin" class="admin-sidebar__submenu-link">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Meus Bairros</span>
+            </a>
+        </li>
+        <?php if ($_SESSION['admin_level'] == '1'): ?>
+            <li class="admin-sidebar__submenu-item <?= strpos($current_page, 'User_') === 0 ? 'active' : '' ?>">
+                <a href="<?= BASE_URL ?>/admin/index.php?page=User_Admin" class="admin-sidebar__submenu-link">
+                    <i class="fas fa-users-cog"></i>
+                    <span>Meus Usuários</span>
+                </a>
+            </li>
+        <?php endif; ?>
+    </ul>
+</li>
 
-                    <li class="admin-sidebar__divider"></li>
+
+
+               
 
                     <li class="admin-sidebar__item">
                         <a href="<?= BASE_URL ?>/admin/Admin_Logout.php" class="admin-sidebar__link">
