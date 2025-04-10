@@ -93,10 +93,20 @@ $current_page = isset($page) ? $page : 'Calendar';
         <i class="fas fa-chevron-down admin-sidebar__submenu-icon"></i>
     </a>
     <ul class="admin-sidebar__submenu">
+
+    <?php if ($_SESSION['admin_level'] == '1'): ?>
+            <li class="admin-sidebar__submenu-item <?= strpos($current_page, 'User_') === 0 ? 'active' : '' ?>">
+                <a href="<?= BASE_URL ?>/admin/index.php?page=User_Admin" class="admin-sidebar__submenu-link">
+                    <i class="fas fa-users-cog"></i>
+                    <span>Usuários do Site</span>
+                </a>
+            </li>
+        <?php endif; ?>
+
         <li class="admin-sidebar__submenu-item <?= strpos($current_page, 'Category_') === 0 ? 'active' : '' ?>">
             <a href="<?= BASE_URL ?>/admin/index.php?page=Category_Admin" class="admin-sidebar__submenu-link">
                 <i class="fas fa-tags"></i>
-                <span>Meus Categorias</span>
+                <span>Minhas Categorias</span>
             </a>
         </li>
         <li class="admin-sidebar__submenu-item <?= strpos($current_page, 'State_') === 0 ? 'active' : '' ?>">
@@ -108,7 +118,7 @@ $current_page = isset($page) ? $page : 'Calendar';
         <li class="admin-sidebar__submenu-item <?= strpos($current_page, 'City_') === 0 ? 'active' : '' ?>">
             <a href="<?= BASE_URL ?>/admin/index.php?page=City_Admin" class="admin-sidebar__submenu-link">
                 <i class="fas fa-city"></i>
-                <span>Meus Cidades</span>
+                <span>Minhas Cidades</span>
             </a>
         </li>
         <li class="admin-sidebar__submenu-item <?= strpos($current_page, 'Neighborhood_') === 0 ? 'active' : '' ?>">
@@ -117,14 +127,7 @@ $current_page = isset($page) ? $page : 'Calendar';
                 <span>Meus Bairros</span>
             </a>
         </li>
-        <?php if ($_SESSION['admin_level'] == '1'): ?>
-            <li class="admin-sidebar__submenu-item <?= strpos($current_page, 'User_') === 0 ? 'active' : '' ?>">
-                <a href="<?= BASE_URL ?>/admin/index.php?page=User_Admin" class="admin-sidebar__submenu-link">
-                    <i class="fas fa-users-cog"></i>
-                    <span>Meus Usuários</span>
-                </a>
-            </li>
-        <?php endif; ?>
+
     </ul>
 </li>
 
