@@ -1,3 +1,4 @@
+
 @import 'css_reset.css';
 @import 'public/header.css';
 @import 'public/home.css';
@@ -10,6 +11,7 @@
 @import 'public/anuncie.css';
 @import 'public/property-card.css';
 @import 'public/whatsapp-button.css';
+
 
 :root {
   /* 60% - Primary/Background colors */

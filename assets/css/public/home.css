@@ -198,6 +198,65 @@
   color: var(--color-text-dark);
 }
 
+/* Stats Counter Animation Styles */
+
+.stats-section__number-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.stats-section__icon {
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+}
+
+.stats-section__icon img {
+  width: 48px;
+  height: 48px;
+  transition: transform 0.3s ease;
+  color: var(--color-accent);
+}
+
+.stats-section__item:hover .stats-section__icon img {
+  transform: scale(1.1);
+}
+
+.stats-section__number {
+  font-size: var(--font-3xl);
+  font-weight: 700;
+  color: var(--color-accent);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.stats-section__number::after {
+  content: '+';
+  font-size: 0.7em;
+  position: relative;
+  top: -5px;
+  margin-left: 2px;
+}
+
+/* Animation for when counter is activated */
+@keyframes countUp {
+  0% {
+      transform: translateY(10px);
+      opacity: 0;
+  }
+  100% {
+      transform: translateY(0);
+      opacity: 1;
+  }
+}
+
+.stats-section__number.animate {
+  animation: countUp 0.5s ease forwards;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .hero-section__wrapper {
@@ -222,3 +281,4 @@
     min-width: 150px;
   }
 }
+

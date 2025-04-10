@@ -74,6 +74,8 @@
     </div>
     
     <!-- Scripts -->
+
     <script src="<?= BASE_URL ?>/assets/scripts/script_loader.js"></script>
+    <script src="<?= BASE_URL ?>/assets/scripts/counter-animation.js"></script>
 </body>
 </html>

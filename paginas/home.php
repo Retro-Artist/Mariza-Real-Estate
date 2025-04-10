@@ -143,17 +143,32 @@ $imoveis_destaque = getFeaturedProperties(6); // Limitar a 6 imóveis em destaqu
 <section class="stats-section">
     <div class="stats-section__wrapper">
         <div class="stats-section__item">
-            <div class="stats-section__number">900 +</div>
-            <div class="stats-section__text">Imóveis vendidos</div>
+            <div class="stats-section__number-container">
+                <div class="stats-section__icon">
+                    <img src="<?= BASE_URL ?>/assets/img/icon_terrenos.svg" alt="Terrenos" />
+                </div>
+                <div class="stats-section__number" data-count="900">0</div>
+            </div>
+            <div class="stats-section__text">Terrenos vendidos</div>
         </div>
         
         <div class="stats-section__item">
-            <div class="stats-section__number">900 +</div>
+            <div class="stats-section__number-container">
+                <div class="stats-section__icon">
+                    <img src="<?= BASE_URL ?>/assets/img/icon_imoveis.svg" alt="Imóveis" />
+                </div>
+                <div class="stats-section__number" data-count="900">0</div>
+            </div>
             <div class="stats-section__text">Imóveis negociados</div>
         </div>
         
         <div class="stats-section__item">
-            <div class="stats-section__number">900 +</div>
+            <div class="stats-section__number-container">
+                <div class="stats-section__icon">
+                    <img src="<?= BASE_URL ?>/assets/img/icon_satisfeitos.svg" alt="Clientes" />
+                </div>
+                <div class="stats-section__number" data-count="900">0</div>
+            </div>
             <div class="stats-section__text">Clientes satisfeitos</div>
         </div>
     </div>

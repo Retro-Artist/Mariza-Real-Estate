@@ -40,7 +40,7 @@ require_once __DIR__ . '/config/config.php';
                 <a href="<?= BASE_URL ?>" class="site-header__nav-item">HOME</a>
                 <a href="<?= BASE_URL ?>/imoveis" class="site-header__nav-item">IMÓVEIS</a>
                 <a href="<?= BASE_URL ?>/contato" class="site-header__nav-item">CONTATO</a>
-                <a href="<?= BASE_URL ?>/anuncie" class="site-header__nav-item">ANUNCIE SEU IMÓVEL</a>
+                <a href="https://wa.me/5577999367802?text=Ol%C3%A1%20tenho%20um%20im%C3%B3vel%20que%20pretendo%20vender%20ou%20alugar" class="site-header__nav-item">ANUNCIE SEU IMÓVEL</a>
                 <button id="searchToggle" class="site-header__search-toggle" aria-label="Buscar no site">
                     <i class="fas fa-search search-open"></i>
                     <i class="fas fa-times search-close"></i>
