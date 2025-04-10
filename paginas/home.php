@@ -8,7 +8,7 @@ $imoveis_destaque = getFeaturedProperties(6); // Limitar a 6 imóveis em destaqu
         <div class="hero-section__content">
             <h1 class="hero-section__title">Nós vamos encontrar o lugar perfeito para você.</h1>
             <p class="hero-section__subtitle">Com a Mariza Corretora você terá os melhores serviços. Com uma trajetória sólida e reconhecida no mercado, somos referência quando se trata de transações imobiliárias de qualidade e confiança. Venha anunciar seu imóvel conosco!</p>
-            <a href="imoveis.php" class="primary-button">Ver imóveis</a>
+            <a href="/imoveis" class="primary-button">Ver imóveis</a>
         </div>
         <div class="hero-section__image">
             <img src="assets/img/mockup_casa.webp" alt="Casa moderna">
@@ -90,13 +90,13 @@ $imoveis_destaque = getFeaturedProperties(6); // Limitar a 6 imóveis em destaqu
                             <div class="property-card__features">
                                 <?php if (!empty($imovel['quartos']) && $imovel['quartos'] != "Nenhum"): ?>
                                 <span class="property-card__feature">
-                                    <i class="fas fa-bed"></i> <?= $imovel['quartos'] ?>
+                                    <i class="fas fa-bed"></i> <?= $imovel['quartos'] ?> <?= $imovel['quartos'] > 1 ? "Quartos" : "Quarto" ?>
                                 </span>
                                 <?php endif; ?>
                                 
                                 <?php if (!empty($imovel['garagem']) && $imovel['garagem'] != "Nenhum"): ?>
                                 <span class="property-card__feature">
-                                    <i class="fas fa-car"></i> <?= $imovel['garagem'] ?>
+                                    <i class="fas fa-car"></i> <?= $imovel['garagem'] ?> <?= $imovel['garagem'] > 1 ? "Garagens" : "Garagem" ?>
                                 </span>
                                 <?php endif; ?>
                                 

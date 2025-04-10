@@ -1,4 +1,6 @@
-/* Header Styles */
+/* Updated Header Styles for Desktop & Mobile */
+
+/* Overall Header */
 .site-header {
   background-color: var(--color-content-bg);
   box-shadow: var(--box-shadow);
@@ -7,11 +9,13 @@
   z-index: 100;
 }
 
+/* Top Bar */
 .site-header__top {
   background-color: var(--color-accent);
   height: 20px;
 }
 
+/* Header Wrapper */
 .site-header__wrapper {
   display: flex;
   justify-content: space-between;
@@ -21,23 +25,23 @@
   padding: 15px 20px;
 }
 
+/* Logo */
 .site-header__logo {
   font-size: var(--font-xl);
   font-weight: bold;
   font-family: var(--font-secondary);
 }
-
 .site-header__logo img {
   max-height: 60px;
 }
 
+/* Desktop Navigation (visible on desktop) */
 .site-header__nav {
   display: flex;
   align-items: center;
   gap: 30px;
 }
-
-.site-header__nav-item {
+.site-header__nav .site-header__nav-item {
   font-size: var(--font-sm);
   font-family: var(--font-primary);
   position: relative;
@@ -45,8 +49,7 @@
   font-weight: 600;
   letter-spacing: 0.5px;
 }
-
-.site-header__nav-item:after {
+.site-header__nav .site-header__nav-item:after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -56,11 +59,18 @@
   background-color: var(--color-accent);
   transition: var(--transition);
 }
-
-.site-header__nav-item:hover:after {
+.site-header__nav .site-header__nav-item:hover:after {
   width: 100%;
 }
-/* Estilos apenas para o botão de busca */
+
+/* Actions Container: holds search and hamburger buttons */
+.site-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Search Toggle Button */
 .site-header__search-toggle {
   background: none;
   border: none;
@@ -69,55 +79,80 @@
   color: var(--color-text-dark);
   width: 24px;
   height: 24px;
-  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
 }
-
 .site-header__search-toggle:focus {
   outline: none;
 }
-
-/* Esconde por completo o ícone de fechar por padrão */
 .site-header__search-toggle .search-close {
-  display: none !important; /* Força o esconder em qualquer circunstância */
+  display: none !important;
 }
-
-/* Mostra apenas o ícone de busca por padrão */
 .site-header__search-toggle .search-open {
   display: block;
 }
-
-/* Quando a busca está ativa, inverte a visibilidade */
 body.search-active .site-header__search-toggle .search-close {
-  display: block !important; /* Força o mostrar */
+  display: block !important;
 }
-
 body.search-active .site-header__search-toggle .search-open {
   display: none;
 }
 
-/* Barra de pesquisa */
+/* Hamburger Toggle Button (only visible on mobile) */
+.site-header__hamburger-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--font-md);
+  color: var(--color-text-dark);
+  padding: 0;
+  display: none; /* Hidden by default – shown in mobile view */
+}
+.site-header__hamburger-toggle:focus {
+  outline: none;
+}
+
+/* Mobile Navigation Dropdown (hidden by default) */
+.site-header__nav-mobile {
+  display: none;
+  flex-direction: column;
+  background-color: var(--color-content-bg);
+  width: 100%;
+  box-shadow: var(--box-shadow);
+}
+.site-header__nav-mobile .site-header__nav-item {
+  font-size: var(--font-base);
+  font-family: var(--font-primary);
+  padding: 10px;
+  text-align: center;
+  border-bottom: 1px solid var(--color-border);
+}
+.site-header__nav-mobile .site-header__nav-item:last-child {
+  border-bottom: none;
+}
+.site-header__nav-mobile.active {
+  display: flex;
+  animation: slideDown 0.3s ease;
+}
+
+/* Search Bar */
 .search-bar {
   background-color: #333;
   padding: 15px 0;
   display: none;
 }
-
 .search-bar.active {
   display: block;
   animation: slideDown 0.3s ease;
 }
-
 .search-bar__form {
   display: flex;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
 }
-
 .search-bar__input {
   width: 100%;
   padding: 10px 15px;
@@ -127,41 +162,39 @@ body.search-active .site-header__search-toggle .search-open {
   color: var(--color-text-light);
   background-color: rgba(255, 255, 255, 0.1);
 }
-
 .search-bar__input::placeholder {
   color: rgba(255, 255, 255, 0.7);
 }
-
 .search-bar__input:focus {
   outline: none;
   background-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Sticky header */
+/* Sticky Header State */
 .site-header--sticky {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   animation: slideDown 0.3s ease;
 }
 
-/* Responsive styles */
+/* Responsive Styles */
+/* Mobile: show hamburger toggle & mobile nav; hide desktop nav */
 @media (max-width: 768px) {
-  .site-header__nav {
-    gap: 15px;
+  .site-header__hamburger-toggle {
+    display: flex;
   }
-  
-  .site-header__nav-item {
-    font-size: var(--font-xs);
+  .site-header__nav {
+    display: none;
   }
 }
-
-@media (max-width: 576px) {
-  .site-header__wrapper {
-    flex-direction: column;
-    gap: 15px;
+/* Desktop: hide hamburger toggle & mobile nav; display desktop nav */
+@media (min-width: 769px) {
+  .site-header__hamburger-toggle {
+    display: none;
   }
-  
   .site-header__nav {
-    width: 100%;
-    justify-content: space-between;
+    display: flex;
+  }
+  .site-header__nav-mobile {
+    display: none;
   }
 }

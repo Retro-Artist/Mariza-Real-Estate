@@ -229,22 +229,123 @@
   box-shadow: var(--box-shadow);
 }
 
-/* Responsive */
+/* Responsive adjustments for mobile devices */
 @media (max-width: 768px) {
-  .contato-section__container {
-    flex-direction: column;
+  .contato-section {
+    padding: 30px 0;
   }
   
-  .form-row {
-    flex-direction: column;
-    gap: 0;
+  .contato-section__wrapper {
+    padding: 0 10px;
   }
   
   .contato-section__title {
     font-size: var(--font-2xl);
+    margin-bottom: 15px;
   }
   
   .contato-section__subtitle {
     font-size: var(--font-md);
+    margin-bottom: 30px;
+  }
+  
+  .message {
+    padding: 10px;
+    margin: 0 auto 20px;
+    width: 100%;
+  }
+  
+  .contato-section__container {
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  
+  .contato-section__info {
+    min-width: 100%;
+  }
+  
+  .contato-section__card {
+    padding: 20px;
+  }
+  
+  .contato-section__info-title {
+    font-size: var(--font-lg);
+    margin-bottom: 20px;
+  }
+  
+  .contato-section__info-title:after {
+    bottom: -8px;
+    width: 40px;
+  }
+  
+  .contato-section__item {
+    margin-bottom: 15px;
+  }
+  
+  .contato-section__icon {
+    width: 35px;
+    height: 35px;
+    margin-right: 10px;
+  }
+  
+  .contato-section__content h4 {
+    font-size: var(--font-sm);
+    margin-bottom: 3px;
+  }
+  
+  .contato-section__content p {
+    margin-bottom: 3px;
+  }
+  
+  .contato-section__social {
+    gap: 10px;
+    margin-top: 20px;
+  }
+  
+  .contato-section__social-link {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .contato-section__form-container {
+    min-width: 100%;
+  }
+  
+  .contato-section__form {
+    padding: 20px;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-control {
+    padding: 10px 12px;
+  }
+  
+  .contato-section__submit {
+    padding: 10px;
+    font-size: var(--font-sm);
+  }
+  
+  .contato-section__map {
+    margin-top: 20px;
+  }
+  
+  .contato-section__map-title {
+    font-size: var(--font-xl);
+    margin-bottom: 20px;
+  }
+  
+  .contato-section__map-title:after {
+    bottom: -8px;
+    width: 40px;
   }
 }
