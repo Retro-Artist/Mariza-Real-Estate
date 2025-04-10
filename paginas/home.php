@@ -64,61 +64,66 @@ $imoveis_destaque = getFeaturedProperties(6); // Limitar a 6 imóveis em destaqu
 <section class="featured-properties section">
     <div class="featured-properties__wrapper">
         <h2 class="section__title">Imóveis em Destaque</h2>
-        
         <?php if (empty($imoveis_destaque)): ?>
-            <p class="text-center">Nenhum imóvel em destaque no momento.</p>
-        <?php else: ?>
-            <div class="properties-section__grid">
-                <?php foreach ($imoveis_destaque as $imovel): ?>
-                    <!-- Property Card -->
-                    <div class="property-card">
-                        <a href="<?= BASE_URL ?>/imovel/<?= $imovel['id'] ?>">
-                            <img src="<?= getPropertyMainImage($imovel) ?>" 
-                                 alt="<?= htmlspecialchars($imovel['titulo'] ?? '') ?>" class="property-card__image">
-                        </a>
-                        
-                        <div class="property-card__content">
-                            <span class="property-card__tag">
-                                <?= $imovel['para'] === 'venda' ? 'Venda' : 'Aluguel' ?> - <?= htmlspecialchars($imovel['categoria'] ?? '') ?>
-                            </span>
-                            <h3 class="property-card__title"><?= htmlspecialchars($imovel['titulo'] ?? '') ?></h3>
-                            <div class="property-card__price"><?= formatCurrency($imovel['valor']) ?></div>
-                            <div class="property-card__location">
-                                <i class="fas fa-map-marker-alt"></i> <?= htmlspecialchars($imovel['bairro'] ?? '') ?>
-                            </div>
-                            
-                            <div class="property-card__features">
-                                <?php if (!empty($imovel['quartos']) && $imovel['quartos'] != "Nenhum"): ?>
-                                <span class="property-card__feature">
-                                    <i class="fas fa-bed"></i> <?= $imovel['quartos'] ?> <?= $imovel['quartos'] > 1 ? "Quartos" : "Quarto" ?>
-                                </span>
-                                <?php endif; ?>
-                                
-                                <?php if (!empty($imovel['garagem']) && $imovel['garagem'] != "Nenhum"): ?>
-                                <span class="property-card__feature">
-                                    <i class="fas fa-car"></i> <?= $imovel['garagem'] ?> <?= $imovel['garagem'] > 1 ? "Garagens" : "Garagem" ?>
-                                </span>
-                                <?php endif; ?>
-                                
-                                <?php if (!empty($imovel['area_total'])): ?>
-                                <span class="property-card__feature">
-                                    <i class="fas fa-vector-square"></i> <?= $imovel['area_total'] ?> <?= $imovel['und_medida'] ?? 'm²' ?>
-                                </span>
-                                <?php endif; ?>
-                            </div>
-                            
-                            <div class="property-card__agent">
-                                <i class="fas fa-city"></i> <?= htmlspecialchars($imovel['cidade'] ?? '') ?>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
+  <p class="text-center">Nenhum imóvel em destaque no momento.</p>
+<?php else: ?>
+  <div class="properties-section__grid">
+    <?php foreach ($imoveis_destaque as $imovel): ?>
+      <!-- Property Card -->
+      <div class="property-card">
+        <a href="<?= BASE_URL ?>/imovel/<?= $imovel['id'] ?>">
+          <div class="property-card__image-wrapper">
+            <img src="<?= getPropertyMainImage($imovel) ?>" 
+                 alt="<?= htmlspecialchars($imovel['titulo'] ?? '') ?>" 
+                 class="property-card__image">
+            <img src="<?= BASE_URL ?>/assets/img/miniatura.png" alt="Watermark" 
+                 class="property-card__watermark">
+          </div>
+        </a>
+        
+        <div class="property-card__content">
+          <span class="property-card__tag">
+            <?= $imovel['para'] === 'venda' ? 'Venda' : 'Aluguel' ?> - <?= htmlspecialchars($imovel['categoria'] ?? '') ?>
+          </span>
+          <h3 class="property-card__title"><?= htmlspecialchars($imovel['titulo'] ?? '') ?></h3>
+          <div class="property-card__price"><?= formatCurrency($imovel['valor']) ?></div>
+          <div class="property-card__location">
+            <i class="fas fa-map-marker-alt"></i> <?= htmlspecialchars($imovel['bairro'] ?? '') ?>
+          </div>
+          
+          <div class="property-card__features">
+            <?php if (!empty($imovel['quartos']) && $imovel['quartos'] != "Nenhum"): ?>
+              <span class="property-card__feature">
+                <i class="fas fa-bed"></i> <?= $imovel['quartos'] ?> <?= $imovel['quartos'] > 1 ? "Quartos" : "Quarto" ?>
+              </span>
+            <?php endif; ?>
             
-            <div class="text-center mt-4">
-                <a href="<?= BASE_URL ?>/imoveis" class="primary-button">Ver todos os imóveis</a>
-            </div>
-        <?php endif; ?>
+            <?php if (!empty($imovel['garagem']) && $imovel['garagem'] != "Nenhum"): ?>
+              <span class="property-card__feature">
+                <i class="fas fa-car"></i> <?= $imovel['garagem'] ?> <?= $imovel['garagem'] > 1 ? "Garagens" : "Garagem" ?>
+              </span>
+            <?php endif; ?>
+            
+            <?php if (!empty($imovel['area_total'])): ?>
+              <span class="property-card__feature">
+                <i class="fas fa-vector-square"></i> <?= $imovel['area_total'] ?> <?= $imovel['und_medida'] ?? 'm²' ?>
+              </span>
+            <?php endif; ?>
+          </div>
+          
+          <div class="property-card__agent">
+            <i class="fas fa-city"></i> <?= htmlspecialchars($imovel['cidade'] ?? '') ?>
+          </div>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+  
+  <div class="text-center mt-4">
+    <a href="<?= BASE_URL ?>/imoveis" class="primary-button">Ver todos os imóveis</a>
+  </div>
+<?php endif; ?>
+
     </div>
 </section>
 
