@@ -38,7 +38,7 @@ $current_page = isset($page) ? $page : 'Calendar';
             <div class="admin-sidebar__header">
                 <div class="admin-sidebar__logo">
                     <a href="/admin">
-                        <img src="<?= BASE_URL ?>/assets/img/site-logo.webp" alt="<?= SITE_NAME ?>">
+                        <img src="<?= BASE_URL ?>/assets/img/Logo-White.png" alt="<?= SITE_NAME ?>">
                     </a>
                 </div>
                 <button class="admin-sidebar__toggle" id="sidebarToggle">
