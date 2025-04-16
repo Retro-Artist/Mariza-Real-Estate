@@ -121,7 +121,6 @@ if (isset($city)) {
     <div class="admin-page city-update">
         <!-- Page Header -->
         <div class="admin-page__header">
-            <h2 class="admin-page__title">Editar Cidade</h2>
             <a href="<?= BASE_URL ?>/admin/index.php?page=City_Admin" class="cancel-button">
                 <i class="fas fa-arrow-left"></i> Voltar
             </a>

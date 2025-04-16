@@ -117,7 +117,6 @@ if (isset($state)) {
     <div class="admin-page state-update">
         <!-- Page Header -->
         <div class="admin-page__header">
-            <h2 class="admin-page__title">Editar Estado</h2>
             <a href="<?= BASE_URL ?>/admin/index.php?page=State_Admin" class="cancel-button">
                 <i class="fas fa-arrow-left"></i> Voltar
             </a>

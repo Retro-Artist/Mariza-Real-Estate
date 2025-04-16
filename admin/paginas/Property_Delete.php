@@ -70,7 +70,6 @@ else {
 <div class="admin-page property-delete">
     <!-- Page Header -->
     <div class="admin-page__header">
-        <h2 class="admin-page__title">Excluir Imóvel</h2>
         <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin" class="cancel-button">
             <i class="fas fa-arrow-left"></i> Voltar
         </a>

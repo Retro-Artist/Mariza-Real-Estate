@@ -71,7 +71,6 @@ $sourceClass = 'badge--' . strtolower($atendimento['local']);
 <div class="admin-page atendimento-view">
     <!-- Page Header -->
     <div class="admin-page__header">
-        <h2 class="admin-page__title">Detalhes do Atendimento</h2>
         <div class="admin-page__actions">
             <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento_Update&id=<?= $atendimento_id ?>" class="primary-button">
                 <i class="fas fa-edit"></i> Editar

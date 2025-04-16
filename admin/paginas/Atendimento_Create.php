@@ -52,7 +52,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="admin-page atendimento-create">
     <!-- Page Header -->
     <div class="admin-page__header">
-        <h2 class="admin-page__title">Novo Atendimento</h2>
         <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento_Admin" class="cancel-button">
             <i class="fas fa-arrow-left"></i> Voltar
         </a>

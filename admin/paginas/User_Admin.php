@@ -27,8 +27,6 @@ $totalPages = $usersData['totalPages'];
 ?>
 
 <div class="admin-page__header">
-    <h2 class="admin-page__title">Gerenciar Usuários</h2>
-    
     <div class="admin-page__actions">
         <a href="<?= BASE_URL ?>/admin/index.php?page=User_Create" class="primary-button">
             <i class="fas fa-plus"></i> Novo Usuário

@@ -78,7 +78,6 @@ if (!$need_redirect) {
 <div class="admin-page event-view">
     <!-- Page Header -->
     <div class="admin-page__header">
-        <h2 class="admin-page__title">Detalhes do Lembrete</h2>
         <div class="admin-page__actions">
             <a href="<?= BASE_URL ?>/admin/index.php?page=Calendar_Update&id=<?= $event_id ?>" class="primary-button">
                 <i class="fas fa-edit"></i> Editar

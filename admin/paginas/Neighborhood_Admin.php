@@ -126,7 +126,6 @@
 <div class="admin-page neighborhood-admin">
     <!-- Page Header -->
     <div class="admin-page__header">
-        <h2 class="admin-page__title">Gerenciar Bairros</h2>
         <div class="admin-page__actions">
             <a href="<?= BASE_URL ?>/admin/index.php?page=Neighborhood_Create" class="primary-button">
                 <i class="fas fa-plus"></i> Adicionar Novo Bairro

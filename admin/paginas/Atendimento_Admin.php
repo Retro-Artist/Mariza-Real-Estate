@@ -49,14 +49,6 @@ if (isset($_SESSION['alert_message'])) {
         </div>
     <?php endif; ?>
     
-    <!-- Page Header with Add Button -->
-    <div class="admin-page__header">
-        <h2 class="admin-page__title">Gerenciar Atendimentos</h2>
-        <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento_Create" class="primary-button">
-            <i class="fas fa-plus"></i> Novo Atendimento
-        </a>
-    </div>
-    
     <!-- Filter Form -->
     <div class="admin-card">
         <h3 class="card-title">Filtros</h3>
@@ -101,6 +93,14 @@ if (isset($_SESSION['alert_message'])) {
                 </div>
             </div>
         </form>
+    </div>
+
+        
+    <!-- Page Header with Add Button -->
+    <div class="admin-page__header">
+        <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento_Create" class="primary-button">
+            <i class="fas fa-plus"></i> Novo Atendimento
+        </a>
     </div>
     
     <!-- Service Requests Table -->

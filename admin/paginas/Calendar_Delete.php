@@ -56,7 +56,6 @@ if (!$need_redirect) {
 <div class="admin-page event-delete">
     <!-- Page Header -->
     <div class="admin-page__header">
-        <h2 class="admin-page__title">Excluir Lembrete</h2>
         <a href="<?= BASE_URL ?>/admin/index.php?page=Calendar" class="cancel-button">
             <i class="fas fa-arrow-left"></i> Voltar
         </a>

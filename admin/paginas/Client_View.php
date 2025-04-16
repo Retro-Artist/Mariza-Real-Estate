@@ -29,7 +29,6 @@ $data_nascimento = !empty($cliente['data_nascimento']) ? date('d/m/Y', strtotime
 <div class="admin-page client-view">
     <!-- Page Header -->
     <div class="page-header">
-        <h2 class="page-title">Detalhes do Cliente</h2>
         <div class="action-buttons">
             <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Update&id=<?= $client_id ?>" class="btn btn-primary">
                 <i class="fas fa-edit"></i> Editar

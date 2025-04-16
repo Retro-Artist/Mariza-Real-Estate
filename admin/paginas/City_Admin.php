@@ -102,7 +102,6 @@
 <div class="admin-page city-admin">
     <!-- Page Header -->
     <div class="admin-page__header">
-        <h2 class="admin-page__title">Gerenciar Cidades</h2>
         <div class="admin-page__actions">
             <a href="<?= BASE_URL ?>/admin/index.php?page=City_Create" class="primary-button">
                 <i class="fas fa-plus"></i> Adicionar Nova Cidade

@@ -53,7 +53,6 @@ else {
 <div class="admin-page client-delete">
     <!-- Page Header -->
     <div class="admin-page__header">
-        <h2 class="admin-page__title">Excluir Cliente</h2>
         <a href="<?= BASE_URL ?>/admin/Client_Admin.php" class="cancel-button">
             <i class="fas fa-arrow-left"></i> Voltar
         </a>

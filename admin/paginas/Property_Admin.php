@@ -38,7 +38,7 @@ $alertType = '';
 if (isset($_SESSION['alert_message'])) {
     $alertMessage = $_SESSION['alert_message'];
     $alertType = $_SESSION['alert_type'] ?? 'success';
-    
+
     // Clear alert message from session
     unset($_SESSION['alert_message']);
     unset($_SESSION['alert_type']);
@@ -52,14 +52,8 @@ if (isset($_SESSION['alert_message'])) {
             <?= htmlspecialchars($alertMessage) ?>
         </div>
     <?php endif; ?>
-    
-    <!-- Page Header with Add Button -->
-    <div class="admin-page__header">
-        <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Create" class="primary-button">
-            <i class="fas fa-plus"></i> Novo Imóvel
-        </a>
-    </div>
-    
+
+
     <!-- Filter Form -->
     <div class="admin-card">
         <h3 class="card-title">Filtros</h3>
@@ -74,7 +68,7 @@ if (isset($_SESSION['alert_message'])) {
                         <option value="aluguel" <?= $filtroTipo === 'aluguel' ? 'selected' : '' ?>>Aluguel</option>
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="categoria">Categoria</label>
                     <select id="categoria" name="categoria" class="form-control">
@@ -86,13 +80,13 @@ if (isset($_SESSION['alert_message'])) {
                         <?php endforeach; ?>
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="busca">Busca</label>
-                    <input type="text" id="busca" name="busca" class="form-control" 
-                           placeholder="Título, código ou referência" value="<?= htmlspecialchars($filtroBusca) ?>">
+                    <input type="text" id="busca" name="busca" class="form-control"
+                        placeholder="Título, código ou referência" value="<?= htmlspecialchars($filtroBusca) ?>">
                 </div>
-                
+
                 <div class="form-group filter-buttons">
                     <label class="invisible">Ações</label>
                     <div class="button-group">
@@ -105,7 +99,14 @@ if (isset($_SESSION['alert_message'])) {
             </div>
         </form>
     </div>
-    
+
+    <!-- Page Header with Add Button -->
+    <div class="admin-page__header">
+        <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Create" class="primary-button">
+            <i class="fas fa-plus"></i> Novo Imóvel
+        </a>
+    </div>
+
     <!-- Properties Table -->
     <div class="admin-card">
         <?php if (empty($imoveis)): ?>
@@ -170,53 +171,53 @@ if (isset($_SESSION['alert_message'])) {
                     </tbody>
                 </table>
             </div>
-            
+
             <!-- Pagination -->
             <?php if ($totalPaginas > 1): ?>
                 <div class="pagination">
                     <?php if ($paginaAtual > 1): ?>
-                        <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin&pagina=1<?= !empty($filtroTipo) ? '&tipo='.$filtroTipo : '' ?><?= !empty($filtroCategoria) ? '&categoria='.$filtroCategoria : '' ?><?= !empty($filtroBusca) ? '&busca='.$filtroBusca : '' ?>" class="pagination__item">
+                        <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin&pagina=1<?= !empty($filtroTipo) ? '&tipo=' . $filtroTipo : '' ?><?= !empty($filtroCategoria) ? '&categoria=' . $filtroCategoria : '' ?><?= !empty($filtroBusca) ? '&busca=' . $filtroBusca : '' ?>" class="pagination__item">
                             <i class="fas fa-angle-double-left"></i>
                         </a>
-                        <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin&pagina=<?= $paginaAtual-1 ?><?= !empty($filtroTipo) ? '&tipo='.$filtroTipo : '' ?><?= !empty($filtroCategoria) ? '&categoria='.$filtroCategoria : '' ?><?= !empty($filtroBusca) ? '&busca='.$filtroBusca : '' ?>" class="pagination__item">
+                        <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin&pagina=<?= $paginaAtual - 1 ?><?= !empty($filtroTipo) ? '&tipo=' . $filtroTipo : '' ?><?= !empty($filtroCategoria) ? '&categoria=' . $filtroCategoria : '' ?><?= !empty($filtroBusca) ? '&busca=' . $filtroBusca : '' ?>" class="pagination__item">
                             <i class="fas fa-angle-left"></i>
                         </a>
                     <?php endif; ?>
-                    
+
                     <?php
                     // Determine range of page numbers to display
                     $range = 2; // Show 2 pages before and after current page
                     $startPage = max(1, $paginaAtual - $range);
                     $endPage = min($totalPaginas, $paginaAtual + $range);
-                    
+
                     // Always show first page
                     if ($startPage > 1) {
-                        echo '<a href="'.BASE_URL.'/admin/index.php?page=Property_Admin&pagina=1'.(!empty($filtroTipo) ? '&tipo='.$filtroTipo : '').(!empty($filtroCategoria) ? '&categoria='.$filtroCategoria : '').(!empty($filtroBusca) ? '&busca='.$filtroBusca : '').'" class="pagination__item">1</a>';
+                        echo '<a href="' . BASE_URL . '/admin/index.php?page=Property_Admin&pagina=1' . (!empty($filtroTipo) ? '&tipo=' . $filtroTipo : '') . (!empty($filtroCategoria) ? '&categoria=' . $filtroCategoria : '') . (!empty($filtroBusca) ? '&busca=' . $filtroBusca : '') . '" class="pagination__item">1</a>';
                         if ($startPage > 2) {
                             echo '<span class="pagination__item pagination__item--ellipsis">...</span>';
                         }
                     }
-                    
+
                     // Display page numbers within range
                     for ($i = $startPage; $i <= $endPage; $i++) {
                         $activeClass = ($i === $paginaAtual) ? 'pagination__item--active' : '';
-                        echo '<a href="'.BASE_URL.'/admin/index.php?page=Property_Admin&pagina='.$i.(!empty($filtroTipo) ? '&tipo='.$filtroTipo : '').(!empty($filtroCategoria) ? '&categoria='.$filtroCategoria : '').(!empty($filtroBusca) ? '&busca='.$filtroBusca : '').'" class="pagination__item '.$activeClass.'">'.$i.'</a>';
+                        echo '<a href="' . BASE_URL . '/admin/index.php?page=Property_Admin&pagina=' . $i . (!empty($filtroTipo) ? '&tipo=' . $filtroTipo : '') . (!empty($filtroCategoria) ? '&categoria=' . $filtroCategoria : '') . (!empty($filtroBusca) ? '&busca=' . $filtroBusca : '') . '" class="pagination__item ' . $activeClass . '">' . $i . '</a>';
                     }
-                    
+
                     // Always show last page
                     if ($endPage < $totalPaginas) {
                         if ($endPage < $totalPaginas - 1) {
                             echo '<span class="pagination__item pagination__item--ellipsis">...</span>';
                         }
-                        echo '<a href="'.BASE_URL.'/admin/index.php?page=Property_Admin&pagina='.$totalPaginas.(!empty($filtroTipo) ? '&tipo='.$filtroTipo : '').(!empty($filtroCategoria) ? '&categoria='.$filtroCategoria : '').(!empty($filtroBusca) ? '&busca='.$filtroBusca : '').'" class="pagination__item">'.$totalPaginas.'</a>';
+                        echo '<a href="' . BASE_URL . '/admin/index.php?page=Property_Admin&pagina=' . $totalPaginas . (!empty($filtroTipo) ? '&tipo=' . $filtroTipo : '') . (!empty($filtroCategoria) ? '&categoria=' . $filtroCategoria : '') . (!empty($filtroBusca) ? '&busca=' . $filtroBusca : '') . '" class="pagination__item">' . $totalPaginas . '</a>';
                     }
                     ?>
-                    
+
                     <?php if ($paginaAtual < $totalPaginas): ?>
-                        <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin&pagina=<?= $paginaAtual+1 ?><?= !empty($filtroTipo) ? '&tipo='.$filtroTipo : '' ?><?= !empty($filtroCategoria) ? '&categoria='.$filtroCategoria : '' ?><?= !empty($filtroBusca) ? '&busca='.$filtroBusca : '' ?>" class="pagination__item">
+                        <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin&pagina=<?= $paginaAtual + 1 ?><?= !empty($filtroTipo) ? '&tipo=' . $filtroTipo : '' ?><?= !empty($filtroCategoria) ? '&categoria=' . $filtroCategoria : '' ?><?= !empty($filtroBusca) ? '&busca=' . $filtroBusca : '' ?>" class="pagination__item">
                             <i class="fas fa-angle-right"></i>
                         </a>
-                        <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin&pagina=<?= $totalPaginas ?><?= !empty($filtroTipo) ? '&tipo='.$filtroTipo : '' ?><?= !empty($filtroCategoria) ? '&categoria='.$filtroCategoria : '' ?><?= !empty($filtroBusca) ? '&busca='.$filtroBusca : '' ?>" class="pagination__item">
+                        <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin&pagina=<?= $totalPaginas ?><?= !empty($filtroTipo) ? '&tipo=' . $filtroTipo : '' ?><?= !empty($filtroCategoria) ? '&categoria=' . $filtroCategoria : '' ?><?= !empty($filtroBusca) ? '&busca=' . $filtroBusca : '' ?>" class="pagination__item">
                             <i class="fas fa-angle-double-right"></i>
                         </a>
                     <?php endif; ?>

@@ -61,7 +61,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="admin-page category-update">
     <!-- Page Header -->
     <div class="admin-page__header">
-        <h2 class="admin-page__title">Editar Categoria</h2>
         <a href="<?= BASE_URL ?>/admin/index.php?page=Category_Admin" class="cancel-button">
             <i class="fas fa-arrow-left"></i> Voltar
         </a>

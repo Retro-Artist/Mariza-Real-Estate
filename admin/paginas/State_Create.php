@@ -78,7 +78,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="admin-page state-create">
     <!-- Page Header -->
     <div class="admin-page__header">
-        <h2 class="admin-page__title">Adicionar Novo Estado</h2>
         <a href="<?= BASE_URL ?>/admin/index.php?page=State_Admin" class="cancel-button">
             <i class="fas fa-arrow-left"></i> Voltar
         </a>

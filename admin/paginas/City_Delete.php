@@ -118,7 +118,6 @@ else {
     <div class="admin-page city-delete">
         <!-- Page Header -->
         <div class="admin-page__header">
-            <h2 class="admin-page__title">Excluir Cidade</h2>
             <a href="<?= BASE_URL ?>/admin/index.php?page=City_Admin" class="cancel-button">
                 <i class="fas fa-arrow-left"></i> Voltar
             </a>

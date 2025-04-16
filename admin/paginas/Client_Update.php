@@ -147,7 +147,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!-- Update Client Page -->
 <div class="client-create-container">
-    <h1 class="client-page-title">Atualizar <span>Cliente</span></h1>
     
     <?php if (!empty($error)): ?>
         <div class="alert-message alert-message--error">

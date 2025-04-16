@@ -107,7 +107,6 @@ if (!empty($formData['id_cidade'])) {
 
 <!-- Add Client Page -->
 <div class="client-create-container">
-    <h1 class="client-page-title">Cadastrar <span>Cliente</span></h1>
     
     <?php if (!empty($error)): ?>
         <div class="alert-message alert-message--error">

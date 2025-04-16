@@ -133,7 +133,6 @@ if (isset($neighborhood)) {
 <div class="admin-page neighborhood-update">
     <!-- Page Header -->
     <div class="admin-page__header">
-        <h2 class="admin-page__title">Editar Bairro</h2>
         <a href="<?= BASE_URL ?>/admin/index.php?page=Neighborhood_Admin" class="cancel-button">
             <i class="fas fa-arrow-left"></i> Voltar
         </a>

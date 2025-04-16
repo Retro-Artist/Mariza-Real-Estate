@@ -64,7 +64,6 @@ try {
     <div class="admin-page state-admin">
         <!-- Page Header -->
         <div class="admin-page__header">
-            <h2 class="admin-page__title">Gerenciar Estados</h2>
             <div class="admin-page__actions">
                 <a href="<?= BASE_URL ?>/admin/index.php?page=State_Create" class="primary-button">
                     <i class="fas fa-plus"></i> Adicionar Novo Estado

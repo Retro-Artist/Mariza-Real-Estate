@@ -78,9 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-<div class="admin-page__header">
-    <h2 class="admin-page__title">Adicionar Novo Usuário</h2>
-    
+<div class="admin-page__header"> 
     <div class="admin-page__actions">
         <a href="<?= BASE_URL ?>/admin/index.php?page=User_Admin" class="cancel-button">
             <i class="fas fa-arrow-left"></i> Voltar

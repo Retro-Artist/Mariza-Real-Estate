@@ -136,7 +136,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="admin-page property-update">
     <!-- Page Header -->
     <div class="admin-page__header">
-        <h2 class="admin-page__title">Editar Imóvel</h2>
         <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin" class="cancel-button">
             <i class="fas fa-arrow-left"></i> Voltar
         </a>

@@ -84,7 +84,6 @@ if (!$need_redirect) {
 <div class="admin-page neighborhood-create">
     <!-- Page Header -->
     <div class="admin-page__header">
-        <h2 class="admin-page__title">Adicionar Novo Bairro</h2>
         <a href="<?= BASE_URL ?>/admin/index.php?page=Neighborhood_Admin" class="cancel-button">
             <i class="fas fa-arrow-left"></i> Voltar
         </a>
