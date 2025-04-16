@@ -11,12 +11,6 @@ require_once __DIR__ . '/../includes/database.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/admin_functions.php';
 
-// Check if user is logged in
-if (!isset($_SESSION['admin_id']) && basename($_SERVER['PHP_SELF']) != 'Admin_Login.php') {
-    // Redirect to login page if not logged in
-    header('Location: ' . BASE_URL . '/admin/Admin_Login.php');
-    exit;
-}
 
 // Process quick reminder creation (from modal)
 if (isset($_POST['action']) && $_POST['action'] === 'quick_create_reminder') {

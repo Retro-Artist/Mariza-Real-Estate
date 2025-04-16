@@ -10,7 +10,7 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 }
 
 // If security check and ID check pass, proceed with page logic
-if (!$need_redirect) {
+
     $neighborhood_id = (int)$_GET['id'];
     
     // Initialize variables
@@ -41,10 +41,9 @@ if (!$need_redirect) {
         $redirect_url = BASE_URL . '/admin/index.php?page=Neighborhood_Admin';
         $need_redirect = true;
     }
-}
 
 // If checks pass and neighborhood data is retrieved, continue with the form
-if (!$need_redirect && isset($neighborhood)) {
+if (isset($neighborhood)) {
     // Get all states for the dropdown
     $states = getStates();
     
@@ -130,7 +129,7 @@ if (!$need_redirect && isset($neighborhood)) {
 }
 ?>
 
-<?php if (!$need_redirect && isset($neighborhood)): ?>
+<?php if (isset($neighborhood)): ?>
 <div class="admin-page neighborhood-update">
     <!-- Page Header -->
     <div class="admin-page__header">
@@ -245,21 +244,5 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add change event to state select
     stateSelect.addEventListener('change', filterCities);
 });
-</script>
-<?php endif; ?>
-
-<?php if ($need_redirect): ?>
-<script>
-    // JavaScript redirect if checks fail
-    window.location.href = "<?= $redirect_url ?>";
-</script>
-<?php endif; ?>
-
-<?php if (isset($redirect_after_save) && $redirect_after_save): ?>
-<script>
-    // Redirect after a brief delay to show the success message
-    setTimeout(function() {
-        window.location.href = "<?= $redirect_url ?>";
-    }, 1500);
 </script>
 <?php endif; ?>

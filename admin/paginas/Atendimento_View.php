@@ -1,7 +1,6 @@
 <?php
 // admin/paginas/Atendimento_View.php
 
-
 // Check if ID is provided
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     $_SESSION['alert_message'] = 'ID do atendimento não especificado.';
@@ -25,7 +24,7 @@ if (!$atendimento) {
 // Process status update
 if (isset($_POST['update_status'])) {
     $new_status = $_POST['status'];
-    
+
     // Update service request status (just the status field)
     $result = updateServiceRequest($atendimento_id, [
         'nome' => $atendimento['nome'],
@@ -35,11 +34,11 @@ if (isset($_POST['update_status'])) {
         'local' => $atendimento['local'],
         'status' => $new_status
     ]);
-    
+
     if ($result) {
         $_SESSION['alert_message'] = 'Status atualizado com sucesso!';
         $_SESSION['alert_type'] = 'success';
-        
+
         // Refresh the page to show updated data
         header('Location: ' . BASE_URL . '/admin/index.php?page=Atendimento_View&id=' . $atendimento_id);
         exit;
@@ -82,7 +81,7 @@ $sourceClass = 'badge--' . strtolower($atendimento['local']);
             </a>
         </div>
     </div>
-    
+
     <!-- Atendimento Details Card -->
     <div class="admin-card">
         <div class="atendimento-header">
@@ -101,17 +100,17 @@ $sourceClass = 'badge--' . strtolower($atendimento['local']);
                 </span>
             </div>
         </div>
-        
+
         <div class="atendimento-details">
             <div class="detail-section">
                 <h3 class="detail-section-title">Informações do Contato</h3>
-                
+
                 <div class="detail-row">
                     <div class="detail-group">
                         <label>Nome:</label>
                         <div class="detail-value"><?= htmlspecialchars($atendimento['nome']) ?></div>
                     </div>
-                    
+
                     <div class="detail-group">
                         <label>Email:</label>
                         <div class="detail-value">
@@ -121,7 +120,7 @@ $sourceClass = 'badge--' . strtolower($atendimento['local']);
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="detail-row">
                     <div class="detail-group">
                         <label>Telefone:</label>
@@ -149,7 +148,7 @@ $sourceClass = 'badge--' . strtolower($atendimento['local']);
                     </div>
                 </div>
             </div>
-            
+
             <div class="detail-section">
                 <h3 class="detail-section-title">Mensagem</h3>
                 <div class="message-content">
@@ -157,13 +156,13 @@ $sourceClass = 'badge--' . strtolower($atendimento['local']);
                 </div>
             </div>
         </div>
-        
-        <!-- Status Update Form -->
+
+        <!-- Status Update Form with aligned button -->
         <div class="status-update">
             <h3 class="detail-section-title">Atualizar Status</h3>
             <form method="POST" action="" class="status-form">
-                <div class="form-row">
-                    <div class="form-group">
+                <div class="status-form__row">
+                    <div class="form-group status-select-group">
                         <label for="status">Status:</label>
                         <select id="status" name="status" class="form-control">
                             <option value="Pendente" <?= $atendimento['status'] === 'Pendente' ? 'selected' : '' ?>>Pendente</option>
@@ -172,8 +171,8 @@ $sourceClass = 'badge--' . strtolower($atendimento['local']);
                             <option value="Cancelado" <?= $atendimento['status'] === 'Cancelado' ? 'selected' : '' ?>>Cancelado</option>
                         </select>
                     </div>
-                    
-                    <div class="form-group">
+
+                    <div class="form-group status-button-group">
                         <button type="submit" name="update_status" value="1" class="primary-button">
                             <i class="fas fa-save"></i> Atualizar Status
                         </button>
@@ -181,18 +180,19 @@ $sourceClass = 'badge--' . strtolower($atendimento['local']);
                 </div>
             </form>
         </div>
-        
-        <!-- Actions -->
+
+        <!-- Actions with improved buttons -->
         <div class="atendimento-actions">
             <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento_Update&id=<?= $atendimento_id ?>" class="btn btn-edit">
                 <i class="fas fa-edit"></i> Editar Atendimento
             </a>
-            <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento_Delete&id=<?= $atendimento_id ?>" class="btn btn-delete delete-button">
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento_Delete&id=<?= $atendimento_id ?>" class="btn btn-delete">
                 <i class="fas fa-trash"></i> Excluir Atendimento
             </a>
             <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Create" class="btn btn-primary">
                 <i class="fas fa-user-plus"></i> Converter em Cliente
             </a>
         </div>
+
     </div>
 </div>

@@ -1,7 +1,7 @@
 <?php
 
 // If security check passes, proceed with page logic
-if (!$need_redirect) {
+
     // Initialize variables
     $error = '';
     $success_message = '';
@@ -74,10 +74,9 @@ if (!$need_redirect) {
             }
         }
     }
-}
 ?>
 
-<?php if (!$need_redirect): ?>
+
 <div class="admin-page city-create">
     <!-- Page Header -->
     <div class="admin-page__header">
@@ -140,20 +139,3 @@ if (!$need_redirect) {
         </div>
     </form>
 </div>
-<?php endif; ?>
-
-<?php if ($need_redirect): ?>
-<script>
-    // JavaScript redirect if security check fails
-    window.location.href = "<?= $redirect_url ?>";
-</script>
-<?php endif; ?>
-
-<?php if ($redirect_after_save): ?>
-<script>
-    // Redirect after a brief delay to show the success message
-    setTimeout(function() {
-        window.location.href = "<?= $redirect_url ?>";
-    }, 1500);
-</script>
-<?php endif; ?>

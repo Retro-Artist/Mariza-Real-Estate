@@ -1,7 +1,7 @@
 <?php
 
 // If security check passes, proceed with page logic
-if (!$need_redirect) {
+
     // Get current page number for pagination
     $page = isset($_GET['p']) ? intval($_GET['p']) : 1;
     $perPage = 15; // Number of cities per page
@@ -95,10 +95,10 @@ if (!$need_redirect) {
         $cities = [];
         $totalPages = 0;
     }
-}
+
 ?>
 
-<?php if (!$need_redirect): ?>
+
 <div class="admin-page city-admin">
     <!-- Page Header -->
     <div class="admin-page__header">
@@ -237,11 +237,3 @@ if (!$need_redirect) {
         <?php endif; ?>
     </div>
 </div>
-<?php endif; ?>
-
-<?php if ($need_redirect): ?>
-<script>
-    // JavaScript redirect if security check fails
-    window.location.href = "<?= $redirect_url ?>";
-</script>
-<?php endif; ?>
