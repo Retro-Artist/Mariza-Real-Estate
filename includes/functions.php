@@ -54,8 +54,6 @@ function getFeaturedProperties($limit = 6): array {
     global $databaseConnection;
     
     try {
-        // Adicionei um log para debug
-        logError("Buscando imóveis em destaque com limite: " . $limit);
         
         $statement = $databaseConnection->prepare(
             "SELECT i.*, c.categoria, b.bairro, cid.nome as cidade, e.uf 
@@ -73,9 +71,6 @@ function getFeaturedProperties($limit = 6): array {
         $statement->execute();
         
         $result = $statement->fetchAll();
-        
-        // Log para debug - quantos imóveis foram encontrados
-        logError("Encontrados " . count($result) . " imóveis em destaque");
         
         return $result;
     } catch (PDOException $e) {
