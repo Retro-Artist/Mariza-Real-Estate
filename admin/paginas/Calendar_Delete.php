@@ -1,12 +1,5 @@
 <?php
-// Security check
-if (!isset($_SESSION['admin_id'])) {
-    // Ao invés de usar header() diretamente, armazenamos para redirecionamento via JavaScript
-    $redirect_url = BASE_URL . '/admin/Admin_Login.php';
-    $need_redirect = true;
-} else {
-    $need_redirect = false;
-}
+
 
 // Check if ID is provided
 if (!isset($_GET['id']) || empty($_GET['id'])) {

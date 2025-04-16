@@ -1,9 +1,4 @@
 <?php
-// Security check
-if (!isset($_SESSION['admin_id'])) {
-    header('Location: ' . BASE_URL . '/admin/Admin_Login.php');
-    exit;
-}
 
 // Check if ID is provided
 if (!isset($_GET['id']) || empty($_GET['id'])) {

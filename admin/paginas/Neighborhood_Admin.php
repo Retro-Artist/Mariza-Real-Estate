@@ -1,12 +1,5 @@
 <?php
-// Security check
-if (!isset($_SESSION['admin_id'])) {
-    // Instead of using header() directly, store the URL for later redirection via JavaScript
-    $redirect_url = BASE_URL . '/admin/Admin_Login.php';
-    $need_redirect = true;
-} else {
-    $need_redirect = false;
-}
+
 
 // If security check passes, proceed with page logic
 if (!$need_redirect) {

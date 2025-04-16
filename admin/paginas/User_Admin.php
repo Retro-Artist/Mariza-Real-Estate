@@ -1,11 +1,4 @@
 <?php
-// Security check - redirect if not admin level
-if ($_SESSION['admin_level'] !== 'Administrador' && $_SESSION['admin_level'] != '1') {
-    $_SESSION['alert_message'] = 'Você não tem permissão para acessar esta área.';
-    $_SESSION['alert_type'] = 'error';
-    header('Location: ' . BASE_URL . '/admin/index.php');
-    exit;
-}
 
 // Initialize variables
 $alertMessage = '';

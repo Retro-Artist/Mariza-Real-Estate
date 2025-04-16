@@ -1,8 +1,4 @@
 <?php
-// Security check - already handled in index.php
-if (!isset($_SESSION['admin_id'])) {
-    return;
-}
 
 // Get current page for highlighting active menu item
 $current_page = isset($page) ? $page : 'Calendar';

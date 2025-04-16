@@ -1,12 +1,6 @@
 <?php
 // admin/paginas/Atendimento_Create.php
 
-// Security check
-if (!isset($_SESSION['admin_id'])) {
-    header('Location: ' . BASE_URL . '/admin/Admin_Login.php');
-    exit;
-}
-
 // Initialize variables
 $error = '';
 $formData = [

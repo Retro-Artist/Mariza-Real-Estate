@@ -1,9 +1,5 @@
 <?php
-// Security check
-if (!isset($_SESSION['admin_id'])) {
-    header('Location: ' . BASE_URL . '/admin/Admin_Login.php');
-    exit;
-}
+
 
 // Get current month and year
 $month = isset($_GET['month']) ? intval($_GET['month']) : date('n');

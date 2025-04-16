@@ -1,9 +1,5 @@
 <?php
-// Security check
-if (!isset($_SESSION['admin_id'])) {
-    header('Location: ' . BASE_URL . '/admin/Admin_Login.php');
-    exit;
-}
+
 
 // Get all categories using our function from admin_functions.php
 $categorias = getAdminCategories();

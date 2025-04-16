@@ -1,9 +1,5 @@
 <?php
-// Security check
-if (!isset($_SESSION['admin_id'])) {
-    header('Location: ' . BASE_URL . '/admin/Admin_Login.php');
-    exit;
-}
+
 
 // Pagination
 $paginaAtual = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
