@@ -75,6 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="admin-page event-create">
     <!-- Page Header -->
     <div class="admin-page__header">
+        <h2 class="admin-page__title">Adicionar Lembrete</h2>
         <a href="<?= BASE_URL ?>/admin/index.php?page=Calendar" class="cancel-button">
             <i class="fas fa-arrow-left"></i> Voltar
         </a>
@@ -179,13 +180,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </form>
 </div>
-
-<?php if ($need_redirect): ?>
-<script>
-    // Redirecionamento via JavaScript se a verificação de segurança falhar
-    window.location.href = "<?= $redirect_url ?>";
-</script>
-<?php endif; ?>
 
 <?php if ($redirect_after_save): ?>
 <script>
