@@ -832,489 +832,531 @@ function getFieldValue($field, $default = '')
 </div>
 
 <script>
-// Tab navigation
-document.addEventListener('DOMContentLoaded', function() {
-    const tabs = document.querySelectorAll('.form-tab');
-    const sections = document.querySelectorAll('.form-section');
+    // Tab navigation
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.form-tab');
+        const sections = document.querySelectorAll('.form-section');
 
-    // Field validation functions
-    window.validators = {
-        // Validate currency value
-        valor: function(value) {
-            // Remove formatting
-            let numericValue = value.replace(/[^\d,]/g, '').replace(',', '.');
-            if (parseFloat(numericValue) <= 0) {
-                return 'Valor deve ser maior que zero';
-            }
-            if (parseFloat(numericValue) > 999999999.99) {
-                return 'O valor máximo permitido é R$ 999.999.999,99';
-            }
-            return null;
-        },
-
-        // Validate numeric area fields
-        area_total: function(value) {
-            if (value !== '' && isNaN(value.replace(',', '.')) || parseFloat(value.replace(',', '.')) < 0) {
-                return 'Por favor, informe um valor numérico válido';
-            }
-            if (parseFloat(value.replace(',', '.')) > 9999999) {
-                return 'A área máxima permitida é 9.999.999';
-            }
-            return null;
-        },
-
-        area_construida: function(value) {
-            if (value !== '' && (isNaN(value.replace(',', '.')) || parseFloat(value.replace(',', '.')) < 0)) {
-                return 'Por favor, informe um valor numérico válido';
-            }
-            if (parseFloat(value.replace(',', '.')) > 9999999) {
-                return 'A área máxima permitida é 9.999.999';
-            }
-            return null;
-        },
-
-        // Validate phone number
-        telefone_anunciante: function(value) {
-            if (value === '') return null;
-
-            // Remove all non-numeric characters
-            const phone = value.replace(/\D/g, '');
-            if (phone.length < 10 || phone.length > 11) {
-                return 'Telefone inválido. Use o formato (XX) XXXXX-XXXX';
-            }
-            return null;
-        }
-    };
-
-    // Apply validation to form fields
-    // Fields to validate on input
-    const fieldsToValidate = [
-        'valor', 'area_total', 'area_construida', 'telefone_anunciante'
-    ];
-
-    fieldsToValidate.forEach(field => {
-        const element = document.getElementById(field);
-        if (element) {
-            element.addEventListener('input', function() {
-                validateField(field, this.value);
-            });
-
-            // Also validate on blur for good measure
-            element.addEventListener('blur', function() {
-                validateField(field, this.value);
-            });
-        }
-    });
-
-    // Function to validate a field and show/hide error message
-    function validateField(fieldName, value) {
-        const element = document.getElementById(fieldName);
-        if (!element) return;
-
-        // Validate using appropriate validator
-        if (window.validators[fieldName]) {
-            const errorMessage = window.validators[fieldName](value);
-
-            // Get or create error element
-            let errorElement = element.parentNode.querySelector('.validation-error');
-            if (!errorElement && errorMessage) {
-                errorElement = document.createElement('div');
-                errorElement.className = 'validation-error';
-                element.parentNode.appendChild(errorElement);
-            }
-
-            // Show or hide error
-            if (errorMessage) {
-                element.classList.add('form-control--error');
-                if (errorElement) {
-                    errorElement.textContent = errorMessage;
+        // Field validation functions
+        window.validators = {
+            // Validate currency value
+            valor: function(value) {
+                // Remove formatting
+                let numericValue = value.replace(/[^\d,]/g, '').replace(',', '.');
+                if (parseFloat(numericValue) <= 0) {
+                    return 'Valor deve ser maior que zero';
                 }
-            } else {
-                element.classList.remove('form-control--error');
-                if (errorElement) {
-                    errorElement.remove();
+                if (parseFloat(numericValue) > 999999999.99) {
+                    return 'O valor máximo permitido é R$ 999.999.999,99';
                 }
+                return null;
+            },
+
+            // Validate numeric area fields
+            area_total: function(value) {
+                if (value !== '' && isNaN(value.replace(',', '.')) || parseFloat(value.replace(',', '.')) < 0) {
+                    return 'Por favor, informe um valor numérico válido';
+                }
+                if (parseFloat(value.replace(',', '.')) > 9999999) {
+                    return 'A área máxima permitida é 9.999.999';
+                }
+                return null;
+            },
+
+            area_construida: function(value) {
+                if (value !== '' && (isNaN(value.replace(',', '.')) || parseFloat(value.replace(',', '.')) < 0)) {
+                    return 'Por favor, informe um valor numérico válido';
+                }
+                if (parseFloat(value.replace(',', '.')) > 9999999) {
+                    return 'A área máxima permitida é 9.999.999';
+                }
+                return null;
+            },
+
+            // Validate phone number
+            telefone_anunciante: function(value) {
+                if (value === '') return null;
+
+                // Remove all non-numeric characters
+                const phone = value.replace(/\D/g, '');
+                if (phone.length < 10 || phone.length > 11) {
+                    return 'Telefone inválido. Use o formato (XX) XXXXX-XXXX';
+                }
+                return null;
             }
-        }
-    }
-
-    // Check for validation errors and show appropriate tab
-    const hasValidationErrors = <?= !empty($validationErrors) ? 'true' : 'false' ?>;
-    const validationErrorFields = <?= json_encode(array_keys($validationErrors ?? [])) ?>;
-
-    if (hasValidationErrors) {
-        // Find which tab contains the first error
-        const fieldToTabMap = {
-            'titulo': 'basic',
-            'valor': 'basic',
-            'para': 'basic',
-            'status': 'basic',
-            'id_estado': 'location',
-            'id_cidade': 'location',
-            'id_bairro': 'location',
-            'area_total': 'details',
-            'area_construida': 'details',
-            'telefone_anunciante': 'attributes',
-            'corretor_responsavel': 'attributes',
-            'main_image': 'images'
         };
 
-        // Get the first error field
-        const firstErrorField = validationErrorFields[0];
-        const tabToActivate = fieldToTabMap[firstErrorField] || 'basic';
+        // Apply validation to form fields
+        // Fields to validate on input
+        const fieldsToValidate = [
+            'valor', 'area_total', 'area_construida', 'telefone_anunciante'
+        ];
 
-        // Activate the appropriate tab
-        activateTab(tabToActivate);
+        fieldsToValidate.forEach(field => {
+            const element = document.getElementById(field);
+            if (element) {
+                element.addEventListener('input', function() {
+                    validateField(field, this.value);
+                });
 
-        // Focus on the first field with error
-        if (document.getElementById(firstErrorField)) {
-            document.getElementById(firstErrorField).focus();
-        }
-    }
-
-    // Tab click handler
-    tabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            const targetTab = this.getAttribute('data-tab');
-            activateTab(targetTab);
-        });
-    });
-
-    // Function to activate a tab
-    function activateTab(tabName) {
-        // Update active tab
-        tabs.forEach(t => {
-            if (t.getAttribute('data-tab') === tabName) {
-                t.classList.add('form-tab--active');
-            } else {
-                t.classList.remove('form-tab--active');
+                // Also validate on blur for good measure
+                element.addEventListener('blur', function() {
+                    validateField(field, this.value);
+                });
             }
         });
 
-        // Show corresponding section
-        sections.forEach(section => {
-            if (section.getAttribute('data-section') === tabName) {
-                section.classList.add('form-section--active');
-            } else {
-                section.classList.remove('form-section--active');
-            }
-        });
-    }
+        // Function to validate a field and show/hide error message
+        function validateField(fieldName, value) {
+            const element = document.getElementById(fieldName);
+            if (!element) return;
 
-    // Quick Fill Button
-    const quickFillButton = document.getElementById('quickFillButton');
-    if (quickFillButton) {
-        quickFillButton.addEventListener('click', function() {
-            // Fill basic fields
-            document.getElementById('titulo').value = 'Imóvel à venda';
-            document.getElementById('valor').value = 'R$ 100.000,00';
+            // Validate using appropriate validator
+            if (window.validators[fieldName]) {
+                const errorMessage = window.validators[fieldName](value);
 
-            // Set selections
-            document.getElementById('para').value = 'venda';
-            document.getElementById('status').value = 'ativo';
-
-            // Fill details fields with minimum values
-            document.getElementById('quartos').value = '2';
-            document.getElementById('banheiros').value = '1';
-            document.getElementById('area_total').value = '200';
-            document.getElementById('area_construida').value = '100';
-
-            // Set hidden required fields with defaults
-            const hiddenFields = [{
-                    name: 'ref',
-                    value: 'REF-' + Date.now()
-                },
-                {
-                    name: 'medida_frente',
-                    value: '0'
-                },
-                {
-                    name: 'medida_fundo',
-                    value: '0'
-                },
-                {
-                    name: 'medida_laterais',
-                    value: '0'
+                // Get or create error element
+                let errorElement = element.parentNode.querySelector('.validation-error');
+                if (!errorElement && errorMessage) {
+                    errorElement = document.createElement('div');
+                    errorElement.className = 'validation-error';
+                    element.parentNode.appendChild(errorElement);
                 }
-            ];
 
-            hiddenFields.forEach(field => {
-                const input = document.querySelector(`input[name="${field.name}"]`);
-                if (input) input.value = field.value;
+                // Show or hide error
+                if (errorMessage) {
+                    element.classList.add('form-control--error');
+                    if (errorElement) {
+                        errorElement.textContent = errorMessage;
+                    }
+                } else {
+                    element.classList.remove('form-control--error');
+                    if (errorElement) {
+                        errorElement.remove();
+                    }
+                }
+            }
+        }
+
+        // Check for validation errors and show appropriate tab
+        const hasValidationErrors = <?= !empty($validationErrors) ? 'true' : 'false' ?>;
+        const validationErrorFields = <?= json_encode(array_keys($validationErrors ?? [])) ?>;
+
+        if (hasValidationErrors) {
+            // Find which tab contains the first error
+            const fieldToTabMap = {
+                'titulo': 'basic',
+                'valor': 'basic',
+                'para': 'basic',
+                'status': 'basic',
+                'id_estado': 'location',
+                'id_cidade': 'location',
+                'id_bairro': 'location',
+                'area_total': 'details',
+                'area_construida': 'details',
+                'telefone_anunciante': 'attributes',
+                'corretor_responsavel': 'attributes',
+                'main_image': 'images'
+            };
+
+            // Get the first error field
+            const firstErrorField = validationErrorFields[0];
+            const tabToActivate = fieldToTabMap[firstErrorField] || 'basic';
+
+            // Activate the appropriate tab
+            activateTab(tabToActivate);
+
+            // Focus on the first field with error
+            if (document.getElementById(firstErrorField)) {
+                document.getElementById(firstErrorField).focus();
+            }
+        }
+
+        // Tab click handler
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const targetTab = this.getAttribute('data-tab');
+                activateTab(targetTab);
+            });
+        });
+
+        // Function to activate a tab
+        function activateTab(tabName) {
+            // Update active tab
+            tabs.forEach(t => {
+                if (t.getAttribute('data-tab') === tabName) {
+                    t.classList.add('form-tab--active');
+                } else {
+                    t.classList.remove('form-tab--active');
+                }
             });
 
-            // Trigger state selection to populate city and neighborhood
-            const stateSelect = document.getElementById('id_estado');
-            if (stateSelect.options.length > 0) {
-                stateSelect.value = stateSelect.options[1].value; // Select first actual state
-                stateSelect.dispatchEvent(new Event('change'));
-            }
-
-            alert('Campos preenchidos automaticamente! Revise as informações antes de salvar.');
-        });
-    }
-
-    // Filter cities based on selected state
-    const stateSelect = document.getElementById('id_estado');
-    const citySelect = document.getElementById('id_cidade');
-    const bairroSelect = document.getElementById('id_bairro');
-
-    // Set initial default values if not already set
-    if (!stateSelect.value && stateSelect.options.length > 1) {
-        stateSelect.value = stateSelect.options[1].value; // Select first actual state
-        // Trigger the change event to update cities
-        stateSelect.dispatchEvent(new Event('change'));
-    }
-
-    stateSelect.addEventListener('change', function() {
-        const selectedState = this.value;
-
-        // Filter cities
-        Array.from(citySelect.options).forEach(option => {
-            if (option.value === '' || option.dataset.state === selectedState) {
-                option.style.display = '';
-            } else {
-                option.style.display = 'none';
-            }
-        });
-
-        // Find first visible city option
-        const firstVisibleCity = Array.from(citySelect.options).find(option =>
-            option.style.display !== 'none' && option.value !== '');
-
-        // Select first visible city
-        if (firstVisibleCity) {
-            citySelect.value = firstVisibleCity.value;
-        } else {
-            citySelect.value = '';
-        }
-
-        // Trigger city change to update neighborhoods
-        citySelect.dispatchEvent(new Event('change'));
-    });
-
-    // Filter neighborhoods based on selected city
-    citySelect.addEventListener('change', function() {
-        const selectedCity = this.value;
-
-        // Filter neighborhoods
-        Array.from(bairroSelect.options).forEach(option => {
-            if (option.value === '' || option.dataset.city === selectedCity) {
-                option.style.display = '';
-            } else {
-                option.style.display = 'none';
-            }
-        });
-
-        // Find first visible neighborhood option
-        const firstVisibleBairro = Array.from(bairroSelect.options).find(option =>
-            option.style.display !== 'none' && option.value !== '');
-
-        // Select first visible neighborhood
-        if (firstVisibleBairro) {
-            bairroSelect.value = firstVisibleBairro.value;
-        } else {
-            bairroSelect.value = '';
-        }
-    });
-
-    // Main image preview functionality
-    const mainImageInput = document.getElementById('main_image');
-    const mainImagePreview = document.getElementById('mainImagePreview');
-
-    if (mainImageInput) {
-        mainImageInput.addEventListener('change', function() {
-            mainImagePreview.innerHTML = '';
-
-            if (this.files && this.files[0]) {
-                const file = this.files[0];
-
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-
-                    reader.onload = function(e) {
-                        const previewContainer = document.createElement('div');
-                        previewContainer.className = 'main-image-container';
-                        previewContainer.innerHTML = `
-    <h4 class="preview-title">Imagem Principal</h4>
-    <div class="main-image-preview__item">
-        <img src="${e.target.result}" alt="Preview da Imagem Principal" class="main-image-preview__img">
-        <div class="main-image-preview__filename">${file.name}</div>
-    </div>
-`;
-                        mainImagePreview.appendChild(previewContainer);
-                    };
-
-                    reader.readAsDataURL(file);
+            // Show corresponding section
+            sections.forEach(section => {
+                if (section.getAttribute('data-section') === tabName) {
+                    section.classList.add('form-section--active');
+                } else {
+                    section.classList.remove('form-section--active');
                 }
+            });
+        }
+
+        // Quick Fill Button
+        const quickFillButton = document.getElementById('quickFillButton');
+        if (quickFillButton) {
+            quickFillButton.addEventListener('click', function() {
+                // Fill basic fields
+                document.getElementById('titulo').value = 'Imóvel à venda';
+                document.getElementById('valor').value = 'R$ 100.000,00';
+
+                // Set selections
+                document.getElementById('para').value = 'venda';
+                document.getElementById('status').value = 'ativo';
+
+                // Fill details fields with minimum values
+                document.getElementById('quartos').value = '2';
+                document.getElementById('banheiros').value = '1';
+                document.getElementById('area_total').value = '200';
+                document.getElementById('area_construida').value = '100';
+
+                // Set hidden required fields with defaults
+                const hiddenFields = [{
+                        name: 'ref',
+                        value: 'REF-' + Date.now()
+                    },
+                    {
+                        name: 'medida_frente',
+                        value: '0'
+                    },
+                    {
+                        name: 'medida_fundo',
+                        value: '0'
+                    },
+                    {
+                        name: 'medida_laterais',
+                        value: '0'
+                    }
+                ];
+
+                hiddenFields.forEach(field => {
+                    const input = document.querySelector(`input[name="${field.name}"]`);
+                    if (input) input.value = field.value;
+                });
+
+                // Trigger state selection to populate city and neighborhood
+                const stateSelect = document.getElementById('id_estado');
+                if (stateSelect.options.length > 0) {
+                    stateSelect.value = stateSelect.options[1].value; // Select first actual state
+                    stateSelect.dispatchEvent(new Event('change'));
+                }
+
+                alert('Campos preenchidos automaticamente! Revise as informações antes de salvar.');
+            });
+        }
+
+        // Filter cities based on selected state
+        const stateSelect = document.getElementById('id_estado');
+        const citySelect = document.getElementById('id_cidade');
+        const bairroSelect = document.getElementById('id_bairro');
+
+        // Set initial default values if not already set
+        if (!stateSelect.value && stateSelect.options.length > 1) {
+            stateSelect.value = stateSelect.options[1].value; // Select first actual state
+            // Trigger the change event to update cities
+            stateSelect.dispatchEvent(new Event('change'));
+        }
+
+        stateSelect.addEventListener('change', function() {
+            const selectedState = this.value;
+
+            // Filter cities
+            Array.from(citySelect.options).forEach(option => {
+                if (option.value === '' || option.dataset.state === selectedState) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+
+            // Find first visible city option
+            const firstVisibleCity = Array.from(citySelect.options).find(option =>
+                option.style.display !== 'none' && option.value !== '');
+
+            // Select first visible city
+            if (firstVisibleCity) {
+                citySelect.value = firstVisibleCity.value;
+            } else {
+                citySelect.value = '';
+            }
+
+            // Trigger city change to update neighborhoods
+            citySelect.dispatchEvent(new Event('change'));
+        });
+
+        // Filter neighborhoods based on selected city
+        citySelect.addEventListener('change', function() {
+            const selectedCity = this.value;
+
+            // Filter neighborhoods
+            Array.from(bairroSelect.options).forEach(option => {
+                if (option.value === '' || option.dataset.city === selectedCity) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+
+            // Find first visible neighborhood option
+            const firstVisibleBairro = Array.from(bairroSelect.options).find(option =>
+                option.style.display !== 'none' && option.value !== '');
+
+            // Select first visible neighborhood
+            if (firstVisibleBairro) {
+                bairroSelect.value = firstVisibleBairro.value;
+            } else {
+                bairroSelect.value = '';
             }
         });
-    }
 
-    // Additional images preview
-    const additionalImagesInput = document.getElementById('images');
-    const additionalImagesPreview = document.getElementById('imagePreview');
+        // Main image preview functionality
+        const mainImageInput = document.getElementById('main_image');
+        const mainImagePreview = document.getElementById('mainImagePreview');
 
-    if (additionalImagesInput) {
-        additionalImagesInput.addEventListener('change', function() {
-            additionalImagesPreview.innerHTML = '';
+        if (mainImageInput) {
+            mainImageInput.addEventListener('change', function() {
+                mainImagePreview.innerHTML = '';
 
-            if (this.files.length > 0) {
-                // Create header
-                const header = document.createElement('div');
-                header.className = 'image-preview__header';
-                header.innerHTML = `<h4>Preview das Imagens Adicionais (${Math.min(this.files.length, 11)} de 11 máximo)</h4>`;
-                additionalImagesPreview.appendChild(header);
-
-                // Create container for images
-                const container = document.createElement('div');
-                container.className = 'image-preview__grid';
-                additionalImagesPreview.appendChild(container);
-
-                for (let i = 0; i < Math.min(this.files.length, 11); i++) {
-                    const file = this.files[i];
+                if (this.files && this.files[0]) {
+                    const file = this.files[0];
 
                     if (file.type.startsWith('image/')) {
                         const reader = new FileReader();
-                        const imgContainer = document.createElement('div');
-                        imgContainer.className = 'image-preview__item';
 
                         reader.onload = function(e) {
-                            imgContainer.innerHTML = `
+                            const previewContainer = document.createElement('div');
+                            previewContainer.className = 'main-image-container';
+                            previewContainer.innerHTML = `
+                                                            <h4 class="preview-title">Imagem Principal</h4>
+                                                            <div class="main-image-preview__item">
+                                                                <img src="${e.target.result}" alt="Preview da Imagem Principal" class="main-image-preview__img">
+                                                                <div class="main-image-preview__filename">${file.name}</div>
+                                                            </div>
+                                                        `;
+                            mainImagePreview.appendChild(previewContainer);
+                        };
+
+                        reader.readAsDataURL(file);
+                    }
+                }
+            });
+        }
+
+        // Additional images preview
+        const additionalImagesInput = document.getElementById('images');
+        const additionalImagesPreview = document.getElementById('imagePreview');
+
+        if (additionalImagesInput) {
+            additionalImagesInput.addEventListener('change', function() {
+                additionalImagesPreview.innerHTML = '';
+
+                if (this.files.length > 0) {
+                    // Create header
+                    const header = document.createElement('div');
+                    header.className = 'image-preview__header';
+                    header.innerHTML = `<h4>Preview das Imagens Adicionais (${Math.min(this.files.length, 11)} de 11 máximo)</h4>`;
+                    additionalImagesPreview.appendChild(header);
+
+                    // Create container for images
+                    const container = document.createElement('div');
+                    container.className = 'image-preview__grid';
+                    additionalImagesPreview.appendChild(container);
+
+                    for (let i = 0; i < Math.min(this.files.length, 11); i++) {
+                        const file = this.files[i];
+
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            const imgContainer = document.createElement('div');
+                            imgContainer.className = 'image-preview__item';
+
+                            reader.onload = function(e) {
+                                imgContainer.innerHTML = `
         <div class="image-preview__number">${i + 2}</div>
         <img src="${e.target.result}" alt="Preview" class="image-preview__img">
         <div class="image-preview__filename">${file.name}</div>
     `;
-                        };
+                            };
 
-                        reader.readAsDataURL(file);
-                        container.appendChild(imgContainer);
+                            reader.readAsDataURL(file);
+                            container.appendChild(imgContainer);
+                        }
                     }
                 }
-            }
-        });
-    }
-
-    // Set default value for price input
-    const moneyInput = document.querySelector('.money-mask');
-    if (moneyInput && !moneyInput.value) {
-        moneyInput.value = 'R$ 0,00';
-    }
-
-    // Improved money mask for price input
-    if (moneyInput) {
-        // Function to format a number as Brazilian currency
-        function formatCurrency(value) {
-            // Convert to string and ensure it's only digits
-            value = String(value).replace(/\D/g, '');
-            
-            // Handle empty value
-            if (value === '') return 'R$ 0,00';
-            
-            // Convert to number (in cents)
-            const numericValue = parseInt(value, 10);
-            
-            // Format as currency with 2 decimal places
-            const formattedValue = (numericValue / 100).toFixed(2);
-            
-            // Replace dot with comma for decimal separator
-            let currencyValue = formattedValue.replace('.', ',');
-            
-            // Add thousands separators
-            currencyValue = currencyValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-            
-            // Add currency symbol
-            return `R$ ${currencyValue}`;
+            });
         }
 
-        // Handle input event
-        moneyInput.addEventListener('input', function() {
-            const rawValue = this.value.replace(/\D/g, '');
-            
-            // Prevent exceeding maximum value (11 digits)
-            if (rawValue.length > 11) {
-                this.value = formatCurrency(rawValue.substring(0, 11));
-            } else {
-                this.value = formatCurrency(rawValue);
+        // Set default value for price input
+        const moneyInput = document.querySelector('.money-mask');
+        if (moneyInput && !moneyInput.value) {
+            moneyInput.value = 'R$ 0,00';
+        }
+
+        // Improved money mask for price input
+        if (moneyInput) {
+            // Function to format a number as Brazilian currency
+            function formatCurrency(value) {
+                // Convert to string and ensure it's only digits
+                value = String(value).replace(/\D/g, '');
+
+                // Handle empty value
+                if (value === '') return 'R$ 0,00';
+
+                // Convert to number (in cents)
+                const numericValue = parseInt(value, 10);
+
+                // Format as currency with 2 decimal places
+                const formattedValue = (numericValue / 100).toFixed(2);
+
+                // Replace dot with comma for decimal separator
+                let currencyValue = formattedValue.replace('.', ',');
+
+                // Add thousands separators
+                currencyValue = currencyValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+                // Add currency symbol
+                return `R$ ${currencyValue}`;
             }
-        });
 
-        // Handle focus event - select all text when focused
-        moneyInput.addEventListener('focus', function() {
-            this.select();
-        });
-
-        // Handle blur event - ensure proper formatting when leaving the field
-        moneyInput.addEventListener('blur', function() {
-            if (this.value === '' || this.value === 'R$ ' || this.value === 'R$ 0,00') {
-                this.value = 'R$ 0,00';
-            } else {
-                // Make sure the value is properly formatted when leaving the field
+            // Handle input event
+            moneyInput.addEventListener('input', function() {
                 const rawValue = this.value.replace(/\D/g, '');
-                this.value = formatCurrency(rawValue);
-            }
-        });
 
-        // Initial formatting if value exists
-        if (moneyInput.value && moneyInput.value !== 'R$ 0,00') {
-            const rawValue = moneyInput.value.replace(/\D/g, '');
-            moneyInput.value = formatCurrency(rawValue);
-        }
-    }
-
-    // Phone mask
-    const phoneInput = document.querySelector('.phone-mask');
-    if (phoneInput) {
-        phoneInput.addEventListener('input', function(e) {
-            let value = this.value.replace(/\D/g, '');
-            if (value.length > 11) value = value.substring(0, 11);
-
-            if (value.length > 6) {
-                this.value = `(${value.substring(0, 2)}) ${value.substring(2, 7)}-${value.substring(7)}`;
-            } else if (value.length > 2) {
-                this.value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
-            } else if (value.length > 0) {
-                this.value = `(${value}`;
-            }
-        });
-    }
-
-    // Add numeric fields validation
-    const numericInputs = document.querySelectorAll('.numeric-only');
-    if (numericInputs.length > 0) {
-        numericInputs.forEach(input => {
-            input.addEventListener('input', function(e) {
-                // Allow only numbers and comma
-                this.value = this.value.replace(/[^0-9,]/g, '');
-
-                // Ensure only one comma
-                const commaCount = (this.value.match(/,/g) || []).length;
-                if (commaCount > 1) {
-                    this.value = this.value.replace(/,/g, function(match, index, string) {
-                        return index === string.indexOf(',') ? ',' : '';
-                    });
-                }
-
-                // Validate the field
-                if (this.id && window.validators[this.id]) {
-                    validateField(this.id, this.value);
+                // Prevent exceeding maximum value (11 digits)
+                if (rawValue.length > 11) {
+                    this.value = formatCurrency(rawValue.substring(0, 11));
+                } else {
+                    this.value = formatCurrency(rawValue);
                 }
             });
-        });
-    }
 
-    // Form Validation
-    const form = document.querySelector('.property-form');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            let hasErrors = false;
+            // Handle focus event - select all text when focused
+            moneyInput.addEventListener('focus', function() {
+                this.select();
+            });
 
-            // Validate all fields that have validators
-            Object.keys(window.validators).forEach(fieldName => {
-                const element = document.getElementById(fieldName);
-                if (element) {
-                    const errorMessage = window.validators[fieldName](element.value);
-                    if (errorMessage) {
+            // Handle blur event - ensure proper formatting when leaving the field
+            moneyInput.addEventListener('blur', function() {
+                if (this.value === '' || this.value === 'R$ ' || this.value === 'R$ 0,00') {
+                    this.value = 'R$ 0,00';
+                } else {
+                    // Make sure the value is properly formatted when leaving the field
+                    const rawValue = this.value.replace(/\D/g, '');
+                    this.value = formatCurrency(rawValue);
+                }
+            });
+
+            // Initial formatting if value exists
+            if (moneyInput.value && moneyInput.value !== 'R$ 0,00') {
+                const rawValue = moneyInput.value.replace(/\D/g, '');
+                moneyInput.value = formatCurrency(rawValue);
+            }
+        }
+
+        // Phone mask
+        const phoneInput = document.querySelector('.phone-mask');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', function(e) {
+                let value = this.value.replace(/\D/g, '');
+                if (value.length > 11) value = value.substring(0, 11);
+
+                if (value.length > 6) {
+                    this.value = `(${value.substring(0, 2)}) ${value.substring(2, 7)}-${value.substring(7)}`;
+                } else if (value.length > 2) {
+                    this.value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
+                } else if (value.length > 0) {
+                    this.value = `(${value}`;
+                }
+            });
+        }
+
+        // Add numeric fields validation
+        const numericInputs = document.querySelectorAll('.numeric-only');
+        if (numericInputs.length > 0) {
+            numericInputs.forEach(input => {
+                input.addEventListener('input', function(e) {
+                    // Allow only numbers and comma
+                    this.value = this.value.replace(/[^0-9,]/g, '');
+
+                    // Ensure only one comma
+                    const commaCount = (this.value.match(/,/g) || []).length;
+                    if (commaCount > 1) {
+                        this.value = this.value.replace(/,/g, function(match, index, string) {
+                            return index === string.indexOf(',') ? ',' : '';
+                        });
+                    }
+
+                    // Validate the field
+                    if (this.id && window.validators[this.id]) {
+                        validateField(this.id, this.value);
+                    }
+                });
+            });
+        }
+
+        // Form Validation
+        const form = document.querySelector('.property-form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                let hasErrors = false;
+
+                // Validate all fields that have validators
+                Object.keys(window.validators).forEach(fieldName => {
+                    const element = document.getElementById(fieldName);
+                    if (element) {
+                        const errorMessage = window.validators[fieldName](element.value);
+                        if (errorMessage) {
+                            hasErrors = true;
+                            element.classList.add('form-control--error');
+
+                            // Get or create error element
+                            let errorElement = element.parentNode.querySelector('.validation-error');
+                            if (!errorElement) {
+                                errorElement = document.createElement('div');
+                                errorElement.className = 'validation-error';
+                                element.parentNode.appendChild(errorElement);
+                            }
+
+                            errorElement.textContent = errorMessage;
+                        }
+                    }
+                });
+
+                // Validate required fields
+                const requiredFields = [{
+                        id: 'titulo',
+                        message: 'Título é obrigatório'
+                    },
+                    {
+                        id: 'valor',
+                        message: 'Valor deve ser preenchido'
+                    },
+                    {
+                        id: 'id_estado',
+                        message: 'Estado é obrigatório'
+                    },
+                    {
+                        id: 'id_cidade',
+                        message: 'Cidade é obrigatória'
+                    },
+                    {
+                        id: 'id_bairro',
+                        message: 'Bairro é obrigatório'
+                    }
+                ];
+
+                requiredFields.forEach(field => {
+                    const element = document.getElementById(field.id);
+                    if (element && !element.value) {
                         hasErrors = true;
                         element.classList.add('form-control--error');
 
@@ -1326,147 +1368,105 @@ document.addEventListener('DOMContentLoaded', function() {
                             element.parentNode.appendChild(errorElement);
                         }
 
-                        errorElement.textContent = errorMessage;
+                        errorElement.textContent = field.message;
                     }
-                }
-            });
-
-            // Validate required fields
-            const requiredFields = [{
-                    id: 'titulo',
-                    message: 'Título é obrigatório'
-                },
-                {
-                    id: 'valor',
-                    message: 'Valor deve ser preenchido'
-                },
-                {
-                    id: 'id_estado',
-                    message: 'Estado é obrigatório'
-                },
-                {
-                    id: 'id_cidade',
-                    message: 'Cidade é obrigatória'
-                },
-                {
-                    id: 'id_bairro',
-                    message: 'Bairro é obrigatório'
-                }
-            ];
-
-            requiredFields.forEach(field => {
-                const element = document.getElementById(field.id);
-                if (element && !element.value) {
-                    hasErrors = true;
-                    element.classList.add('form-control--error');
-
-                    // Get or create error element
-                    let errorElement = element.parentNode.querySelector('.validation-error');
-                    if (!errorElement) {
-                        errorElement = document.createElement('div');
-                        errorElement.className = 'validation-error';
-                        element.parentNode.appendChild(errorElement);
-                    }
-
-                    errorElement.textContent = field.message;
-                }
-            });
-
-            // Validate main image
-            const mainImageInput = document.getElementById('main_image');
-            if (mainImageInput && (!mainImageInput.files || mainImageInput.files.length === 0)) {
-                hasErrors = true;
-                mainImageInput.classList.add('form-control--error');
-
-                // Get or create error element
-                let errorElement = mainImageInput.parentNode.querySelector('.validation-error');
-                if (!errorElement) {
-                    errorElement = document.createElement('div');
-                    errorElement.className = 'validation-error';
-                    mainImageInput.parentNode.appendChild(errorElement);
-                }
-
-                errorElement.textContent = 'A imagem principal é obrigatória';
-            } else if (mainImageInput && mainImageInput.files.length > 0) {
-                // Validate image size and type
-                const file = mainImageInput.files[0];
-                if (file.size > 5 * 1024 * 1024) { // 5MB
-                    hasErrors = true;
-
-                    let errorElement = mainImageInput.parentNode.querySelector('.validation-error');
-                    if (!errorElement) {
-                        errorElement = document.createElement('div');
-                        errorElement.className = 'validation-error';
-                        mainImageInput.parentNode.appendChild(errorElement);
-                    }
-
-                    errorElement.textContent = 'A imagem principal deve ter no máximo 5MB';
-                }
-
-                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-                if (!allowedTypes.includes(file.type)) {
-                    hasErrors = true;
-
-                    let errorElement = mainImageInput.parentNode.querySelector('.validation-error');
-                    if (!errorElement) {
-                        errorElement = document.createElement('div');
-                        errorElement.className = 'validation-error';
-                        mainImageInput.parentNode.appendChild(errorElement);
-                    }
-
-                    errorElement.textContent = 'Tipo de arquivo não permitido. Use apenas JPG, PNG ou GIF';
-                }
-            }
-
-            if (hasErrors) {
-                e.preventDefault();
-
-                // Show alert message at the top of the form
-                const alertMessage = document.createElement('div');
-                alertMessage.className = 'alert-message alert-message--error';
-                alertMessage.textContent = 'Por favor, corrija os erros no formulário antes de continuar.';
-
-                // Insert at the top of the form
-                const firstElement = form.firstChild;
-                form.insertBefore(alertMessage, firstElement);
-
-                // Scroll to the top of the form
-                alertMessage.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
                 });
 
-                // Remove the alert after 5 seconds
-                setTimeout(() => {
-                    alertMessage.remove();
-                }, 5000);
+                // Validate main image
+                const mainImageInput = document.getElementById('main_image');
+                if (mainImageInput && (!mainImageInput.files || mainImageInput.files.length === 0)) {
+                    hasErrors = true;
+                    mainImageInput.classList.add('form-control--error');
 
-                // Scroll to the first error
-                const firstError = document.querySelector('.form-control--error');
-                if (firstError) {
-                    // Find which tab contains the error
-                    let section = firstError.closest('.form-section');
-                    if (section) {
-                        let tabId = section.getAttribute('data-section');
-                        activateTab(tabId);
+                    // Get or create error element
+                    let errorElement = mainImageInput.parentNode.querySelector('.validation-error');
+                    if (!errorElement) {
+                        errorElement = document.createElement('div');
+                        errorElement.className = 'validation-error';
+                        mainImageInput.parentNode.appendChild(errorElement);
+                    }
 
-                        // Wait a bit for tab to activate then scroll to error
-                        setTimeout(() => {
-                            firstError.scrollIntoView({
-                                behavior: 'smooth',
-                                block: 'center'
-                            });
-                            firstError.focus();
-                        }, 100);
+                    errorElement.textContent = 'A imagem principal é obrigatória';
+                } else if (mainImageInput && mainImageInput.files.length > 0) {
+                    // Validate image size and type
+                    const file = mainImageInput.files[0];
+                    if (file.size > 5 * 1024 * 1024) { // 5MB
+                        hasErrors = true;
+
+                        let errorElement = mainImageInput.parentNode.querySelector('.validation-error');
+                        if (!errorElement) {
+                            errorElement = document.createElement('div');
+                            errorElement.className = 'validation-error';
+                            mainImageInput.parentNode.appendChild(errorElement);
+                        }
+
+                        errorElement.textContent = 'A imagem principal deve ter no máximo 5MB';
+                    }
+
+                    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                    if (!allowedTypes.includes(file.type)) {
+                        hasErrors = true;
+
+                        let errorElement = mainImageInput.parentNode.querySelector('.validation-error');
+                        if (!errorElement) {
+                            errorElement = document.createElement('div');
+                            errorElement.className = 'validation-error';
+                            mainImageInput.parentNode.appendChild(errorElement);
+                        }
+
+                        errorElement.textContent = 'Tipo de arquivo não permitido. Use apenas JPG, PNG ou GIF';
                     }
                 }
-            }
-        });
-    }
 
-    // Trigger state change on page load to populate dropdowns
-    if (stateSelect && stateSelect.value) {
-        stateSelect.dispatchEvent(new Event('change'));
-    }
-});
+                if (hasErrors) {
+                    e.preventDefault();
+
+                    // Show alert message at the top of the form
+                    const alertMessage = document.createElement('div');
+                    alertMessage.className = 'alert-message alert-message--error';
+                    alertMessage.textContent = 'Por favor, corrija os erros no formulário antes de continuar.';
+
+                    // Insert at the top of the form
+                    const firstElement = form.firstChild;
+                    form.insertBefore(alertMessage, firstElement);
+
+                    // Scroll to the top of the form
+                    alertMessage.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+
+                    // Remove the alert after 5 seconds
+                    setTimeout(() => {
+                        alertMessage.remove();
+                    }, 5000);
+
+                    // Scroll to the first error
+                    const firstError = document.querySelector('.form-control--error');
+                    if (firstError) {
+                        // Find which tab contains the error
+                        let section = firstError.closest('.form-section');
+                        if (section) {
+                            let tabId = section.getAttribute('data-section');
+                            activateTab(tabId);
+
+                            // Wait a bit for tab to activate then scroll to error
+                            setTimeout(() => {
+                                firstError.scrollIntoView({
+                                    behavior: 'smooth',
+                                    block: 'center'
+                                });
+                                firstError.focus();
+                            }, 100);
+                        }
+                    }
+                }
+            });
+        }
+
+        // Trigger state change on page load to populate dropdowns
+        if (stateSelect && stateSelect.value) {
+            stateSelect.dispatchEvent(new Event('change'));
+        }
+    });
 </script>
