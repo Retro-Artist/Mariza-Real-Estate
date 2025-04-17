@@ -29,9 +29,9 @@ if (!$need_redirect) {
             );
             $stmt->bindParam(':id', $neighborhood_id);
             $stmt->execute();
-            
+
             $neighborhood = $stmt->fetch();
-            
+
             if (!$neighborhood) {
                 $_SESSION['alert_message'] = 'Bairro não encontrado.';
                 $_SESSION['alert_type'] = 'error';
@@ -45,9 +45,9 @@ if (!$need_redirect) {
             );
             $stmt->bindParam(':id_bairro', $neighborhood_id);
             $stmt->execute();
-            
+
             $propertiesCount = $stmt->fetch()['count'];
-            
+
             // If neighborhood is in use, set error
             if ($propertiesCount > 0) {
                 $error = 'Este bairro não pode ser excluído porque está associado a ' . $propertiesCount . ' imóvel(is).';
@@ -56,7 +56,7 @@ if (!$need_redirect) {
             logError("Error checking neighborhood usage: " . $e->getMessage());
             $error = 'Ocorreu um erro ao verificar se o bairro pode ser excluído.';
         }
-    } 
+    }
     // If confirmed, process deletion
     else {
         try {
@@ -66,9 +66,9 @@ if (!$need_redirect) {
             );
             $stmt->bindParam(':id_bairro', $neighborhood_id);
             $stmt->execute();
-            
+
             $propertiesCount = $stmt->fetch()['count'];
-            
+
             if ($propertiesCount > 0) {
                 $_SESSION['alert_message'] = 'Este bairro não pode ser excluído porque está em uso.';
                 $_SESSION['alert_type'] = 'error';
@@ -79,7 +79,7 @@ if (!$need_redirect) {
                 $stmt = $databaseConnection->prepare("DELETE FROM sistema_bairros WHERE id = :id");
                 $stmt->bindParam(':id', $neighborhood_id);
                 $stmt->execute();
-                
+
                 $_SESSION['alert_message'] = 'Bairro excluído com sucesso!';
                 $_SESSION['alert_type'] = 'success';
                 $redirect_url = BASE_URL . '/admin/index.php?page=Neighborhood_Admin';
@@ -97,55 +97,57 @@ if (!$need_redirect) {
 ?>
 
 <?php if (!$need_redirect && isset($neighborhood) && $neighborhood): ?>
-<!-- Delete Neighborhood Confirmation Page -->
-<div class="admin-page neighborhood-delete">
-    <!-- Page Header -->
-    <div class="admin-page__header">
-        <a href="<?= BASE_URL ?>/admin/index.php?page=Neighborhood_Admin" class="cancel-button">
-            <i class="fas fa-arrow-left"></i> Voltar
-        </a>
-    </div>
-    
-    <!-- Confirmation Card -->
-    <div class="admin-card">
-        <?php if (!empty($error)): ?>
-            <div class="alert-message alert-message--error">
-                <?= htmlspecialchars($error) ?>
-            </div>
-            
-            <div class="form-actions mt-4">
-                <a href="<?= BASE_URL ?>/admin/index.php?page=Neighborhood_Admin" class="primary-button">
-                    <i class="fas fa-arrow-left"></i> Voltar para Lista de Bairros
-                </a>
-            </div>
-        <?php else: ?>
-            <div class="confirmation-message">
-                <i class="fas fa-exclamation-triangle confirmation-icon"></i>
-                <h3>Tem certeza que deseja excluir este bairro?</h3>
-                <p>Você está prestes a excluir o bairro "<strong><?= htmlspecialchars($neighborhood['bairro']) ?></strong>" da cidade de <strong><?= isset($neighborhood['cidade_nome']) ? htmlspecialchars($neighborhood['cidade_nome']) : 'N/A' ?></strong> no estado de <strong><?= isset($neighborhood['estado_nome']) ? htmlspecialchars($neighborhood['estado_nome']) : 'N/A' ?> (<?= isset($neighborhood['uf']) ? htmlspecialchars($neighborhood['uf']) : 'N/A' ?>)</strong>.</p>
-                <p>Esta ação não pode ser desfeita.</p>
-                
-                <div class="warning-text">
-                    <i class="fas fa-info-circle"></i> Esta ação só será possível se o bairro não estiver associado a nenhum imóvel.
-                </div>
-            </div>
-            
-            <div class="confirmation-actions">
+    <main class="Location">
+        <!-- Delete Neighborhood Confirmation Page -->
+        <div class="admin-page neighborhood-delete">
+            <!-- Page Header -->
+            <div class="admin-page__header">
                 <a href="<?= BASE_URL ?>/admin/index.php?page=Neighborhood_Admin" class="cancel-button">
-                    Cancelar
-                </a>
-                <a href="<?= BASE_URL ?>/admin/index.php?page=Neighborhood_Delete&id=<?= $neighborhood_id ?>&confirm=1" class="delete-button">
-                    <i class="fas fa-trash"></i> Sim, Excluir Bairro
+                    <i class="fas fa-arrow-left"></i> Voltar
                 </a>
             </div>
-        <?php endif; ?>
-    </div>
-</div>
+
+            <!-- Confirmation Card -->
+            <div class="admin-card">
+                <?php if (!empty($error)): ?>
+                    <div class="alert-message alert-message--error">
+                        <?= htmlspecialchars($error) ?>
+                    </div>
+
+                    <div class="form-actions mt-4">
+                        <a href="<?= BASE_URL ?>/admin/index.php?page=Neighborhood_Admin" class="primary-button">
+                            <i class="fas fa-arrow-left"></i> Voltar para Lista de Bairros
+                        </a>
+                    </div>
+                <?php else: ?>
+                    <div class="confirmation-message">
+                        <i class="fas fa-exclamation-triangle confirmation-icon"></i>
+                        <h3>Tem certeza que deseja excluir este bairro?</h3>
+                        <p>Você está prestes a excluir o bairro "<strong><?= htmlspecialchars($neighborhood['bairro']) ?></strong>" da cidade de <strong><?= isset($neighborhood['cidade_nome']) ? htmlspecialchars($neighborhood['cidade_nome']) : 'N/A' ?></strong> no estado de <strong><?= isset($neighborhood['estado_nome']) ? htmlspecialchars($neighborhood['estado_nome']) : 'N/A' ?> (<?= isset($neighborhood['uf']) ? htmlspecialchars($neighborhood['uf']) : 'N/A' ?>)</strong>.</p>
+                        <p>Esta ação não pode ser desfeita.</p>
+
+                        <div class="warning-text">
+                            <i class="fas fa-info-circle"></i> Esta ação só será possível se o bairro não estiver associado a nenhum imóvel.
+                        </div>
+                    </div>
+
+                    <div class="confirmation-actions">
+                        <a href="<?= BASE_URL ?>/admin/index.php?page=Neighborhood_Admin" class="cancel-button">
+                            Cancelar
+                        </a>
+                        <a href="<?= BASE_URL ?>/admin/index.php?page=Neighborhood_Delete&id=<?= $neighborhood_id ?>&confirm=1" class="delete-button">
+                            <i class="fas fa-trash"></i> Sim, Excluir Bairro
+                        </a>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </main>
 <?php endif; ?>
 
 <?php if ($need_redirect): ?>
-<script>
-    // JavaScript redirect if checks fail
-    window.location.href = "<?= $redirect_url ?>";
-</script>
+    <script>
+        // JavaScript redirect if checks fail
+        window.location.href = "<?= $redirect_url ?>";
+    </script>
 <?php endif; ?>

@@ -447,389 +447,390 @@ function getFieldValue($field, $default = '')
     return $default;
 }
 ?>
-
-<!-- Property Create Page -->
-<div class="admin-page property-create">
-    <div class="admin-page__header">
-        <h2 class="admin-page__title">Adicionar Novo Imóvel</h2>
-        <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin" class="admin-page__back-link">
-            <i class="fas fa-arrow-left"></i> Voltar para Lista
-        </a>
-    </div>
-
-    <?php if ($error): ?>
-        <div class="alert-message alert-message--error">
-            <?= htmlspecialchars($error) ?>
+<main class="Property">
+    <!-- Property Create Page -->
+    <div class="admin-page property-create">
+        <div class="admin-page__header">
+            <h2 class="admin-page__title">Adicionar Novo Imóvel</h2>
+            <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin" class="admin-page__back-link">
+                <i class="fas fa-arrow-left"></i> Voltar para Lista
+            </a>
         </div>
-        <?php if (MODE === 'Development' && !empty($debugInfo)): ?>
-            <div class="debug-info">
-                <h3>Informações de Depuração</h3>
-                <pre><?= htmlspecialchars($debugInfo) ?></pre>
+
+        <?php if ($error): ?>
+            <div class="alert-message alert-message--error">
+                <?= htmlspecialchars($error) ?>
             </div>
+            <?php if (MODE === 'Development' && !empty($debugInfo)): ?>
+                <div class="debug-info">
+                    <h3>Informações de Depuração</h3>
+                    <pre><?= htmlspecialchars($debugInfo) ?></pre>
+                </div>
+            <?php endif; ?>
         <?php endif; ?>
-    <?php endif; ?>
 
-    <div class="admin-card">
-        <!-- Quick Fill Form -->
-        <div class="quick-fill">
-            <h3>Preencher Rapidamente</h3>
-            <p>Preencha o formulário automaticamente com os valores padrão.</p>
-            <button type="button" id="quickFillButton" class="secondary-button">
-                <i class="fas fa-magic"></i> Preencher Automaticamente
-            </button>
-        </div>
-
-        <form action="" method="POST" enctype="multipart/form-data" class="property-form">
-            <!-- Hidden fields for required values that might be missing -->
-            <input type="hidden" name="ref" value="<?= getFieldValue('ref', 'REF-' . date('YmdHis') . rand(100, 999)) ?>">
-            <input type="hidden" name="medida_frente" value="<?= getFieldValue('medida_frente', '0') ?>">
-            <input type="hidden" name="medida_fundo" value="<?= getFieldValue('medida_fundo', '0') ?>">
-            <input type="hidden" name="medida_laterais" value="<?= getFieldValue('medida_laterais', '0') ?>">
-
-            <!-- Tabs for better form navigation -->
-            <div class="form-tabs">
-                <button type="button" class="form-tab form-tab--active" data-tab="basic">Informações Básicas</button>
-                <button type="button" class="form-tab" data-tab="details">Detalhes</button>
-                <button type="button" class="form-tab" data-tab="location">Localização</button>
-                <button type="button" class="form-tab" data-tab="attributes">Características</button>
-                <button type="button" class="form-tab" data-tab="images">Imagens</button>
-            </div>
-
-            <div class="form-sections">
-                <!-- Basic Information Section -->
-                <div class="form-section form-section--active" data-section="basic">
-                    <h3 class="form-section__title">Informações Básicas</h3>
-                    <p class="form-section__desc">Os campos marcados com <span class="required">*</span> são obrigatórios.</p>
-
-                    <div class="form-row">
-                        <div class="form-group form-group--large">
-                            <label for="titulo">Título do Imóvel <span class="required">*</span></label>
-                            <input type="text" id="titulo" name="titulo" class="form-control<?= errorClass('titulo') ?>" required value="<?= getFieldValue('titulo') ?>">
-                            <?= showValidationError('titulo') ?>
-                            <div class="form-help">Ex: Casa com 3 quartos em Jardim das Acácias</div>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="para">Anúncio Para <span class="required">*</span></label>
-                            <select id="para" name="para" class="form-control<?= errorClass('para') ?>" required>
-                                <option value="venda" <?= getFieldValue('para') == 'venda' ? 'selected' : '' ?>>Venda</option>
-                                <option value="aluguel" <?= getFieldValue('para') == 'aluguel' ? 'selected' : '' ?>>Aluguel</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="id_categoria">Categoria <span class="required">*</span></label>
-                            <select id="id_categoria" name="id_categoria" class="form-control<?= errorClass('id_categoria') ?>" required>
-                                <?php foreach ($categories as $category): ?>
-                                    <option value="<?= $category['id'] ?>" <?= getFieldValue('id_categoria') == $category['id'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($category['categoria']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <?= showValidationError('id_categoria') ?>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="valor">Valor <span class="required">*</span></label>
-                            <input type="text" id="valor" name="valor" class="form-control money-mask<?= errorClass('valor') ?>" required value="<?= getFieldValue('valor') ?>">
-                            <?= showValidationError('valor') ?>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="status">Status <span class="required">*</span></label>
-                            <select id="status" name="status" class="form-control<?= errorClass('status') ?>" required>
-                                <option value="ativo" <?= getFieldValue('status') == 'ativo' ? 'selected' : '' ?>>Ativo</option>
-                                <option value="inativo" <?= getFieldValue('status') == 'inativo' ? 'selected' : '' ?>>Inativo</option>
-                                <option value="vendido" <?= getFieldValue('status') == 'vendido' ? 'selected' : '' ?>>Vendido</option>
-                                <option value="alugado" <?= getFieldValue('status') == 'alugado' ? 'selected' : '' ?>>Alugado</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group form-group--large">
-                            <label for="descricao">Descrição</label>
-                            <textarea id="descricao" name="descricao" class="form-control" rows="6"><?= getFieldValue('descricao') ?></textarea>
-                            <div class="form-help">Descreva as características do imóvel em detalhes</div>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group form-group--large">
-                            <label for="palavras_chaves">Palavras-chave</label>
-                            <input type="text" id="palavras_chaves" name="palavras_chaves" class="form-control" value="<?= getFieldValue('palavras_chaves') ?>">
-                            <div class="form-help">Palavras-chave que ajudem na busca deste imóvel (separadas por vírgula)</div>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group form-group--checkbox">
-                            <input type="checkbox" id="destaque" name="destaque" value="1" <?= isset($_POST['destaque']) ? 'checked' : '' ?>>
-                            <label for="destaque">Imóvel em Destaque</label>
-                            <div class="form-help">Marque esta opção para que o imóvel apareça na seção de destaque na página inicial</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Details Section -->
-                <div class="form-section" data-section="details">
-                    <h3 class="form-section__title">Detalhes do Imóvel</h3>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="quartos">Quartos</label>
-                            <select id="quartos" name="quartos" class="form-control">
-                                <option value="0" <?= getFieldValue('quartos') == '0' ? 'selected' : '' ?>>Nenhum</option>
-                                <?php for ($i = 1; $i <= 10; $i++): ?>
-                                    <option value="<?= $i ?>" <?= getFieldValue('quartos') == $i ? 'selected' : '' ?>><?= $i ?></option>
-                                <?php endfor; ?>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="suites">Suítes</label>
-                            <select id="suites" name="suites" class="form-control">
-                                <option value="0" <?= getFieldValue('suites') == '0' ? 'selected' : '' ?>>Nenhum</option>
-                                <?php for ($i = 1; $i <= 5; $i++): ?>
-                                    <option value="<?= $i ?>" <?= getFieldValue('suites') == $i ? 'selected' : '' ?>><?= $i ?></option>
-                                <?php endfor; ?>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="banheiros">Banheiros</label>
-                            <select id="banheiros" name="banheiros" class="form-control">
-                                <option value="0" <?= getFieldValue('banheiros') == '0' ? 'selected' : '' ?>>Nenhum</option>
-                                <?php for ($i = 1; $i <= 5; $i++): ?>
-                                    <option value="<?= $i ?>" <?= getFieldValue('banheiros') == $i ? 'selected' : '' ?>><?= $i ?></option>
-                                <?php endfor; ?>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="salas">Salas</label>
-                            <select id="salas" name="salas" class="form-control">
-                                <option value="0" <?= getFieldValue('salas') == '0' ? 'selected' : '' ?>>Nenhum</option>
-                                <?php for ($i = 1; $i <= 5; $i++): ?>
-                                    <option value="<?= $i ?>" <?= getFieldValue('salas') == $i ? 'selected' : '' ?>><?= $i ?></option>
-                                <?php endfor; ?>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="cozinhas">Cozinhas</label>
-                            <select id="cozinhas" name="cozinhas" class="form-control">
-                                <option value="0" <?= getFieldValue('cozinhas') == '0' ? 'selected' : '' ?>>Nenhum</option>
-                                <?php for ($i = 1; $i <= 3; $i++): ?>
-                                    <option value="<?= $i ?>" <?= getFieldValue('cozinhas') == $i ? 'selected' : '' ?>><?= $i ?></option>
-                                <?php endfor; ?>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="garagem">Vagas de Garagem</label>
-                            <select id="garagem" name="garagem" class="form-control">
-                                <option value="0" <?= getFieldValue('garagem') == '0' ? 'selected' : '' ?>>Nenhum</option>
-                                <?php for ($i = 1; $i <= 10; $i++): ?>
-                                    <option value="<?= $i ?>" <?= getFieldValue('garagem') == $i ? 'selected' : '' ?>><?= $i ?></option>
-                                <?php endfor; ?>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="area_servico">Área de Serviço</label>
-                            <select id="area_servico" name="area_servico" class="form-control">
-                                <option value="Não" <?= getFieldValue('area_servico') == 'Não' ? 'selected' : '' ?>>Não</option>
-                                <option value="Sim" <?= getFieldValue('area_servico') == 'Sim' ? 'selected' : '' ?>>Sim</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="und_medida">Unidade de Medida</label>
-                            <select id="und_medida" name="und_medida" class="form-control">
-                                <option value="M²" <?= getFieldValue('und_medida') == 'M²' ? 'selected' : '' ?>>m²</option>
-                                <option value="ha" <?= getFieldValue('und_medida') == 'ha' ? 'selected' : '' ?>>ha</option>
-                                <option value="alq" <?= getFieldValue('und_medida') == 'alq' ? 'selected' : '' ?>>alq</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="area_total">Área Total</label>
-                            <input type="text" id="area_total" name="area_total" class="form-control numeric-only<?= errorClass('area_total') ?>" value="<?= getFieldValue('area_total') ?>">
-                            <?= showValidationError('area_total') ?>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="area_construida">Área Construída</label>
-                            <input type="text" id="area_construida" name="area_construida" class="form-control numeric-only<?= errorClass('area_construida') ?>" value="<?= getFieldValue('area_construida') ?>">
-                            <?= showValidationError('area_construida') ?>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="quadra_lote">Quadra/Lote</label>
-                            <input type="text" id="quadra_lote" name="quadra_lote" class="form-control" value="<?= getFieldValue('quadra_lote') ?>">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Location Section -->
-                <div class="form-section" data-section="location">
-                    <h3 class="form-section__title">Localização</h3>
-                    <p class="form-section__desc">Informações sobre a localização do imóvel</p>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="id_estado">Estado <span class="required">*</span></label>
-                            <select id="id_estado" name="id_estado" class="form-control<?= errorClass('id_estado') ?>" required>
-                                <option value="">Selecione o Estado</option>
-                                <?php foreach ($states as $state): ?>
-                                    <option value="<?= $state['id'] ?>" <?= getFieldValue('id_estado') == $state['id'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($state['nome']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <?= showValidationError('id_estado') ?>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="id_cidade">Cidade <span class="required">*</span></label>
-                            <select id="id_cidade" name="id_cidade" class="form-control<?= errorClass('id_cidade') ?>" required>
-                                <option value="">Selecione a Cidade</option>
-                                <?php foreach ($cities as $city): ?>
-                                    <option value="<?= $city['id'] ?>"
-                                        data-state="<?= $city['id_estado'] ?>"
-                                        <?= getFieldValue('id_cidade') == $city['id'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($city['nome']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <?= showValidationError('id_cidade') ?>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="id_bairro">Bairro <span class="required">*</span></label>
-                            <select id="id_bairro" name="id_bairro" class="form-control<?= errorClass('id_bairro') ?>" required>
-                                <option value="">Selecione o Bairro</option>
-                                <?php foreach ($neighborhoods as $bairro): ?>
-                                    <option value="<?= $bairro['id'] ?>"
-                                        data-city="<?= $bairro['id_cidade'] ?>"
-                                        <?= getFieldValue('id_bairro') == $bairro['id'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($bairro['bairro']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <?= showValidationError('id_bairro') ?>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group form-group--large">
-                            <label for="endereco">Endereço Completo</label>
-                            <input type="text" id="endereco" name="endereco" class="form-control" value="<?= getFieldValue('endereco') ?>">
-                            <div class="form-help">Ex: Rua das Flores, 123 - Centro</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Attributes Section -->
-                <div class="form-section" data-section="attributes">
-                    <h3 class="form-section__title">Informações Adicionais</h3>
-                    <p class="form-section__desc">Dados do anunciante e responsável pelo imóvel</p>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="nome_anunciante">Nome do Anunciante</label>
-                            <input type="text" id="nome_anunciante" name="nome_anunciante" class="form-control" value="<?= getFieldValue('nome_anunciante') ?>">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="telefone_anunciante">Telefone do Anunciante</label>
-                            <input type="text" id="telefone_anunciante" name="telefone_anunciante" class="form-control phone-mask<?= errorClass('telefone_anunciante') ?>" value="<?= getFieldValue('telefone_anunciante') ?>">
-                            <?= showValidationError('telefone_anunciante') ?>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="corretor_responsavel">Corretor Responsável <span class="required">*</span></label>
-                            <select id="corretor_responsavel" name="corretor_responsavel" class="form-control<?= errorClass('corretor_responsavel') ?>" required>
-                                <?php foreach ($users as $user): ?>
-                                    <option value="<?= $user['id'] ?>" <?= getFieldValue('corretor_responsavel') == $user['id'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($user['nome']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <?= showValidationError('corretor_responsavel') ?>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Images Section -->
-                <div class="form-section" data-section="images">
-                    <h3 class="form-section__title">Fotos do Imóvel</h3>
-                    <p class="form-section__desc">Adicione fotos do imóvel para apresentação aos clientes</p>
-
-                    <!-- New separate field for main image -->
-                    <div class="form-row">
-                        <div class="form-group form-group--large">
-                            <label for="main_image">Imagem Principal <span class="required">*</span></label>
-                            <input type="file" id="main_image" name="main_image" class="form-control-file<?= errorClass('main_image') ?>" accept="image/*">
-                            <?= showValidationError('main_image') ?>
-                            <div class="form-help">
-                                <p>Esta imagem será usada como miniatura e como primeira imagem na galeria.</p>
-                                <p>Recomendamos uma imagem de boa qualidade, de preferência na horizontal.</p>
-                                <p>Tamanho máximo: 5MB.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Main image preview container -->
-                    <div class="main-image-preview" id="mainImagePreview" style="margin-bottom: 20px;"></div>
-
-                    <!-- Existing field for additional images -->
-                    <div class="form-row" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
-                        <div class="form-group form-group--large">
-                            <label for="images">Imagens Adicionais</label>
-                            <input type="file" id="images" name="images[]" class="form-control-file" multiple accept="image/*">
-                            <div class="form-help">
-                                <p>São permitidas até 11 imagens adicionais no formato JPG, PNG ou GIF.</p>
-                                <p>Tamanho máximo por arquivo: 5MB.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Additional images preview container -->
-                    <div class="image-preview" id="imagePreview"></div>
-                </div>
-            </div>
-
-            <div class="form-actions">
-                <button type="submit" class="primary-button primary-button--large">
-                    <i class="fas fa-save"></i> Salvar Imóvel
+        <div class="admin-card">
+            <!-- Quick Fill Form -->
+            <div class="quick-fill">
+                <h3>Preencher Rapidamente</h3>
+                <p>Preencha o formulário automaticamente com os valores padrão.</p>
+                <button type="button" id="quickFillButton" class="secondary-button">
+                    <i class="fas fa-magic"></i> Preencher Automaticamente
                 </button>
-                <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin" class="cancel-button">
-                    <i class="fas fa-times"></i> Cancelar
-                </a>
             </div>
-        </form>
+
+            <form action="" method="POST" enctype="multipart/form-data" class="property-form">
+                <!-- Hidden fields for required values that might be missing -->
+                <input type="hidden" name="ref" value="<?= getFieldValue('ref', 'REF-' . date('YmdHis') . rand(100, 999)) ?>">
+                <input type="hidden" name="medida_frente" value="<?= getFieldValue('medida_frente', '0') ?>">
+                <input type="hidden" name="medida_fundo" value="<?= getFieldValue('medida_fundo', '0') ?>">
+                <input type="hidden" name="medida_laterais" value="<?= getFieldValue('medida_laterais', '0') ?>">
+
+                <!-- Tabs for better form navigation -->
+                <div class="form-tabs">
+                    <button type="button" class="form-tab form-tab--active" data-tab="basic">Informações Básicas</button>
+                    <button type="button" class="form-tab" data-tab="details">Detalhes</button>
+                    <button type="button" class="form-tab" data-tab="location">Localização</button>
+                    <button type="button" class="form-tab" data-tab="attributes">Características</button>
+                    <button type="button" class="form-tab" data-tab="images">Imagens</button>
+                </div>
+
+                <div class="form-sections">
+                    <!-- Basic Information Section -->
+                    <div class="form-section form-section--active" data-section="basic">
+                        <h3 class="form-section__title">Informações Básicas</h3>
+                        <p class="form-section__desc">Os campos marcados com <span class="required">*</span> são obrigatórios.</p>
+
+                        <div class="form-row">
+                            <div class="form-group form-group--large">
+                                <label for="titulo">Título do Imóvel <span class="required">*</span></label>
+                                <input type="text" id="titulo" name="titulo" class="form-control<?= errorClass('titulo') ?>" required value="<?= getFieldValue('titulo') ?>">
+                                <?= showValidationError('titulo') ?>
+                                <div class="form-help">Ex: Casa com 3 quartos em Jardim das Acácias</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="para">Anúncio Para <span class="required">*</span></label>
+                                <select id="para" name="para" class="form-control<?= errorClass('para') ?>" required>
+                                    <option value="venda" <?= getFieldValue('para') == 'venda' ? 'selected' : '' ?>>Venda</option>
+                                    <option value="aluguel" <?= getFieldValue('para') == 'aluguel' ? 'selected' : '' ?>>Aluguel</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_categoria">Categoria <span class="required">*</span></label>
+                                <select id="id_categoria" name="id_categoria" class="form-control<?= errorClass('id_categoria') ?>" required>
+                                    <?php foreach ($categories as $category): ?>
+                                        <option value="<?= $category['id'] ?>" <?= getFieldValue('id_categoria') == $category['id'] ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($category['categoria']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?= showValidationError('id_categoria') ?>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="valor">Valor <span class="required">*</span></label>
+                                <input type="text" id="valor" name="valor" class="form-control money-mask<?= errorClass('valor') ?>" required value="<?= getFieldValue('valor') ?>">
+                                <?= showValidationError('valor') ?>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="status">Status <span class="required">*</span></label>
+                                <select id="status" name="status" class="form-control<?= errorClass('status') ?>" required>
+                                    <option value="ativo" <?= getFieldValue('status') == 'ativo' ? 'selected' : '' ?>>Ativo</option>
+                                    <option value="inativo" <?= getFieldValue('status') == 'inativo' ? 'selected' : '' ?>>Inativo</option>
+                                    <option value="vendido" <?= getFieldValue('status') == 'vendido' ? 'selected' : '' ?>>Vendido</option>
+                                    <option value="alugado" <?= getFieldValue('status') == 'alugado' ? 'selected' : '' ?>>Alugado</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group form-group--large">
+                                <label for="descricao">Descrição</label>
+                                <textarea id="descricao" name="descricao" class="form-control" rows="6"><?= getFieldValue('descricao') ?></textarea>
+                                <div class="form-help">Descreva as características do imóvel em detalhes</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group form-group--large">
+                                <label for="palavras_chaves">Palavras-chave</label>
+                                <input type="text" id="palavras_chaves" name="palavras_chaves" class="form-control" value="<?= getFieldValue('palavras_chaves') ?>">
+                                <div class="form-help">Palavras-chave que ajudem na busca deste imóvel (separadas por vírgula)</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group form-group--checkbox">
+                                <input type="checkbox" id="destaque" name="destaque" value="1" <?= isset($_POST['destaque']) ? 'checked' : '' ?>>
+                                <label for="destaque">Imóvel em Destaque</label>
+                                <div class="form-help">Marque esta opção para que o imóvel apareça na seção de destaque na página inicial</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Details Section -->
+                    <div class="form-section" data-section="details">
+                        <h3 class="form-section__title">Detalhes do Imóvel</h3>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="quartos">Quartos</label>
+                                <select id="quartos" name="quartos" class="form-control">
+                                    <option value="0" <?= getFieldValue('quartos') == '0' ? 'selected' : '' ?>>Nenhum</option>
+                                    <?php for ($i = 1; $i <= 10; $i++): ?>
+                                        <option value="<?= $i ?>" <?= getFieldValue('quartos') == $i ? 'selected' : '' ?>><?= $i ?></option>
+                                    <?php endfor; ?>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="suites">Suítes</label>
+                                <select id="suites" name="suites" class="form-control">
+                                    <option value="0" <?= getFieldValue('suites') == '0' ? 'selected' : '' ?>>Nenhum</option>
+                                    <?php for ($i = 1; $i <= 5; $i++): ?>
+                                        <option value="<?= $i ?>" <?= getFieldValue('suites') == $i ? 'selected' : '' ?>><?= $i ?></option>
+                                    <?php endfor; ?>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="banheiros">Banheiros</label>
+                                <select id="banheiros" name="banheiros" class="form-control">
+                                    <option value="0" <?= getFieldValue('banheiros') == '0' ? 'selected' : '' ?>>Nenhum</option>
+                                    <?php for ($i = 1; $i <= 5; $i++): ?>
+                                        <option value="<?= $i ?>" <?= getFieldValue('banheiros') == $i ? 'selected' : '' ?>><?= $i ?></option>
+                                    <?php endfor; ?>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="salas">Salas</label>
+                                <select id="salas" name="salas" class="form-control">
+                                    <option value="0" <?= getFieldValue('salas') == '0' ? 'selected' : '' ?>>Nenhum</option>
+                                    <?php for ($i = 1; $i <= 5; $i++): ?>
+                                        <option value="<?= $i ?>" <?= getFieldValue('salas') == $i ? 'selected' : '' ?>><?= $i ?></option>
+                                    <?php endfor; ?>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cozinhas">Cozinhas</label>
+                                <select id="cozinhas" name="cozinhas" class="form-control">
+                                    <option value="0" <?= getFieldValue('cozinhas') == '0' ? 'selected' : '' ?>>Nenhum</option>
+                                    <?php for ($i = 1; $i <= 3; $i++): ?>
+                                        <option value="<?= $i ?>" <?= getFieldValue('cozinhas') == $i ? 'selected' : '' ?>><?= $i ?></option>
+                                    <?php endfor; ?>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="garagem">Vagas de Garagem</label>
+                                <select id="garagem" name="garagem" class="form-control">
+                                    <option value="0" <?= getFieldValue('garagem') == '0' ? 'selected' : '' ?>>Nenhum</option>
+                                    <?php for ($i = 1; $i <= 10; $i++): ?>
+                                        <option value="<?= $i ?>" <?= getFieldValue('garagem') == $i ? 'selected' : '' ?>><?= $i ?></option>
+                                    <?php endfor; ?>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="area_servico">Área de Serviço</label>
+                                <select id="area_servico" name="area_servico" class="form-control">
+                                    <option value="Não" <?= getFieldValue('area_servico') == 'Não' ? 'selected' : '' ?>>Não</option>
+                                    <option value="Sim" <?= getFieldValue('area_servico') == 'Sim' ? 'selected' : '' ?>>Sim</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="und_medida">Unidade de Medida</label>
+                                <select id="und_medida" name="und_medida" class="form-control">
+                                    <option value="M²" <?= getFieldValue('und_medida') == 'M²' ? 'selected' : '' ?>>m²</option>
+                                    <option value="ha" <?= getFieldValue('und_medida') == 'ha' ? 'selected' : '' ?>>ha</option>
+                                    <option value="alq" <?= getFieldValue('und_medida') == 'alq' ? 'selected' : '' ?>>alq</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="area_total">Área Total</label>
+                                <input type="text" id="area_total" name="area_total" class="form-control numeric-only<?= errorClass('area_total') ?>" value="<?= getFieldValue('area_total') ?>">
+                                <?= showValidationError('area_total') ?>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="area_construida">Área Construída</label>
+                                <input type="text" id="area_construida" name="area_construida" class="form-control numeric-only<?= errorClass('area_construida') ?>" value="<?= getFieldValue('area_construida') ?>">
+                                <?= showValidationError('area_construida') ?>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="quadra_lote">Quadra/Lote</label>
+                                <input type="text" id="quadra_lote" name="quadra_lote" class="form-control" value="<?= getFieldValue('quadra_lote') ?>">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location Section -->
+                    <div class="form-section" data-section="location">
+                        <h3 class="form-section__title">Localização</h3>
+                        <p class="form-section__desc">Informações sobre a localização do imóvel</p>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="id_estado">Estado <span class="required">*</span></label>
+                                <select id="id_estado" name="id_estado" class="form-control<?= errorClass('id_estado') ?>" required>
+                                    <option value="">Selecione o Estado</option>
+                                    <?php foreach ($states as $state): ?>
+                                        <option value="<?= $state['id'] ?>" <?= getFieldValue('id_estado') == $state['id'] ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($state['nome']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?= showValidationError('id_estado') ?>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_cidade">Cidade <span class="required">*</span></label>
+                                <select id="id_cidade" name="id_cidade" class="form-control<?= errorClass('id_cidade') ?>" required>
+                                    <option value="">Selecione a Cidade</option>
+                                    <?php foreach ($cities as $city): ?>
+                                        <option value="<?= $city['id'] ?>"
+                                            data-state="<?= $city['id_estado'] ?>"
+                                            <?= getFieldValue('id_cidade') == $city['id'] ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($city['nome']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?= showValidationError('id_cidade') ?>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="id_bairro">Bairro <span class="required">*</span></label>
+                                <select id="id_bairro" name="id_bairro" class="form-control<?= errorClass('id_bairro') ?>" required>
+                                    <option value="">Selecione o Bairro</option>
+                                    <?php foreach ($neighborhoods as $bairro): ?>
+                                        <option value="<?= $bairro['id'] ?>"
+                                            data-city="<?= $bairro['id_cidade'] ?>"
+                                            <?= getFieldValue('id_bairro') == $bairro['id'] ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($bairro['bairro']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?= showValidationError('id_bairro') ?>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group form-group--large">
+                                <label for="endereco">Endereço Completo</label>
+                                <input type="text" id="endereco" name="endereco" class="form-control" value="<?= getFieldValue('endereco') ?>">
+                                <div class="form-help">Ex: Rua das Flores, 123 - Centro</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Attributes Section -->
+                    <div class="form-section" data-section="attributes">
+                        <h3 class="form-section__title">Informações Adicionais</h3>
+                        <p class="form-section__desc">Dados do anunciante e responsável pelo imóvel</p>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nome_anunciante">Nome do Anunciante</label>
+                                <input type="text" id="nome_anunciante" name="nome_anunciante" class="form-control" value="<?= getFieldValue('nome_anunciante') ?>">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="telefone_anunciante">Telefone do Anunciante</label>
+                                <input type="text" id="telefone_anunciante" name="telefone_anunciante" class="form-control phone-mask<?= errorClass('telefone_anunciante') ?>" value="<?= getFieldValue('telefone_anunciante') ?>">
+                                <?= showValidationError('telefone_anunciante') ?>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="corretor_responsavel">Corretor Responsável <span class="required">*</span></label>
+                                <select id="corretor_responsavel" name="corretor_responsavel" class="form-control<?= errorClass('corretor_responsavel') ?>" required>
+                                    <?php foreach ($users as $user): ?>
+                                        <option value="<?= $user['id'] ?>" <?= getFieldValue('corretor_responsavel') == $user['id'] ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($user['nome']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?= showValidationError('corretor_responsavel') ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Images Section -->
+                    <div class="form-section" data-section="images">
+                        <h3 class="form-section__title">Fotos do Imóvel</h3>
+                        <p class="form-section__desc">Adicione fotos do imóvel para apresentação aos clientes</p>
+
+                        <!-- New separate field for main image -->
+                        <div class="form-row">
+                            <div class="form-group form-group--large">
+                                <label for="main_image">Imagem Principal <span class="required">*</span></label>
+                                <input type="file" id="main_image" name="main_image" class="form-control-file<?= errorClass('main_image') ?>" accept="image/*">
+                                <?= showValidationError('main_image') ?>
+                                <div class="form-help">
+                                    <p>Esta imagem será usada como miniatura e como primeira imagem na galeria.</p>
+                                    <p>Recomendamos uma imagem de boa qualidade, de preferência na horizontal.</p>
+                                    <p>Tamanho máximo: 5MB.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Main image preview container -->
+                        <div class="main-image-preview" id="mainImagePreview" style="margin-bottom: 20px;"></div>
+
+                        <!-- Existing field for additional images -->
+                        <div class="form-row" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+                            <div class="form-group form-group--large">
+                                <label for="images">Imagens Adicionais</label>
+                                <input type="file" id="images" name="images[]" class="form-control-file" multiple accept="image/*">
+                                <div class="form-help">
+                                    <p>São permitidas até 11 imagens adicionais no formato JPG, PNG ou GIF.</p>
+                                    <p>Tamanho máximo por arquivo: 5MB.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional images preview container -->
+                        <div class="image-preview" id="imagePreview"></div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="primary-button primary-button--large">
+                        <i class="fas fa-save"></i> Salvar Imóvel
+                    </button>
+                    <a href="<?= BASE_URL ?>/admin/index.php?page=Property_Admin" class="cancel-button">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
+</main>
 
 <script>
     // Tab navigation

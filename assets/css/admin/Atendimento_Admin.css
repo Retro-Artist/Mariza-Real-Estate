@@ -1,7 +1,7 @@
 /* ===================================
    Simplified Service Request Page Styles
    =================================== */
-
+.Atendimento{
 /* Service Detail View - Keeps original structure but improves spacing */
 .atendimento-view .admin-card {
   margin-bottom: 30px;
@@ -228,4 +228,5 @@
   .atendimento-actions .btn {
     width: 100%;
   }
+}
 }

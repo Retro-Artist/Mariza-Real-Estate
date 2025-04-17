@@ -40,7 +40,7 @@ if (isset($_SESSION['alert_message'])) {
     unset($_SESSION['alert_type']);
 }
 ?>
-
+<main class="Atendimento">
 <!-- Service Requests List Page -->
 <div class="admin-page atendimento-admin">
     <?php if (!empty($alertMessage)): ?>
@@ -217,3 +217,4 @@ if (isset($_SESSION['alert_message'])) {
         <?php endif; ?>
     </div>
 </div>
+</main>

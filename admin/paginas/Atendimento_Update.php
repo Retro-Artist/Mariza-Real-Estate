@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $formData['status'] = $status;
 }
 ?>
-
+<main class="Atendimento">
 <div class="admin-page atendimento-update">
     <!-- Page Header -->
     <div class="admin-page__header">
@@ -165,3 +165,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </form>
 </div>
+</main>

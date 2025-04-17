@@ -1,7 +1,7 @@
 /* ===================================
    User Management Styles
    =================================== */
-
+.User{
    .user-admin .badge--blue {
     background-color: rgba(52, 152, 219, 0.15);
     color: var(--admin-blue);
@@ -37,3 +37,4 @@
     font-weight: 500;
     margin-top: 15px;
   }
+}

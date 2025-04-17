@@ -74,51 +74,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 ?>
 
+<main class="Location">
+    <div class="admin-page state-create">
+        <!-- Page Header -->
+        <div class="admin-page__header">
+            <a href="<?= BASE_URL ?>/admin/index.php?page=State_Admin" class="cancel-button">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
 
-<div class="admin-page state-create">
-    <!-- Page Header -->
-    <div class="admin-page__header">
-        <a href="<?= BASE_URL ?>/admin/index.php?page=State_Admin" class="cancel-button">
-            <i class="fas fa-arrow-left"></i> Voltar
-        </a>
+        <!-- State Form -->
+        <form method="POST" action="" class="admin-form">
+            <?php if (!empty($error)): ?>
+                <div class="alert-message alert-message--error">
+                    <?= htmlspecialchars($error) ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($success_message)): ?>
+                <div class="alert-message alert-message--success">
+                    <?= htmlspecialchars($success_message) ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="form-section">
+                <h3 class="form-section__title">Informações do Estado</h3>
+
+                <div class="form-row">
+                    <div class="form-group form-group--large">
+                        <label for="nome">Nome do Estado <span class="required">*</span></label>
+                        <input type="text" id="nome" name="nome" class="form-control" value="<?= htmlspecialchars($formData['nome']) ?>" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="uf">UF <span class="required">*</span></label>
+                        <input type="text" id="uf" name="uf" class="form-control" value="<?= htmlspecialchars($formData['uf']) ?>" maxlength="2" style="text-transform: uppercase;" required>
+                        <div class="form-text">Sigla de 2 letras (ex: SP)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="<?= BASE_URL ?>/admin/index.php?page=State_Admin" class="cancel-button">Cancelar</a>
+                <button type="submit" class="primary-button">
+                    <i class="fas fa-save"></i> Salvar Estado
+                </button>
+            </div>
+        </form>
     </div>
-
-    <!-- State Form -->
-    <form method="POST" action="" class="admin-form">
-        <?php if (!empty($error)): ?>
-            <div class="alert-message alert-message--error">
-                <?= htmlspecialchars($error) ?>
-            </div>
-        <?php endif; ?>
-
-        <?php if (!empty($success_message)): ?>
-            <div class="alert-message alert-message--success">
-                <?= htmlspecialchars($success_message) ?>
-            </div>
-        <?php endif; ?>
-
-        <div class="form-section">
-            <h3 class="form-section__title">Informações do Estado</h3>
-
-            <div class="form-row">
-                <div class="form-group form-group--large">
-                    <label for="nome">Nome do Estado <span class="required">*</span></label>
-                    <input type="text" id="nome" name="nome" class="form-control" value="<?= htmlspecialchars($formData['nome']) ?>" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="uf">UF <span class="required">*</span></label>
-                    <input type="text" id="uf" name="uf" class="form-control" value="<?= htmlspecialchars($formData['uf']) ?>" maxlength="2" style="text-transform: uppercase;" required>
-                    <div class="form-text">Sigla de 2 letras (ex: SP)</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="form-actions">
-            <a href="<?= BASE_URL ?>/admin/index.php?page=State_Admin" class="cancel-button">Cancelar</a>
-            <button type="submit" class="primary-button">
-                <i class="fas fa-save"></i> Salvar Estado
-            </button>
-        </div>
-    </form>
-</div>
+</main>

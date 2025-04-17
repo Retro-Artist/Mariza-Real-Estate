@@ -1,4 +1,6 @@
 /* Calendar Day Hover Styles */
+.Calendar {
+
 .calendar__day {
     cursor: pointer;
     transition: background-color 0.2s ease, transform 0.1s ease;
@@ -218,4 +220,5 @@ body.modal-open {
         width: 250px;
         right: -100%;
     }
+}
 }

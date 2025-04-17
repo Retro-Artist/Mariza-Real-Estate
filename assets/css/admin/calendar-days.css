@@ -1,5 +1,5 @@
 /* Enhanced Calendar Day Styles */
-
+.Calendar {
 /* Calendar grid */
 .calendar__days {
     display: grid;
@@ -302,4 +302,5 @@
         font-size: 0.7rem;
         padding: 2px 4px;
     }
+}
 }

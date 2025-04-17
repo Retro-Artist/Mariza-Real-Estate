@@ -1,22 +1,21 @@
 /* Main admin styles file that imports all admin-related CSS */
 
 /* Import admin components */
-
+@import 'styles.css';
 @import 'admin/Admin_Footer.css';
 @import 'admin/Admin_Header.css';
 @import 'admin/Admin_Login.css';
-@import 'admin/Admin_Styles.css';
 @import 'admin/Alert-Notification.css';
 @import 'admin/Atendimento_Admin.css';
+@import 'admin/Client_Admin.css';
+@import 'admin/User_Admin.css';
+@import 'admin/Location_Management.css';
+@import 'admin/Shared-Components.css';
+@import 'admin/Property_Admin.css';
 @import 'admin/Calendar_Admin.css';
 @import 'admin/Calendar-Days.css';
 @import 'admin/Calendar-Modal.css';
 @import 'admin/Category_Admin.css';
-@import 'admin/Client_Admin.css';
-@import 'admin/User_Admin.css';
-@import 'admin/Location_Management.css';
-@import 'admin/Property_Admin.css';
-@import 'admin/Shared-Components.css';
 
 /* Admin Area Base Styles */
 :root {

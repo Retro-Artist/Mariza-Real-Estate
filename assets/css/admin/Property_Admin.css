@@ -2,6 +2,8 @@
    Property Page Styles
    =================================== */
 
+
+.Property{
 /* Property Admin List */
 .property-admin .filter-form {
   margin-bottom: 20px;
@@ -661,4 +663,7 @@ textarea.form-control {
   .image-preview {
     height: 80px;
   }
+}
+
+
 }

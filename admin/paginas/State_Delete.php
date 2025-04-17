@@ -127,48 +127,50 @@ else {
 ?>
 
 <?php if (isset($state) && $state): ?>
-    <!-- Delete State Confirmation Page -->
-    <div class="admin-page state-delete">
-        <!-- Page Header -->
-        <div class="admin-page__header">
-            <a href="<?= BASE_URL ?>/admin/index.php?page=State_Admin" class="cancel-button">
-                <i class="fas fa-arrow-left"></i> Voltar
-            </a>
-        </div>
+    <main class="Location">
+        <!-- Delete State Confirmation Page -->
+        <div class="admin-page state-delete">
+            <!-- Page Header -->
+            <div class="admin-page__header">
+                <a href="<?= BASE_URL ?>/admin/index.php?page=State_Admin" class="cancel-button">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </a>
+            </div>
 
-        <!-- Confirmation Card -->
-        <div class="admin-card">
-            <?php if (!empty($error)): ?>
-                <div class="alert-message alert-message--error">
-                    <?= htmlspecialchars($error) ?>
-                </div>
-
-                <div class="form-actions mt-4">
-                    <a href="<?= BASE_URL ?>/admin/index.php?page=State_Admin" class="primary-button">
-                        <i class="fas fa-arrow-left"></i> Voltar para Lista de Estados
-                    </a>
-                </div>
-            <?php else: ?>
-                <div class="confirmation-message">
-                    <i class="fas fa-exclamation-triangle confirmation-icon"></i>
-                    <h3>Tem certeza que deseja excluir este estado?</h3>
-                    <p>Você está prestes a excluir o estado "<strong><?= htmlspecialchars($state['nome']) ?></strong>" (<?= htmlspecialchars($state['uf']) ?>).</p>
-                    <p>Esta ação não pode ser desfeita.</p>
-
-                    <div class="warning-text">
-                        <i class="fas fa-info-circle"></i> Esta ação só será possível se o estado não estiver associado a nenhuma cidade, bairro ou imóvel.
+            <!-- Confirmation Card -->
+            <div class="admin-card">
+                <?php if (!empty($error)): ?>
+                    <div class="alert-message alert-message--error">
+                        <?= htmlspecialchars($error) ?>
                     </div>
-                </div>
 
-                <div class="confirmation-actions">
-                    <a href="<?= BASE_URL ?>/admin/index.php?page=State_Admin" class="cancel-button">
-                        Cancelar
-                    </a>
-                    <a href="<?= BASE_URL ?>/admin/index.php?page=State_Delete&id=<?= $state_id ?>&confirm=1" class="delete-button">
-                        <i class="fas fa-trash"></i> Sim, Excluir Estado
-                    </a>
-                </div>
-            <?php endif; ?>
+                    <div class="form-actions mt-4">
+                        <a href="<?= BASE_URL ?>/admin/index.php?page=State_Admin" class="primary-button">
+                            <i class="fas fa-arrow-left"></i> Voltar para Lista de Estados
+                        </a>
+                    </div>
+                <?php else: ?>
+                    <div class="confirmation-message">
+                        <i class="fas fa-exclamation-triangle confirmation-icon"></i>
+                        <h3>Tem certeza que deseja excluir este estado?</h3>
+                        <p>Você está prestes a excluir o estado "<strong><?= htmlspecialchars($state['nome']) ?></strong>" (<?= htmlspecialchars($state['uf']) ?>).</p>
+                        <p>Esta ação não pode ser desfeita.</p>
+
+                        <div class="warning-text">
+                            <i class="fas fa-info-circle"></i> Esta ação só será possível se o estado não estiver associado a nenhuma cidade, bairro ou imóvel.
+                        </div>
+                    </div>
+
+                    <div class="confirmation-actions">
+                        <a href="<?= BASE_URL ?>/admin/index.php?page=State_Admin" class="cancel-button">
+                            Cancelar
+                        </a>
+                        <a href="<?= BASE_URL ?>/admin/index.php?page=State_Delete&id=<?= $state_id ?>&confirm=1" class="delete-button">
+                            <i class="fas fa-trash"></i> Sim, Excluir Estado
+                        </a>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
-    </div>
+    </main>
 <?php endif; ?>

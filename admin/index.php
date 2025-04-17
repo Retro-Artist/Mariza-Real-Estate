@@ -12,9 +12,22 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/database.php';
 require_once __DIR__ . '/../includes/functions.php';
 
-// Check if admin is logged in - if not, include login page and exit
+// Check if user is logged in - if not, include login page and exit
 if (!isset($_SESSION['admin_id'])) {
     include 'Admin_Login.php';
+    exit;
+}
+
+// Enforce page-level permissions
+$admin_only_pages = ['User_Admin', 'User_Create', 'User_Update', 'User_Delete'];
+$current_page = isset($_GET['page']) ? $_GET['page'] : 'Calendar';
+
+// Check if the current page requires admin privileges
+if (in_array($current_page, $admin_only_pages) && (!isset($_SESSION['admin_level']) || $_SESSION['admin_level'] != '1')) {
+    // Redirect non-admin users who try to access admin-only pages
+    $_SESSION['alert_message'] = 'Você não tem permissão para acessar esta página.';
+    $_SESSION['alert_type'] = 'error';
+    header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar');
     exit;
 }
 

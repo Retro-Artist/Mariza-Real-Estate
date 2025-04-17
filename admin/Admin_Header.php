@@ -1,8 +1,24 @@
 <?php
+// Ensure session is active
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Default redirect logic if not set by the page
+if (!isset($need_redirect)) {
+    $need_redirect = false;
+}
+
+// Redirect to login if not logged in
+if (!isset($_SESSION['admin_id'])) {
+    header('Location: ' . BASE_URL . '/admin/Admin_Login.php');
+    exit;
+}
 
 // Get current page for highlighting active menu item
 $current_page = isset($page) ? $page : 'Calendar';
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -15,9 +31,8 @@ $current_page = isset($page) ? $page : 'Calendar';
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+    
     <!-- Styles -->
-    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/styles.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/admin.css">
 
     <!-- Font Awesome Icons -->
@@ -77,8 +92,7 @@ $current_page = isset($page) ? $page : 'Calendar';
                             <i class="fas fa-chevron-down admin-sidebar__submenu-icon"></i>
                         </a>
                         <ul class="admin-sidebar__submenu">
-
-                        <?php if (isset($_SESSION['admin_level']) && $_SESSION['admin_level'] == '1'): ?>
+                            <?php if (isset($_SESSION['admin_level']) && ($_SESSION['admin_level'] == '1' || $_SESSION['admin_level'] == 1)): ?>
                                 <li class="admin-sidebar__submenu-item <?= strpos($current_page, 'User_') === 0 ? 'active' : '' ?>">
                                     <a href="<?= BASE_URL ?>/admin/index.php?page=User_Admin" class="admin-sidebar__submenu-link">
                                         <i class="fas fa-users-cog"></i>

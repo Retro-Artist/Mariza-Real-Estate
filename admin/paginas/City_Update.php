@@ -118,65 +118,67 @@ if (isset($city)) {
 ?>
 
 <?php if (isset($city)): ?>
-    <div class="admin-page city-update">
-        <!-- Page Header -->
-        <div class="admin-page__header">
-            <a href="<?= BASE_URL ?>/admin/index.php?page=City_Admin" class="cancel-button">
-                <i class="fas fa-arrow-left"></i> Voltar
-            </a>
+    <main class="Location">
+        <div class="admin-page city-update">
+            <!-- Page Header -->
+            <div class="admin-page__header">
+                <a href="<?= BASE_URL ?>/admin/index.php?page=City_Admin" class="cancel-button">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </a>
+            </div>
+
+            <!-- City Form -->
+            <form method="POST" action="" class="admin-form">
+                <?php if (!empty($error)): ?>
+                    <div class="alert-message alert-message--error">
+                        <?= htmlspecialchars($error) ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($success_message)): ?>
+                    <div class="alert-message alert-message--success">
+                        <?= htmlspecialchars($success_message) ?>
+                    </div>
+                <?php endif; ?>
+
+                <div class="form-section">
+                    <h3 class="form-section__title">Informações da Cidade</h3>
+
+                    <div class="form-row">
+                        <div class="form-group form-group--large">
+                            <label for="nome">Nome da Cidade <span class="required">*</span></label>
+                            <input type="text" id="nome" name="nome" class="form-control" value="<?= htmlspecialchars($formData['nome']) ?>" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_estado">Estado <span class="required">*</span></label>
+                            <select id="id_estado" name="id_estado" class="form-control" required>
+                                <option value="">Selecione um Estado</option>
+                                <?php foreach ($states as $state): ?>
+                                    <option value="<?= $state['id'] ?>" <?= $formData['id_estado'] == $state['id'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($state['nome']) ?> (<?= htmlspecialchars($state['uf']) ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cep">CEP</label>
+                            <input type="text" id="cep" name="cep" class="form-control" value="<?= htmlspecialchars($formData['cep']) ?>">
+                            <div class="form-text">Formato: 00000-000</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a href="<?= BASE_URL ?>/admin/index.php?page=City_Admin" class="cancel-button">Cancelar</a>
+                    <button type="submit" class="primary-button">
+                        <i class="fas fa-save"></i> Salvar Alterações
+                    </button>
+                </div>
+            </form>
         </div>
-
-        <!-- City Form -->
-        <form method="POST" action="" class="admin-form">
-            <?php if (!empty($error)): ?>
-                <div class="alert-message alert-message--error">
-                    <?= htmlspecialchars($error) ?>
-                </div>
-            <?php endif; ?>
-
-            <?php if (!empty($success_message)): ?>
-                <div class="alert-message alert-message--success">
-                    <?= htmlspecialchars($success_message) ?>
-                </div>
-            <?php endif; ?>
-
-            <div class="form-section">
-                <h3 class="form-section__title">Informações da Cidade</h3>
-
-                <div class="form-row">
-                    <div class="form-group form-group--large">
-                        <label for="nome">Nome da Cidade <span class="required">*</span></label>
-                        <input type="text" id="nome" name="nome" class="form-control" value="<?= htmlspecialchars($formData['nome']) ?>" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="id_estado">Estado <span class="required">*</span></label>
-                        <select id="id_estado" name="id_estado" class="form-control" required>
-                            <option value="">Selecione um Estado</option>
-                            <?php foreach ($states as $state): ?>
-                                <option value="<?= $state['id'] ?>" <?= $formData['id_estado'] == $state['id'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($state['nome']) ?> (<?= htmlspecialchars($state['uf']) ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="cep">CEP</label>
-                        <input type="text" id="cep" name="cep" class="form-control" value="<?= htmlspecialchars($formData['cep']) ?>">
-                        <div class="form-text">Formato: 00000-000</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-actions">
-                <a href="<?= BASE_URL ?>/admin/index.php?page=City_Admin" class="cancel-button">Cancelar</a>
-                <button type="submit" class="primary-button">
-                    <i class="fas fa-save"></i> Salvar Alterações
-                </button>
-            </div>
-        </form>
-    </div>
+    </main>
 <?php endif; ?>

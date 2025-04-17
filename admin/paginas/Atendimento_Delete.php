@@ -48,7 +48,7 @@ else {
     }
 }
 ?>
-
+<main class="Atendimento">
 <!-- Delete Atendimento Confirmation Page -->
 <div class="admin-page atendimento-delete">
     <!-- Page Header -->
@@ -78,3 +78,4 @@ else {
         </div>
     </div>
 </div>
+</main>

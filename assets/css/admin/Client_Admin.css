@@ -1,5 +1,6 @@
 /* Client Admin Page Styles - Versão Atualizada */
 
+.Client {
 /* Estilos gerais da página de clientes */
 .client-admin .admin-card {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
@@ -222,4 +223,6 @@
 
 .client-admin .admin-card {
   animation: fadeIn 0.3s ease-in-out;
+}
+
 }

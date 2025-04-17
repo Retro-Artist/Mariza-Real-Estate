@@ -60,7 +60,7 @@ try {
 
 ?>
 
-
+<main class="Location">
     <div class="admin-page state-admin">
         <!-- Page Header -->
         <div class="admin-page__header">
@@ -180,3 +180,4 @@ try {
             <?php endif; ?>
         </div>
     </div>
+</main>

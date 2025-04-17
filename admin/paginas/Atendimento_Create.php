@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-
+<main class="Atendimento">
 <div class="admin-page atendimento-create">
     <!-- Page Header -->
     <div class="admin-page__header">
@@ -128,3 +128,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </form>
 </div>
+</main>
