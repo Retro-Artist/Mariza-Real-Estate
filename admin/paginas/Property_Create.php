@@ -1,6 +1,11 @@
 <?php
 // This page is included within index.php, which already handles the session check
 
+// Enable detailed error reporting for debugging
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // Fetch data for selects
 $categories        = getAdminCategories();
 $statesStmt        = $databaseConnection->query("SELECT * FROM sistema_estados ORDER BY nome");
@@ -13,16 +18,17 @@ $users             = $usersResult['users'];
 $error = null;
 $success = null;
 $validationErrors = [];
+$debugInfo = ''; // For capturing debug information
 
 // Default values for required fields
 $defaults = [
     'titulo' => 'Imóvel à venda',
-    'para' => 'Venda',
+    'para' => 'venda', // Changed to lowercase to match database values
     'id_categoria' => $categories[0]['id'] ?? 1,
     'id_estado' => $states[0]['id'] ?? 1,
     'id_cidade' => $cities[0]['id'] ?? 1,
     'id_bairro' => $neighborhoods[0]['id'] ?? 0,
-    'valor' => 'R$ 0,00',
+    'valor' => '0,00',
     'quartos' => '0',
     'suites' => '0',
     'banheiros' => '0',
@@ -31,11 +37,19 @@ $defaults = [
     'garagem' => '0',
     'area_servico' => 'Não',
     'und_medida' => 'M²',
-    'status' => 'Ativo',
-    'corretor_responsavel' => $_SESSION['admin_id'] ?? 1
+    'status' => 'ativo', // Changed to lowercase to match database values
+    'corretor_responsavel' => $_SESSION['admin_id'] ?? 1,
+    'classificados' => 'nao', // Added missing required field
+    'medida_frente' => '', // Added missing fields
+    'medida_fundo' => '',
+    'medida_laterais' => '',
+    'ref' => '' // Added missing reference field
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Debug - Capture all POST data
+    $debugInfo .= "POST Data: " . print_r($_POST, true) . "\n";
+    
     // Validate required fields
     if (empty($_POST['titulo'])) {
         $validationErrors['titulo'] = 'Título é obrigatório';
@@ -52,8 +66,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $validationErrors['valor'] = 'Valor deve ser maior que zero';
     }
 
+    // Validate other required fields
+    if (empty($_POST['id_categoria'])) {
+        $validationErrors['id_categoria'] = 'Categoria é obrigatória';
+    }
+    
+    if (empty($_POST['id_estado'])) {
+        $validationErrors['id_estado'] = 'Estado é obrigatório';
+    }
+    
+    if (empty($_POST['id_cidade'])) {
+        $validationErrors['id_cidade'] = 'Cidade é obrigatória';
+    }
+
     // Generate a unique code for the property
-    $codigo = md5(uniqid(rand(), true));
+    $codigo = date('YmdHis') . rand(100, 999); // Use timestamp + random number for more readable code
     
     // Current date and time
     $currentDate = date('Y-m-d');
@@ -62,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Collect form data
     $propertyData = [
         'titulo'               => $_POST['titulo'] ?? $defaults['titulo'],
-        'para'                 => $_POST['para'] ?? $defaults['para'],
+        'para'                 => strtolower($_POST['para'] ?? $defaults['para']), // Ensure lowercase
         'id_categoria'         => $_POST['id_categoria'] ?? $defaults['id_categoria'],
         'id_estado'            => $_POST['id_estado'] ?? $defaults['id_estado'],
         'id_cidade'            => $_POST['id_cidade'] ?? $defaults['id_cidade'],
@@ -82,119 +109,200 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'descricao'            => $_POST['descricao'] ?? '',
         'palavras_chaves'      => $_POST['palavras_chaves'] ?? '',
         'codigo'               => $codigo,
+        'ref'                  => $_POST['ref'] ?? $codigo,
         'data'                 => $currentDate,
         'hora'                 => $currentTime,
         'id_usuario'           => $_SESSION['admin_id'],
-        'status'               => $_POST['status'] ?? $defaults['status'],
+        'status'               => strtolower($_POST['status'] ?? $defaults['status']), // Ensure lowercase
         'destaque'             => isset($_POST['destaque']) ? 1 : 0,
+        'classificados'        => 'nao', // Default value for required field
         'quadra_lote'          => $_POST['quadra_lote'] ?? '',
+        'medida_frente'        => $_POST['medida_frente'] ?? '',
+        'medida_fundo'         => $_POST['medida_fundo'] ?? '',
+        'medida_laterais'      => $_POST['medida_laterais'] ?? '',
         'nome_anunciante'      => $_POST['nome_anunciante'] ?? '',
         'telefone_anunciante'  => $_POST['telefone_anunciante'] ?? '',
         'corretor_responsavel' => $_POST['corretor_responsavel'] ?? $defaults['corretor_responsavel']
     ];
 
+    // Debug - Capture processed property data
+    $debugInfo .= "Property Data: " . print_r($propertyData, true) . "\n";
+
     // If there are no validation errors, proceed with saving
     if (empty($validationErrors)) {
-        // Create property using the function from admin_functions.php
-        $newPropertyId = createProperty($propertyData);
-    
-        if ($newPropertyId) {
-            // Handle image uploads
-            if (!empty($_FILES['images']['name'][0])) {
-                $uploadDir = __DIR__ . '/../../uploads/imoveis/';
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0755, true);
-                }
-                
-                $code = $propertyData['codigo'];
-                foreach ($_FILES['images']['name'] as $i => $origName) {
-                    if ($_FILES['images']['error'][$i] === UPLOAD_ERR_OK) {
-                        $tmp = $_FILES['images']['tmp_name'][$i];
-                        $ext = 'jpg'; // Forcing jpg extension as per system design
-                        $filename = $code . sprintf('%02d', $i + 1) . '.' . $ext;
-                        
-                        // Process the image - resize if needed
-                        processImageUpload($tmp, $uploadDir . $filename);
+        try {
+            // Create property using the function from admin_functions.php
+            $newPropertyId = createProperty($propertyData);
+            
+            // Debug - Capture the result
+            $debugInfo .= "Result of createProperty(): " . ($newPropertyId ? "Success with ID: $newPropertyId" : "Failed") . "\n";
+        
+            if ($newPropertyId) {
+                // Handle image uploads
+                if (!empty($_FILES['images']['name'][0])) {
+                    $uploadDir = __DIR__ . '/../../uploads/imoveis/';
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0755, true);
+                    }
+                    
+                    $code = $propertyData['codigo'];
+                    $uploadedImages = 0;
+                    $uploadErrors = [];
+                    
+                    foreach ($_FILES['images']['name'] as $i => $origName) {
+                        if ($_FILES['images']['error'][$i] === UPLOAD_ERR_OK) {
+                            $tmp = $_FILES['images']['tmp_name'][$i];
+                            $ext = 'jpg'; // Forcing jpg extension as per system design
+                            $filename = $code . sprintf('%02d', $i + 1) . '.' . $ext;
+                            
+                            // Process the image - resize if needed
+                            $result = processImageUpload($tmp, $uploadDir . $filename);
+                            if ($result) {
+                                $uploadedImages++;
+                            } else {
+                                $uploadErrors[] = "Erro ao processar imagem $i: $filename";
+                            }
+                        } else {
+                            $uploadErrors[] = "Erro no upload da imagem $i: " . $_FILES['images']['error'][$i];
+                        }
+                    }
+                    
+                    // Debug - Capture image upload results
+                    $debugInfo .= "Uploaded $uploadedImages images\n";
+                    if (!empty($uploadErrors)) {
+                        $debugInfo .= "Upload Errors: " . implode(", ", $uploadErrors) . "\n";
                     }
                 }
+                
+                // Set success message
+                $_SESSION['alert_message'] = "Imóvel cadastrado com sucesso!";
+                $_SESSION['alert_type'] = "success";
+                
+                // Log debug info if there was any
+                if (!empty($debugInfo)) {
+                    logError("Property Create Debug Info: $debugInfo", 'DEBUG');
+                }
+                
+                // Redirect to property admin
+                header('Location: ' . BASE_URL . '/admin/index.php?page=Property_Admin');
+                exit;
+            } else {
+                // Check if we can get a more specific error from database
+                $databaseError = $databaseConnection->errorInfo();
+                $error = "Erro ao cadastrar imóvel. ";
+                if (!empty($databaseError[2])) {
+                    $error .= "Erro do banco de dados: " . $databaseError[2];
+                } else {
+                    $error .= "Verifique os dados e tente novamente.";
+                }
+                
+                // Log debug info on error
+                logError("Property Create Error: $error\nDebug Info: $debugInfo", 'ERROR');
             }
-            
-            // Set success message
-            $_SESSION['alert_message'] = "Imóvel cadastrado com sucesso!";
-            $_SESSION['alert_type'] = "success";
-            
-            // Redirect to property admin
-            header('Location: ' . BASE_URL . '/admin/index.php?page=Property_Admin');
-            exit;
-        } else {
-            $error = "Erro ao cadastrar imóvel. Por favor, verifique os dados e tente novamente.";
+        } catch (Exception $e) {
+            $error = "Exceção ao cadastrar imóvel: " . $e->getMessage();
+            logError("Property Create Exception: " . $e->getMessage() . "\nDebug Info: $debugInfo", 'ERROR');
         }
     } else {
         $error = "Por favor, corrija os erros no formulário antes de continuar.";
+        // Log validation errors
+        logError("Property Create Validation Errors: " . print_r($validationErrors, true) . "\nDebug Info: $debugInfo", 'WARN');
     }
 }
 
 // Helper function to process image uploads
 function processImageUpload($sourcePath, $destPath) {
-    // Get image information
-    $imageInfo = getimagesize($sourcePath);
-    $width = $imageInfo[0];
-    $height = $imageInfo[1];
-    $type = $imageInfo[2];
-    
-    // Create image resource based on type
-    switch ($type) {
-        case IMAGETYPE_JPEG:
-            $sourceImage = imagecreatefromjpeg($sourcePath);
-            break;
-        case IMAGETYPE_PNG:
-            $sourceImage = imagecreatefrompng($sourcePath);
-            break;
-        case IMAGETYPE_GIF:
-            $sourceImage = imagecreatefromgif($sourcePath);
-            break;
-        default:
-            // Unsupported image type
-            move_uploaded_file($sourcePath, $destPath);
-            return;
-    }
-    
-    // Check if need to resize
-    $maxWidth = 1200;
-    $maxHeight = 800;
-    
-    if ($width > $maxWidth || $height > $maxHeight) {
-        // Calculate new dimensions
-        $ratio = min($maxWidth / $width, $maxHeight / $height);
-        $newWidth = round($width * $ratio);
-        $newHeight = round($height * $ratio);
-        
-        // Create a new image with new dimensions
-        $newImage = imagecreatetruecolor($newWidth, $newHeight);
-        
-        // Handle transparency for PNG
-        if ($type == IMAGETYPE_PNG) {
-            imagealphablending($newImage, false);
-            imagesavealpha($newImage, true);
-            $transparent = imagecolorallocatealpha($newImage, 255, 255, 255, 127);
-            imagefilledrectangle($newImage, 0, 0, $newWidth, $newHeight, $transparent);
+    try {
+        // Get image information
+        $imageInfo = getimagesize($sourcePath);
+        if (!$imageInfo) {
+            logError("Failed to get image information for: $sourcePath", 'ERROR');
+            return false;
         }
         
-        // Resize the image
-        imagecopyresampled($newImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+        $width = $imageInfo[0];
+        $height = $imageInfo[1];
+        $type = $imageInfo[2];
         
-        // Save the image
-        imagejpeg($newImage, $destPath, 90);
+        // Create image resource based on type
+        switch ($type) {
+            case IMAGETYPE_JPEG:
+                $sourceImage = imagecreatefromjpeg($sourcePath);
+                break;
+            case IMAGETYPE_PNG:
+                $sourceImage = imagecreatefrompng($sourcePath);
+                break;
+            case IMAGETYPE_GIF:
+                $sourceImage = imagecreatefromgif($sourcePath);
+                break;
+            default:
+                // Unsupported image type, try direct copy
+                logError("Unsupported image type for: $sourcePath, trying direct copy", 'WARN');
+                return move_uploaded_file($sourcePath, $destPath);
+        }
         
-        // Free up memory
-        imagedestroy($newImage);
-    } else {
-        // Save as JPEG without resizing
-        imagejpeg($sourceImage, $destPath, 90);
+        if (!$sourceImage) {
+            logError("Failed to create image resource for: $sourcePath", 'ERROR');
+            return false;
+        }
+        
+        // Check if need to resize
+        $maxWidth = 1200;
+        $maxHeight = 800;
+        
+        if ($width > $maxWidth || $height > $maxHeight) {
+            // Calculate new dimensions
+            $ratio = min($maxWidth / $width, $maxHeight / $height);
+            $newWidth = round($width * $ratio);
+            $newHeight = round($height * $ratio);
+            
+            // Create a new image with new dimensions
+            $newImage = imagecreatetruecolor($newWidth, $newHeight);
+            
+            if (!$newImage) {
+                logError("Failed to create resized image canvas for: $sourcePath", 'ERROR');
+                return false;
+            }
+            
+            // Handle transparency for PNG
+            if ($type == IMAGETYPE_PNG) {
+                imagealphablending($newImage, false);
+                imagesavealpha($newImage, true);
+                $transparent = imagecolorallocatealpha($newImage, 255, 255, 255, 127);
+                imagefilledrectangle($newImage, 0, 0, $newWidth, $newHeight, $transparent);
+            }
+            
+            // Resize the image
+            $result = imagecopyresampled($newImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+            
+            if (!$result) {
+                logError("Failed to resize image for: $sourcePath", 'ERROR');
+                imagedestroy($sourceImage);
+                imagedestroy($newImage);
+                return false;
+            }
+            
+            // Save the image
+            $result = imagejpeg($newImage, $destPath, 90);
+            
+            // Free up memory
+            imagedestroy($newImage);
+            imagedestroy($sourceImage);
+            
+            return $result;
+        } else {
+            // Save as JPEG without resizing
+            $result = imagejpeg($sourceImage, $destPath, 90);
+            
+            // Free up memory
+            imagedestroy($sourceImage);
+            
+            return $result;
+        }
+    } catch (Exception $e) {
+        logError("Image processing exception: " . $e->getMessage(), 'ERROR');
+        return false;
     }
-    
-    // Free up memory
-    imagedestroy($sourceImage);
 }
 
 // Helper function to display validation error
@@ -237,6 +345,12 @@ function getFieldValue($field, $default = '') {
         <div class="alert-message alert-message--error">
             <?= htmlspecialchars($error) ?>
         </div>
+        <?php if (MODE === 'Development' && !empty($debugInfo)): ?>
+            <div class="debug-info">
+                <h3>Informações de Depuração</h3>
+                <pre><?= htmlspecialchars($debugInfo) ?></pre>
+            </div>
+        <?php endif; ?>
     <?php endif; ?>
 
     <div class="admin-card">
@@ -250,6 +364,12 @@ function getFieldValue($field, $default = '') {
         </div>
 
         <form action="" method="POST" enctype="multipart/form-data" class="property-form">
+            <!-- Hidden fields for required values that might be missing -->
+            <input type="hidden" name="ref" value="<?= getFieldValue('ref', 'REF-'.date('YmdHis')) ?>">
+            <input type="hidden" name="medida_frente" value="<?= getFieldValue('medida_frente', '0') ?>">
+            <input type="hidden" name="medida_fundo" value="<?= getFieldValue('medida_fundo', '0') ?>">
+            <input type="hidden" name="medida_laterais" value="<?= getFieldValue('medida_laterais', '0') ?>">
+            
             <!-- Tabs for better form navigation -->
             <div class="form-tabs">
                 <button type="button" class="form-tab form-tab--active" data-tab="basic">Informações Básicas</button>
@@ -278,8 +398,8 @@ function getFieldValue($field, $default = '') {
                         <div class="form-group">
                             <label for="para">Anúncio Para <span class="required">*</span></label>
                             <select id="para" name="para" class="form-control<?= errorClass('para') ?>" required>
-                                <option value="Venda" <?= getFieldValue('para') == 'Venda' ? 'selected' : '' ?>>Venda</option>
-                                <option value="Aluguel" <?= getFieldValue('para') == 'Aluguel' ? 'selected' : '' ?>>Aluguel</option>
+                                <option value="venda" <?= getFieldValue('para') == 'venda' ? 'selected' : '' ?>>Venda</option>
+                                <option value="aluguel" <?= getFieldValue('para') == 'aluguel' ? 'selected' : '' ?>>Aluguel</option>
                             </select>
                         </div>
 
@@ -292,6 +412,7 @@ function getFieldValue($field, $default = '') {
                                     </option>
                                 <?php endforeach; ?>
                             </select>
+                            <?= showValidationError('id_categoria') ?>
                         </div>
                     </div>
 
@@ -305,10 +426,10 @@ function getFieldValue($field, $default = '') {
                         <div class="form-group">
                             <label for="status">Status <span class="required">*</span></label>
                             <select id="status" name="status" class="form-control<?= errorClass('status') ?>" required>
-                                <option value="Ativo" <?= getFieldValue('status') == 'Ativo' ? 'selected' : '' ?>>Ativo</option>
-                                <option value="Inativo" <?= getFieldValue('status') == 'Inativo' ? 'selected' : '' ?>>Inativo</option>
-                                <option value="Vendido" <?= getFieldValue('status') == 'Vendido' ? 'selected' : '' ?>>Vendido</option>
-                                <option value="Alugado" <?= getFieldValue('status') == 'Alugado' ? 'selected' : '' ?>>Alugado</option>
+                                <option value="ativo" <?= getFieldValue('status') == 'ativo' ? 'selected' : '' ?>>Ativo</option>
+                                <option value="inativo" <?= getFieldValue('status') == 'inativo' ? 'selected' : '' ?>>Inativo</option>
+                                <option value="vendido" <?= getFieldValue('status') == 'vendido' ? 'selected' : '' ?>>Vendido</option>
+                                <option value="alugado" <?= getFieldValue('status') == 'alugado' ? 'selected' : '' ?>>Alugado</option>
                             </select>
                         </div>
                     </div>
@@ -346,7 +467,7 @@ function getFieldValue($field, $default = '') {
                         <div class="form-group">
                             <label for="quartos">Quartos</label>
                             <select id="quartos" name="quartos" class="form-control">
-                                <option value="Nenhum" <?= getFieldValue('quartos') == 'Nenhum' ? 'selected' : '' ?>>Nenhum</option>
+                                <option value="0" <?= getFieldValue('quartos') == '0' ? 'selected' : '' ?>>Nenhum</option>
                                 <?php for ($i = 1; $i <= 10; $i++): ?>
                                     <option value="<?= $i ?>" <?= getFieldValue('quartos') == $i ? 'selected' : '' ?>><?= $i ?></option>
                                 <?php endfor; ?>
@@ -356,7 +477,7 @@ function getFieldValue($field, $default = '') {
                         <div class="form-group">
                             <label for="suites">Suítes</label>
                             <select id="suites" name="suites" class="form-control">
-                                <option value="Nenhum" <?= getFieldValue('suites') == 'Nenhum' ? 'selected' : '' ?>>Nenhum</option>
+                                <option value="0" <?= getFieldValue('suites') == '0' ? 'selected' : '' ?>>Nenhum</option>
                                 <?php for ($i = 1; $i <= 5; $i++): ?>
                                     <option value="<?= $i ?>" <?= getFieldValue('suites') == $i ? 'selected' : '' ?>><?= $i ?></option>
                                 <?php endfor; ?>
@@ -368,7 +489,7 @@ function getFieldValue($field, $default = '') {
                         <div class="form-group">
                             <label for="banheiros">Banheiros</label>
                             <select id="banheiros" name="banheiros" class="form-control">
-                                <option value="Nenhum" <?= getFieldValue('banheiros') == 'Nenhum' ? 'selected' : '' ?>>Nenhum</option>
+                                <option value="0" <?= getFieldValue('banheiros') == '0' ? 'selected' : '' ?>>Nenhum</option>
                                 <?php for ($i = 1; $i <= 5; $i++): ?>
                                     <option value="<?= $i ?>" <?= getFieldValue('banheiros') == $i ? 'selected' : '' ?>><?= $i ?></option>
                                 <?php endfor; ?>
@@ -378,7 +499,7 @@ function getFieldValue($field, $default = '') {
                         <div class="form-group">
                             <label for="salas">Salas</label>
                             <select id="salas" name="salas" class="form-control">
-                                <option value="Nenhum" <?= getFieldValue('salas') == 'Nenhum' ? 'selected' : '' ?>>Nenhum</option>
+                                <option value="0" <?= getFieldValue('salas') == '0' ? 'selected' : '' ?>>Nenhum</option>
                                 <?php for ($i = 1; $i <= 5; $i++): ?>
                                     <option value="<?= $i ?>" <?= getFieldValue('salas') == $i ? 'selected' : '' ?>><?= $i ?></option>
                                 <?php endfor; ?>
@@ -390,7 +511,7 @@ function getFieldValue($field, $default = '') {
                         <div class="form-group">
                             <label for="cozinhas">Cozinhas</label>
                             <select id="cozinhas" name="cozinhas" class="form-control">
-                                <option value="Nenhum" <?= getFieldValue('cozinhas') == 'Nenhum' ? 'selected' : '' ?>>Nenhum</option>
+                                <option value="0" <?= getFieldValue('cozinhas') == '0' ? 'selected' : '' ?>>Nenhum</option>
                                 <?php for ($i = 1; $i <= 3; $i++): ?>
                                     <option value="<?= $i ?>" <?= getFieldValue('cozinhas') == $i ? 'selected' : '' ?>><?= $i ?></option>
                                 <?php endfor; ?>
@@ -400,7 +521,7 @@ function getFieldValue($field, $default = '') {
                         <div class="form-group">
                             <label for="garagem">Vagas de Garagem</label>
                             <select id="garagem" name="garagem" class="form-control">
-                                <option value="Nenhum" <?= getFieldValue('garagem') == 'Nenhum' ? 'selected' : '' ?>>Nenhum</option>
+                                <option value="0" <?= getFieldValue('garagem') == '0' ? 'selected' : '' ?>>Nenhum</option>
                                 <?php for ($i = 1; $i <= 10; $i++): ?>
                                     <option value="<?= $i ?>" <?= getFieldValue('garagem') == $i ? 'selected' : '' ?>><?= $i ?></option>
                                 <?php endfor; ?>
@@ -650,6 +771,107 @@ function getFieldValue($field, $default = '') {
     border-top: 1px solid #eee;
     margin-top: 20px;
 }
+
+/* Debug info styling */
+.debug-info {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 20px;
+    overflow: auto;
+    max-height: 300px;
+}
+
+.debug-info h3 {
+    margin-top: 0;
+    color: #333;
+    font-size: 1rem;
+}
+
+.debug-info pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: #666;
+    font-size: 0.8rem;
+}
+
+/* Image preview styling */
+.image-preview__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.image-preview__item {
+    position: relative;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.image-preview__item--primary {
+    border-color: #4caf50;
+    background-color: #f1f8e9;
+}
+
+.image-preview__number {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    z-index: 1;
+}
+
+.image-preview__primary {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background-color: #4caf50;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    z-index: 1;
+}
+
+.image-preview__img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 3px;
+    display: block;
+}
+
+.image-preview__filename {
+    margin-top: 5px;
+    font-size: 11px;
+    color: #666;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.image-preview__header {
+    margin-bottom: 10px;
+}
+
+.image-preview__header h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: #333;
+}
 </style>
 
 <script>
@@ -726,8 +948,8 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('valor').value = 'R$ 100.000,00';
             
             // Set selections
-            document.getElementById('para').value = 'Venda';
-            document.getElementById('status').value = 'Ativo';
+            document.getElementById('para').value = 'venda';
+            document.getElementById('status').value = 'ativo';
             
             // Fill details fields with minimum values
             document.getElementById('quartos').value = '2';
@@ -735,10 +957,23 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('area_total').value = '200';
             document.getElementById('area_construida').value = '100';
             
+            // Set hidden required fields with defaults
+            const hiddenFields = [
+                { name: 'ref', value: 'REF-' + Date.now() },
+                { name: 'medida_frente', value: '0' },
+                { name: 'medida_fundo', value: '0' },
+                { name: 'medida_laterais', value: '0' }
+            ];
+            
+            hiddenFields.forEach(field => {
+                const input = document.querySelector(`input[name="${field.name}"]`);
+                if (input) input.value = field.value;
+            });
+            
             // Trigger state selection to populate city and neighborhood
             const stateSelect = document.getElementById('id_estado');
             if (stateSelect.options.length > 0) {
-                stateSelect.value = stateSelect.options[0].value;
+                stateSelect.value = stateSelect.options[1].value; // Select first actual state
                 stateSelect.dispatchEvent(new Event('change'));
             }
             
@@ -752,8 +987,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const bairroSelect = document.getElementById('id_bairro');
     
     // Set initial default values if not already set
-    if (!stateSelect.value && stateSelect.options.length > 0) {
-        stateSelect.value = stateSelect.options[0].value;
+    if (!stateSelect.value && stateSelect.options.length > 1) {
+        stateSelect.value = stateSelect.options[1].value; // Select first actual state
         // Trigger the change event to update cities
         stateSelect.dispatchEvent(new Event('change'));
     }
@@ -880,6 +1115,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (moneyInput.value) {
             let value = moneyInput.value.replace(/\D/g, '');
             if (value) {
+                if (value.length <= 2) {
+                    value = '0' + value.padStart(2, '0');
+                }
                 value = (parseInt(value) / 100).toFixed(2);
                 value = value.replace('.', ',');
                 value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');

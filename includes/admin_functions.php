@@ -193,6 +193,11 @@ function createProperty(array $propertyData): int|false
     global $databaseConnection;
 
     try {
+        // Log the property data for debugging
+        if (MODE === 'Development') {
+            error_log("Creating property with data: " . print_r($propertyData, true));
+        }
+
         // Check if property code already exists
         $stmt = $databaseConnection->prepare(
             "SELECT id FROM sistema_imoveis WHERE codigo = :codigo LIMIT 1"
@@ -201,6 +206,7 @@ function createProperty(array $propertyData): int|false
         $stmt->execute();
 
         if ($stmt->rowCount() > 0) {
+            error_log("Property code already exists: " . $propertyData['codigo']);
             return false;
         }
 
@@ -214,19 +220,19 @@ function createProperty(array $propertyData): int|false
             $propertyData['palavras_chaves'] = $propertyData['titulo'] . ' ' . $propertyData['descricao'];
         }
 
-        // Insert new property
+        // Insert new property - MODIFIED to match actual table structure
         $sql = "INSERT INTO sistema_imoveis (
                     titulo, para, id_categoria, id_estado, id_cidade, id_bairro,
                     valor, quartos, suites, banheiros, salas, cozinhas, garagem, area_servico,
-                    area_total, area_construida, und_medida, endereco, descricao, ref,
+                    area_total, area_construida, und_medida, endereco, descricao,
                     codigo, status, data, hora, id_usuario, palavras_chaves, destaque,
-                    classificados, quadra_lote, medida_frente, medida_fundo, medida_laterais, corretor_responsavel, nome_anunciante, telefone_anunciante
+                    quadra_lote, corretor_responsavel, nome_anunciante, telefone_anunciante
                 ) VALUES (
                     :titulo, :para, :id_categoria, :id_estado, :id_cidade, :id_bairro,
                     :valor, :quartos, :suites, :banheiros, :salas, :cozinhas, :garagem, :area_servico,
-                    :area_total, :area_construida, :und_medida, :endereco, :descricao, :ref,
+                    :area_total, :area_construida, :und_medida, :endereco, :descricao,
                     :codigo, :status, :data, :hora, :id_usuario, :palavras_chaves, :destaque,
-                    :classificados, :quadra_lote, :medida_frente, :medida_fundo, :medida_laterais, :corretor_responsavel, :nome_anunciante, :telefone_anunciante
+                    :quadra_lote, :corretor_responsavel, :nome_anunciante, :telefone_anunciante
                 )";
 
         $stmt = $databaseConnection->prepare($sql);
@@ -251,7 +257,6 @@ function createProperty(array $propertyData): int|false
         $stmt->bindParam(':und_medida', $propertyData['und_medida']);
         $stmt->bindParam(':endereco', $propertyData['endereco']);
         $stmt->bindParam(':descricao', $propertyData['descricao']);
-        $stmt->bindParam(':ref', $propertyData['ref']);
         $stmt->bindParam(':codigo', $propertyData['codigo']);
         $stmt->bindParam(':status', $propertyData['status']);
         $stmt->bindParam(':data', $data);
@@ -259,20 +264,25 @@ function createProperty(array $propertyData): int|false
         $stmt->bindParam(':id_usuario', $id_usuario);
         $stmt->bindParam(':palavras_chaves', $propertyData['palavras_chaves']);
         $stmt->bindParam(':destaque', $propertyData['destaque']);
-        $stmt->bindParam(':classificados', $propertyData['classificados']);
         $stmt->bindParam(':quadra_lote', $propertyData['quadra_lote']);
-        $stmt->bindParam(':medida_frente', $propertyData['medida_frente']);
-        $stmt->bindParam(':medida_fundo', $propertyData['medida_fundo']);
-        $stmt->bindParam(':medida_laterais', $propertyData['medida_laterais']);
         $stmt->bindParam(':corretor_responsavel', $propertyData['corretor_responsavel']);
         $stmt->bindParam(':nome_anunciante', $propertyData['nome_anunciante']);
         $stmt->bindParam(':telefone_anunciante', $propertyData['telefone_anunciante']);
 
-        $stmt->execute();
+        $result = $stmt->execute();
+        
+        if (!$result) {
+            // Log error details
+            $errorInfo = $stmt->errorInfo();
+            error_log("SQL Error: " . print_r($errorInfo, true));
+            return false;
+        }
 
         return $databaseConnection->lastInsertId();
     } catch (PDOException $e) {
-        logError("Error creating property: " . $e->getMessage());
+        // Detailed error logging
+        error_log("Exception in createProperty: " . $e->getMessage());
+        error_log("Property data: " . print_r($propertyData, true));
         return false;
     }
 }
