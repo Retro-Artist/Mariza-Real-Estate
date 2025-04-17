@@ -188,9 +188,9 @@ $sourceClass = 'badge--' . strtolower($atendimento['local']);
                 <a href="<?= BASE_URL ?>/admin/index.php?page=Atendimento_Delete&id=<?= $atendimento_id ?>" class="btn btn-delete">
                     <i class="fas fa-trash"></i> Excluir Atendimento
                 </a>
-                <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Create" class="btn btn-primary">
+                <!-- <a href="<?= BASE_URL ?>/admin/index.php?page=Client_Create&from_atendimento=<?= $atendimento_id ?>" class="btn btn-primary">
                     <i class="fas fa-user-plus"></i> Converter em Cliente
-                </a>
+                </a> -->
             </div>
 
         </div>
