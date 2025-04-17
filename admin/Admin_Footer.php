@@ -20,3 +20,5 @@
 <script src="<?= BASE_URL ?>/assets/scripts/script_loader.js"></script>
 </body>
 </html>
+
+<?php ob_end_flush(); ?>
