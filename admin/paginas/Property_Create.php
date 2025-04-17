@@ -49,19 +49,19 @@ $defaults = [
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Debug - Capture all POST data
     $debugInfo .= "POST Data: " . print_r($_POST, true) . "\n";
-    
+
     // Validate required fields
     if (empty($_POST['titulo'])) {
         $validationErrors['titulo'] = 'Título é obrigatório';
     }
-    
+
     // Format currency value (remove R$ and convert comma to dot)
     $valorFormatado = $_POST['valor'] ?? '0';
     $valorFormatado = str_replace('R$ ', '', $valorFormatado);
     $valorFormatado = str_replace('.', '', $valorFormatado);
     $valorFormatado = str_replace(',', '.', $valorFormatado);
     $valorFormatado = (float)$valorFormatado;
-    
+
     if ($valorFormatado <= 0) {
         $validationErrors['valor'] = 'Valor deve ser maior que zero';
     }
@@ -70,18 +70,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($_POST['id_categoria'])) {
         $validationErrors['id_categoria'] = 'Categoria é obrigatória';
     }
-    
+
     if (empty($_POST['id_estado'])) {
         $validationErrors['id_estado'] = 'Estado é obrigatório';
     }
-    
+
     if (empty($_POST['id_cidade'])) {
         $validationErrors['id_cidade'] = 'Cidade é obrigatória';
     }
 
+    // Add this validation for neighborhood
+    if (empty($_POST['id_bairro'])) {
+        $validationErrors['id_bairro'] = 'Bairro é obrigatório';
+    }
+
     // Generate a unique code for the property
     $codigo = date('YmdHis') . rand(100, 999); // Use timestamp + random number for more readable code
-    
+
     // Current date and time
     $currentDate = date('Y-m-d');
     $currentTime = date('H:i:s');
@@ -133,10 +138,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             // Create property using the function from admin_functions.php
             $newPropertyId = createProperty($propertyData);
-            
+
             // Debug - Capture the result
             $debugInfo .= "Result of createProperty(): " . ($newPropertyId ? "Success with ID: $newPropertyId" : "Failed") . "\n";
-        
+
             if ($newPropertyId) {
                 // Handle image uploads
                 if (!empty($_FILES['images']['name'][0])) {
@@ -144,17 +149,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!is_dir($uploadDir)) {
                         mkdir($uploadDir, 0755, true);
                     }
-                    
+
                     $code = $propertyData['codigo'];
                     $uploadedImages = 0;
                     $uploadErrors = [];
-                    
+
                     foreach ($_FILES['images']['name'] as $i => $origName) {
                         if ($_FILES['images']['error'][$i] === UPLOAD_ERR_OK) {
                             $tmp = $_FILES['images']['tmp_name'][$i];
                             $ext = 'jpg'; // Forcing jpg extension as per system design
                             $filename = $code . sprintf('%02d', $i + 1) . '.' . $ext;
-                            
+
                             // Process the image - resize if needed
                             $result = processImageUpload($tmp, $uploadDir . $filename);
                             if ($result) {
@@ -166,23 +171,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $uploadErrors[] = "Erro no upload da imagem $i: " . $_FILES['images']['error'][$i];
                         }
                     }
-                    
+
                     // Debug - Capture image upload results
                     $debugInfo .= "Uploaded $uploadedImages images\n";
                     if (!empty($uploadErrors)) {
                         $debugInfo .= "Upload Errors: " . implode(", ", $uploadErrors) . "\n";
                     }
                 }
-                
+
                 // Set success message
                 $_SESSION['alert_message'] = "Imóvel cadastrado com sucesso!";
                 $_SESSION['alert_type'] = "success";
-                
+
                 // Log debug info if there was any
                 if (!empty($debugInfo)) {
                     logError("Property Create Debug Info: $debugInfo", 'DEBUG');
                 }
-                
+
                 // Redirect to property admin
                 header('Location: ' . BASE_URL . '/admin/index.php?page=Property_Admin');
                 exit;
@@ -195,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     $error .= "Verifique os dados e tente novamente.";
                 }
-                
+
                 // Log debug info on error
                 logError("Property Create Error: $error\nDebug Info: $debugInfo", 'ERROR');
             }
@@ -211,7 +216,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Helper function to process image uploads
-function processImageUpload($sourcePath, $destPath) {
+function processImageUpload($sourcePath, $destPath)
+{
     try {
         // Get image information
         $imageInfo = getimagesize($sourcePath);
@@ -219,11 +225,11 @@ function processImageUpload($sourcePath, $destPath) {
             logError("Failed to get image information for: $sourcePath", 'ERROR');
             return false;
         }
-        
+
         $width = $imageInfo[0];
         $height = $imageInfo[1];
         $type = $imageInfo[2];
-        
+
         // Create image resource based on type
         switch ($type) {
             case IMAGETYPE_JPEG:
@@ -240,30 +246,30 @@ function processImageUpload($sourcePath, $destPath) {
                 logError("Unsupported image type for: $sourcePath, trying direct copy", 'WARN');
                 return move_uploaded_file($sourcePath, $destPath);
         }
-        
+
         if (!$sourceImage) {
             logError("Failed to create image resource for: $sourcePath", 'ERROR');
             return false;
         }
-        
+
         // Check if need to resize
         $maxWidth = 1200;
         $maxHeight = 800;
-        
+
         if ($width > $maxWidth || $height > $maxHeight) {
             // Calculate new dimensions
             $ratio = min($maxWidth / $width, $maxHeight / $height);
             $newWidth = round($width * $ratio);
             $newHeight = round($height * $ratio);
-            
+
             // Create a new image with new dimensions
             $newImage = imagecreatetruecolor($newWidth, $newHeight);
-            
+
             if (!$newImage) {
                 logError("Failed to create resized image canvas for: $sourcePath", 'ERROR');
                 return false;
             }
-            
+
             // Handle transparency for PNG
             if ($type == IMAGETYPE_PNG) {
                 imagealphablending($newImage, false);
@@ -271,32 +277,32 @@ function processImageUpload($sourcePath, $destPath) {
                 $transparent = imagecolorallocatealpha($newImage, 255, 255, 255, 127);
                 imagefilledrectangle($newImage, 0, 0, $newWidth, $newHeight, $transparent);
             }
-            
+
             // Resize the image
             $result = imagecopyresampled($newImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-            
+
             if (!$result) {
                 logError("Failed to resize image for: $sourcePath", 'ERROR');
                 imagedestroy($sourceImage);
                 imagedestroy($newImage);
                 return false;
             }
-            
+
             // Save the image
             $result = imagejpeg($newImage, $destPath, 90);
-            
+
             // Free up memory
             imagedestroy($newImage);
             imagedestroy($sourceImage);
-            
+
             return $result;
         } else {
             // Save as JPEG without resizing
             $result = imagejpeg($sourceImage, $destPath, 90);
-            
+
             // Free up memory
             imagedestroy($sourceImage);
-            
+
             return $result;
         }
     } catch (Exception $e) {
@@ -306,7 +312,8 @@ function processImageUpload($sourcePath, $destPath) {
 }
 
 // Helper function to display validation error
-function showValidationError($field) {
+function showValidationError($field)
+{
     global $validationErrors;
     if (isset($validationErrors[$field])) {
         return '<div class="validation-error">' . htmlspecialchars($validationErrors[$field]) . '</div>';
@@ -315,13 +322,15 @@ function showValidationError($field) {
 }
 
 // Helper function to add error class to form fields
-function errorClass($field) {
+function errorClass($field)
+{
     global $validationErrors;
     return isset($validationErrors[$field]) ? ' form-control--error' : '';
 }
 
 // Helper to get field value or default
-function getFieldValue($field, $default = '') {
+function getFieldValue($field, $default = '')
+{
     global $defaults;
     if (isset($_POST[$field])) {
         return htmlspecialchars($_POST[$field]);
@@ -365,11 +374,11 @@ function getFieldValue($field, $default = '') {
 
         <form action="" method="POST" enctype="multipart/form-data" class="property-form">
             <!-- Hidden fields for required values that might be missing -->
-            <input type="hidden" name="ref" value="<?= getFieldValue('ref', 'REF-'.date('YmdHis')) ?>">
+            <input type="hidden" name="ref" value="<?= getFieldValue('ref', 'REF-' . date('YmdHis')) ?>">
             <input type="hidden" name="medida_frente" value="<?= getFieldValue('medida_frente', '0') ?>">
             <input type="hidden" name="medida_fundo" value="<?= getFieldValue('medida_fundo', '0') ?>">
             <input type="hidden" name="medida_laterais" value="<?= getFieldValue('medida_laterais', '0') ?>">
-            
+
             <!-- Tabs for better form navigation -->
             <div class="form-tabs">
                 <button type="button" class="form-tab form-tab--active" data-tab="basic">Informações Básicas</button>
@@ -592,9 +601,9 @@ function getFieldValue($field, $default = '') {
                             <select id="id_cidade" name="id_cidade" class="form-control<?= errorClass('id_cidade') ?>" required>
                                 <option value="">Selecione a Cidade</option>
                                 <?php foreach ($cities as $city): ?>
-                                    <option value="<?= $city['id'] ?>" 
-                                            data-state="<?= $city['id_estado'] ?>" 
-                                            <?= getFieldValue('id_cidade') == $city['id'] ? 'selected' : '' ?>>
+                                    <option value="<?= $city['id'] ?>"
+                                        data-state="<?= $city['id_estado'] ?>"
+                                        <?= getFieldValue('id_cidade') == $city['id'] ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($city['nome']) ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -605,17 +614,18 @@ function getFieldValue($field, $default = '') {
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="id_bairro">Bairro</label>
-                            <select id="id_bairro" name="id_bairro" class="form-control">
+                            <label for="id_bairro">Bairro <span class="required">*</span></label>
+                            <select id="id_bairro" name="id_bairro" class="form-control<?= errorClass('id_bairro') ?>" required>
                                 <option value="">Selecione o Bairro</option>
                                 <?php foreach ($neighborhoods as $bairro): ?>
-                                    <option value="<?= $bairro['id'] ?>" 
-                                            data-city="<?= $bairro['id_cidade'] ?>"
-                                            <?= getFieldValue('id_bairro') == $bairro['id'] ? 'selected' : '' ?>>
+                                    <option value="<?= $bairro['id'] ?>"
+                                        data-city="<?= $bairro['id_cidade'] ?>"
+                                        <?= getFieldValue('id_bairro') == $bairro['id'] ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($bairro['bairro']) ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
+                            <?= showValidationError('id_bairro') ?>
                         </div>
                     </div>
 
@@ -693,529 +703,378 @@ function getFieldValue($field, $default = '') {
     </div>
 </div>
 
-<style>
-/* Additional styling for form validation */
-.validation-error {
-    color: #e74c3c;
-    font-size: 12px;
-    margin-top: 5px;
-    display: block;
-}
-
-.form-control--error {
-    border-color: #e74c3c !important;
-    background-color: #fff8f8;
-}
-
-.required {
-    color: #e74c3c;
-    font-weight: bold;
-}
-
-.form-section__desc {
-    color: #777;
-    font-size: 0.9rem;
-    margin-bottom: 1.5rem;
-}
-
-.quick-fill {
-    padding: 15px;
-    background-color: #f8f9fa;
-    border-radius: 6px;
-    margin-bottom: 20px;
-    border-left: 4px solid #4CAF50;
-}
-
-.quick-fill h3 {
-    margin-top: 0;
-    font-size: 1.1rem;
-    color: #333;
-}
-
-.quick-fill p {
-    color: #666;
-    margin-bottom: 10px;
-    font-size: 0.9rem;
-}
-
-.secondary-button {
-    background-color: #6c757d;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    font-size: 0.9rem;
-}
-
-.secondary-button:hover {
-    background-color: #5a6268;
-}
-
-.form-help {
-    font-size: 12px;
-    color: #666;
-    margin-top: 5px;
-}
-
-.primary-button--large {
-    padding: 12px 24px;
-    font-size: 1.1rem;
-}
-
-.form-actions {
-    display: flex;
-    justify-content: space-between;
-    padding-top: 20px;
-    border-top: 1px solid #eee;
-    margin-top: 20px;
-}
-
-/* Debug info styling */
-.debug-info {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    padding: 15px;
-    margin-bottom: 20px;
-    overflow: auto;
-    max-height: 300px;
-}
-
-.debug-info h3 {
-    margin-top: 0;
-    color: #333;
-    font-size: 1rem;
-}
-
-.debug-info pre {
-    margin: 0;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    color: #666;
-    font-size: 0.8rem;
-}
-
-/* Image preview styling */
-.image-preview__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 15px;
-    margin-top: 15px;
-}
-
-.image-preview__item {
-    position: relative;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 10px;
-    background-color: #f9f9f9;
-}
-
-.image-preview__item--primary {
-    border-color: #4caf50;
-    background-color: #f1f8e9;
-}
-
-.image-preview__number {
-    position: absolute;
-    top: 5px;
-    left: 5px;
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    z-index: 1;
-}
-
-.image-preview__primary {
-    position: absolute;
-    bottom: 5px;
-    right: 5px;
-    background-color: #4caf50;
-    color: white;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-size: 10px;
-    z-index: 1;
-}
-
-.image-preview__img {
-    width: 100%;
-    height: 100px;
-    object-fit: cover;
-    border-radius: 3px;
-    display: block;
-}
-
-.image-preview__filename {
-    margin-top: 5px;
-    font-size: 11px;
-    color: #666;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
-}
-
-.image-preview__header {
-    margin-bottom: 10px;
-}
-
-.image-preview__header h4 {
-    margin: 0;
-    font-size: 1rem;
-    color: #333;
-}
-</style>
-
 <script>
-// Tab navigation
-document.addEventListener('DOMContentLoaded', function() {
-    const tabs = document.querySelectorAll('.form-tab');
-    const sections = document.querySelectorAll('.form-section');
-    
-    // Check for validation errors and show appropriate tab
-    const hasValidationErrors = <?= !empty($validationErrors) ? 'true' : 'false' ?>;
-    const validationErrorFields = <?= json_encode(array_keys($validationErrors ?? [])) ?>;
-    
-    if (hasValidationErrors) {
-        // Find which tab contains the first error
-        const fieldToTabMap = {
-            'titulo': 'basic',
-            'valor': 'basic',
-            'para': 'basic',
-            'status': 'basic',
-            'id_estado': 'location',
-            'id_cidade': 'location',
-            'id_bairro': 'location',
-            'corretor_responsavel': 'attributes'
-        };
-        
-        // Get the first error field
-        const firstErrorField = validationErrorFields[0];
-        const tabToActivate = fieldToTabMap[firstErrorField] || 'basic';
-        
-        // Activate the appropriate tab
-        activateTab(tabToActivate);
-        
-        // Focus on the first field with error
-        if (document.getElementById(firstErrorField)) {
-            document.getElementById(firstErrorField).focus();
+    // Tab navigation
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.form-tab');
+        const sections = document.querySelectorAll('.form-section');
+
+        // Check for validation errors and show appropriate tab
+        const hasValidationErrors = <?= !empty($validationErrors) ? 'true' : 'false' ?>;
+        const validationErrorFields = <?= json_encode(array_keys($validationErrors ?? [])) ?>;
+
+        if (hasValidationErrors) {
+            // Find which tab contains the first error
+            const fieldToTabMap = {
+                'titulo': 'basic',
+                'valor': 'basic',
+                'para': 'basic',
+                'status': 'basic',
+                'id_estado': 'location',
+                'id_cidade': 'location',
+                'id_bairro': 'location',
+                'corretor_responsavel': 'attributes'
+            };
+
+            // Get the first error field
+            const firstErrorField = validationErrorFields[0];
+            const tabToActivate = fieldToTabMap[firstErrorField] || 'basic';
+
+            // Activate the appropriate tab
+            activateTab(tabToActivate);
+
+            // Focus on the first field with error
+            if (document.getElementById(firstErrorField)) {
+                document.getElementById(firstErrorField).focus();
+            }
         }
-    }
-    
-    // Tab click handler
-    tabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            const targetTab = this.getAttribute('data-tab');
-            activateTab(targetTab);
-        });
-    });
-    
-    // Function to activate a tab
-    function activateTab(tabName) {
-        // Update active tab
-        tabs.forEach(t => {
-            if (t.getAttribute('data-tab') === tabName) {
-                t.classList.add('form-tab--active');
-            } else {
-                t.classList.remove('form-tab--active');
-            }
-        });
-        
-        // Show corresponding section
-        sections.forEach(section => {
-            if (section.getAttribute('data-section') === tabName) {
-                section.classList.add('form-section--active');
-            } else {
-                section.classList.remove('form-section--active');
-            }
-        });
-    }
-    
-    // Quick Fill Button
-    const quickFillButton = document.getElementById('quickFillButton');
-    if (quickFillButton) {
-        quickFillButton.addEventListener('click', function() {
-            // Fill basic fields
-            document.getElementById('titulo').value = 'Imóvel à venda';
-            document.getElementById('valor').value = 'R$ 100.000,00';
-            
-            // Set selections
-            document.getElementById('para').value = 'venda';
-            document.getElementById('status').value = 'ativo';
-            
-            // Fill details fields with minimum values
-            document.getElementById('quartos').value = '2';
-            document.getElementById('banheiros').value = '1';
-            document.getElementById('area_total').value = '200';
-            document.getElementById('area_construida').value = '100';
-            
-            // Set hidden required fields with defaults
-            const hiddenFields = [
-                { name: 'ref', value: 'REF-' + Date.now() },
-                { name: 'medida_frente', value: '0' },
-                { name: 'medida_fundo', value: '0' },
-                { name: 'medida_laterais', value: '0' }
-            ];
-            
-            hiddenFields.forEach(field => {
-                const input = document.querySelector(`input[name="${field.name}"]`);
-                if (input) input.value = field.value;
+
+        // Tab click handler
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const targetTab = this.getAttribute('data-tab');
+                activateTab(targetTab);
             });
-            
-            // Trigger state selection to populate city and neighborhood
-            const stateSelect = document.getElementById('id_estado');
-            if (stateSelect.options.length > 0) {
-                stateSelect.value = stateSelect.options[1].value; // Select first actual state
-                stateSelect.dispatchEvent(new Event('change'));
-            }
-            
-            alert('Campos preenchidos automaticamente! Revise as informações antes de salvar.');
         });
-    }
-    
-    // Filter cities based on selected state
-    const stateSelect = document.getElementById('id_estado');
-    const citySelect = document.getElementById('id_cidade');
-    const bairroSelect = document.getElementById('id_bairro');
-    
-    // Set initial default values if not already set
-    if (!stateSelect.value && stateSelect.options.length > 1) {
-        stateSelect.value = stateSelect.options[1].value; // Select first actual state
-        // Trigger the change event to update cities
-        stateSelect.dispatchEvent(new Event('change'));
-    }
-    
-    stateSelect.addEventListener('change', function() {
-        const selectedState = this.value;
-        
-        // Filter cities
-        Array.from(citySelect.options).forEach(option => {
-            if (option.value === '' || option.dataset.state === selectedState) {
-                option.style.display = '';
-            } else {
-                option.style.display = 'none';
-            }
-        });
-        
-        // Find first visible city option
-        const firstVisibleCity = Array.from(citySelect.options).find(option => 
-            option.style.display !== 'none' && option.value !== '');
-        
-        // Select first visible city
-        if (firstVisibleCity) {
-            citySelect.value = firstVisibleCity.value;
-        } else {
-            citySelect.value = '';
+
+        // Function to activate a tab
+        function activateTab(tabName) {
+            // Update active tab
+            tabs.forEach(t => {
+                if (t.getAttribute('data-tab') === tabName) {
+                    t.classList.add('form-tab--active');
+                } else {
+                    t.classList.remove('form-tab--active');
+                }
+            });
+
+            // Show corresponding section
+            sections.forEach(section => {
+                if (section.getAttribute('data-section') === tabName) {
+                    section.classList.add('form-section--active');
+                } else {
+                    section.classList.remove('form-section--active');
+                }
+            });
         }
-        
-        // Trigger city change to update neighborhoods
-        citySelect.dispatchEvent(new Event('change'));
-    });
-    
-    // Filter neighborhoods based on selected city
-    citySelect.addEventListener('change', function() {
-        const selectedCity = this.value;
-        
-        // Filter neighborhoods
-        Array.from(bairroSelect.options).forEach(option => {
-            if (option.value === '' || option.dataset.city === selectedCity) {
-                option.style.display = '';
+
+        // Quick Fill Button
+        const quickFillButton = document.getElementById('quickFillButton');
+        if (quickFillButton) {
+            quickFillButton.addEventListener('click', function() {
+                // Fill basic fields
+                document.getElementById('titulo').value = 'Imóvel à venda';
+                document.getElementById('valor').value = 'R$ 100.000,00';
+
+                // Set selections
+                document.getElementById('para').value = 'venda';
+                document.getElementById('status').value = 'ativo';
+
+                // Fill details fields with minimum values
+                document.getElementById('quartos').value = '2';
+                document.getElementById('banheiros').value = '1';
+                document.getElementById('area_total').value = '200';
+                document.getElementById('area_construida').value = '100';
+
+                // Set hidden required fields with defaults
+                const hiddenFields = [{
+                        name: 'ref',
+                        value: 'REF-' + Date.now()
+                    },
+                    {
+                        name: 'medida_frente',
+                        value: '0'
+                    },
+                    {
+                        name: 'medida_fundo',
+                        value: '0'
+                    },
+                    {
+                        name: 'medida_laterais',
+                        value: '0'
+                    }
+                ];
+
+                hiddenFields.forEach(field => {
+                    const input = document.querySelector(`input[name="${field.name}"]`);
+                    if (input) input.value = field.value;
+                });
+
+                // Trigger state selection to populate city and neighborhood
+                const stateSelect = document.getElementById('id_estado');
+                if (stateSelect.options.length > 0) {
+                    stateSelect.value = stateSelect.options[1].value; // Select first actual state
+                    stateSelect.dispatchEvent(new Event('change'));
+                }
+
+                alert('Campos preenchidos automaticamente! Revise as informações antes de salvar.');
+            });
+        }
+
+        // Filter cities based on selected state
+        const stateSelect = document.getElementById('id_estado');
+        const citySelect = document.getElementById('id_cidade');
+        const bairroSelect = document.getElementById('id_bairro');
+
+        // Set initial default values if not already set
+        if (!stateSelect.value && stateSelect.options.length > 1) {
+            stateSelect.value = stateSelect.options[1].value; // Select first actual state
+            // Trigger the change event to update cities
+            stateSelect.dispatchEvent(new Event('change'));
+        }
+
+        stateSelect.addEventListener('change', function() {
+            const selectedState = this.value;
+
+            // Filter cities
+            Array.from(citySelect.options).forEach(option => {
+                if (option.value === '' || option.dataset.state === selectedState) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+
+            // Find first visible city option
+            const firstVisibleCity = Array.from(citySelect.options).find(option =>
+                option.style.display !== 'none' && option.value !== '');
+
+            // Select first visible city
+            if (firstVisibleCity) {
+                citySelect.value = firstVisibleCity.value;
             } else {
-                option.style.display = 'none';
+                citySelect.value = '';
+            }
+
+            // Trigger city change to update neighborhoods
+            citySelect.dispatchEvent(new Event('change'));
+        });
+
+        // Filter neighborhoods based on selected city
+        citySelect.addEventListener('change', function() {
+            const selectedCity = this.value;
+
+            // Filter neighborhoods
+            Array.from(bairroSelect.options).forEach(option => {
+                if (option.value === '' || option.dataset.city === selectedCity) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+
+            // Find first visible neighborhood option
+            const firstVisibleBairro = Array.from(bairroSelect.options).find(option =>
+                option.style.display !== 'none' && option.value !== '');
+
+            // Select first visible neighborhood
+            if (firstVisibleBairro) {
+                bairroSelect.value = firstVisibleBairro.value;
+            } else {
+                bairroSelect.value = '';
             }
         });
-        
-        // Find first visible neighborhood option
-        const firstVisibleBairro = Array.from(bairroSelect.options).find(option => 
-            option.style.display !== 'none' && option.value !== '');
-        
-        // Select first visible neighborhood
-        if (firstVisibleBairro) {
-            bairroSelect.value = firstVisibleBairro.value;
-        } else {
-            bairroSelect.value = '';
-        }
-    });
-    
-    // Image preview
-    const imageInput = document.getElementById('images');
-    const imagePreview = document.getElementById('imagePreview');
-    
-    if (imageInput) {
-        imageInput.addEventListener('change', function() {
-            imagePreview.innerHTML = '';
-            
-            if (this.files.length > 0) {
-                // Create header
-                const header = document.createElement('div');
-                header.className = 'image-preview__header';
-                header.innerHTML = `<h4>Preview das Imagens Selecionadas (${Math.min(this.files.length, 12)} de 12 máximo)</h4>`;
-                imagePreview.appendChild(header);
-                
-                // Create container for images
-                const container = document.createElement('div');
-                container.className = 'image-preview__grid';
-                imagePreview.appendChild(container);
-                
-                for (let i = 0; i < Math.min(this.files.length, 12); i++) {
-                    const file = this.files[i];
-                    
-                    if (file.type.startsWith('image/')) {
-                        const reader = new FileReader();
-                        const imgContainer = document.createElement('div');
-                        imgContainer.className = 'image-preview__item';
-                        
-                        reader.onload = function(e) {
-                            imgContainer.innerHTML = `
+
+        // Image preview
+        const imageInput = document.getElementById('images');
+        const imagePreview = document.getElementById('imagePreview');
+
+        if (imageInput) {
+            imageInput.addEventListener('change', function() {
+                imagePreview.innerHTML = '';
+
+                if (this.files.length > 0) {
+                    // Create header
+                    const header = document.createElement('div');
+                    header.className = 'image-preview__header';
+                    header.innerHTML = `<h4>Preview das Imagens Selecionadas (${Math.min(this.files.length, 12)} de 12 máximo)</h4>`;
+                    imagePreview.appendChild(header);
+
+                    // Create container for images
+                    const container = document.createElement('div');
+                    container.className = 'image-preview__grid';
+                    imagePreview.appendChild(container);
+
+                    for (let i = 0; i < Math.min(this.files.length, 12); i++) {
+                        const file = this.files[i];
+
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            const imgContainer = document.createElement('div');
+                            imgContainer.className = 'image-preview__item';
+
+                            reader.onload = function(e) {
+                                imgContainer.innerHTML = `
                                 <div class="image-preview__number">${i + 1}</div>
                                 <img src="${e.target.result}" alt="Preview" class="image-preview__img">
                                 <div class="image-preview__filename">${file.name}</div>
                             `;
-                            
-                            if (i === 0) {
-                                imgContainer.classList.add('image-preview__item--primary');
-                                imgContainer.innerHTML += '<div class="image-preview__primary">Imagem Principal</div>';
-                            }
-                        };
-                        
-                        reader.readAsDataURL(file);
-                        container.appendChild(imgContainer);
-                    }
-                }
-            }
-        });
-    }
-    
-    // Set default value for price input
-    const moneyInput = document.querySelector('.money-mask');
-    if (moneyInput && !moneyInput.value) {
-        moneyInput.value = 'R$ 0,00';
-    }
-    
-    // Money mask for price input
-    if (moneyInput) {
-        moneyInput.addEventListener('input', function(e) {
-            let value = this.value.replace(/\D/g, '');
-            if (value === '') value = '0';
-            value = (parseInt(value) / 100).toFixed(2);
-            value = value.replace('.', ',');
-            value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-            this.value = 'R$ ' + value;
-        });
-        
-        // Initial formatting if value exists
-        if (moneyInput.value) {
-            let value = moneyInput.value.replace(/\D/g, '');
-            if (value) {
-                if (value.length <= 2) {
-                    value = '0' + value.padStart(2, '0');
-                }
-                value = (parseInt(value) / 100).toFixed(2);
-                value = value.replace('.', ',');
-                value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-                moneyInput.value = 'R$ ' + value;
-            }
-        }
-    }
-    
-    // Phone mask
-    const phoneInput = document.querySelector('.phone-mask');
-    if (phoneInput) {
-        phoneInput.addEventListener('input', function(e) {
-            let value = this.value.replace(/\D/g, '');
-            if (value.length > 11) value = value.substring(0, 11);
-            
-            if (value.length > 6) {
-                this.value = `(${value.substring(0, 2)}) ${value.substring(2, 7)}-${value.substring(7)}`;
-            } else if (value.length > 2) {
-                this.value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
-            } else if (value.length > 0) {
-                this.value = `(${value}`;
-            }
-        });
-    }
-    
-    // Form Validation
-    const form = document.querySelector('.property-form');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            let hasErrors = false;
-            
-            // Validate required fields
-            const requiredFields = [
-                { id: 'titulo', message: 'Título é obrigatório' },
-                { id: 'valor', message: 'Valor deve ser preenchido' },
-                { id: 'id_estado', message: 'Estado é obrigatório' },
-                { id: 'id_cidade', message: 'Cidade é obrigatória' }
-            ];
-            
-            requiredFields.forEach(field => {
-                const element = document.getElementById(field.id);
-                const errorDiv = element.parentNode.querySelector('.validation-error') || 
-                                 document.createElement('div');
-                errorDiv.className = 'validation-error';
-                
-                if (!element.value) {
-                    hasErrors = true;
-                    element.classList.add('form-control--error');
-                    errorDiv.textContent = field.message;
-                    
-                    // Add error message if not already there
-                    if (!element.parentNode.querySelector('.validation-error')) {
-                        element.parentNode.appendChild(errorDiv);
-                    }
-                } else {
-                    element.classList.remove('form-control--error');
-                    if (element.parentNode.contains(errorDiv)) {
-                        element.parentNode.removeChild(errorDiv);
+
+                                if (i === 0) {
+                                    imgContainer.classList.add('image-preview__item--primary');
+                                    imgContainer.innerHTML += '<div class="image-preview__primary">Imagem Principal</div>';
+                                }
+                            };
+
+                            reader.readAsDataURL(file);
+                            container.appendChild(imgContainer);
+                        }
                     }
                 }
             });
-            
-            // Validate valor is greater than zero
-            const valorInput = document.getElementById('valor');
-            if (valorInput) {
-                let valorValue = valorInput.value.replace(/\D/g, '');
-                valorValue = parseInt(valorValue);
-                
-                if (valorValue <= 0) {
-                    hasErrors = true;
-                    valorInput.classList.add('form-control--error');
-                    
-                    const errorDiv = valorInput.parentNode.querySelector('.validation-error') || 
-                                    document.createElement('div');
+        }
+
+        // Set default value for price input
+        const moneyInput = document.querySelector('.money-mask');
+        if (moneyInput && !moneyInput.value) {
+            moneyInput.value = 'R$ 0,00';
+        }
+
+        // Money mask for price input
+        if (moneyInput) {
+            moneyInput.addEventListener('input', function(e) {
+                let value = this.value.replace(/\D/g, '');
+                if (value === '') value = '0';
+                value = (parseInt(value) / 100).toFixed(2);
+                value = value.replace('.', ',');
+                value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                this.value = 'R$ ' + value;
+            });
+
+            // Initial formatting if value exists
+            if (moneyInput.value) {
+                let value = moneyInput.value.replace(/\D/g, '');
+                if (value) {
+                    if (value.length <= 2) {
+                        value = '0' + value.padStart(2, '0');
+                    }
+                    value = (parseInt(value) / 100).toFixed(2);
+                    value = value.replace('.', ',');
+                    value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                    moneyInput.value = 'R$ ' + value;
+                }
+            }
+        }
+
+        // Phone mask
+        const phoneInput = document.querySelector('.phone-mask');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', function(e) {
+                let value = this.value.replace(/\D/g, '');
+                if (value.length > 11) value = value.substring(0, 11);
+
+                if (value.length > 6) {
+                    this.value = `(${value.substring(0, 2)}) ${value.substring(2, 7)}-${value.substring(7)}`;
+                } else if (value.length > 2) {
+                    this.value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
+                } else if (value.length > 0) {
+                    this.value = `(${value}`;
+                }
+            });
+        }
+
+        // Form Validation
+        const form = document.querySelector('.property-form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                let hasErrors = false;
+
+
+                // Validate required fields
+                const requiredFields = [{
+                        id: 'titulo',
+                        message: 'Título é obrigatório'
+                    },
+                    {
+                        id: 'valor',
+                        message: 'Valor deve ser preenchido'
+                    },
+                    {
+                        id: 'id_estado',
+                        message: 'Estado é obrigatório'
+                    },
+                    {
+                        id: 'id_cidade',
+                        message: 'Cidade é obrigatória'
+                    },
+                    {
+                        id: 'id_bairro',
+                        message: 'Bairro é obrigatório'
+                    } // Add this line
+                ];
+
+                requiredFields.forEach(field => {
+                    const element = document.getElementById(field.id);
+                    const errorDiv = element.parentNode.querySelector('.validation-error') ||
+                        document.createElement('div');
                     errorDiv.className = 'validation-error';
-                    errorDiv.textContent = 'Valor deve ser maior que zero';
-                    
-                    if (!valorInput.parentNode.querySelector('.validation-error')) {
-                        valorInput.parentNode.appendChild(errorDiv);
+
+                    if (!element.value) {
+                        hasErrors = true;
+                        element.classList.add('form-control--error');
+                        errorDiv.textContent = field.message;
+
+                        // Add error message if not already there
+                        if (!element.parentNode.querySelector('.validation-error')) {
+                            element.parentNode.appendChild(errorDiv);
+                        }
+                    } else {
+                        element.classList.remove('form-control--error');
+                        if (element.parentNode.contains(errorDiv)) {
+                            element.parentNode.removeChild(errorDiv);
+                        }
+                    }
+                });
+
+                // Validate valor is greater than zero
+                const valorInput = document.getElementById('valor');
+                if (valorInput) {
+                    let valorValue = valorInput.value.replace(/\D/g, '');
+                    valorValue = parseInt(valorValue);
+
+                    if (valorValue <= 0) {
+                        hasErrors = true;
+                        valorInput.classList.add('form-control--error');
+
+                        const errorDiv = valorInput.parentNode.querySelector('.validation-error') ||
+                            document.createElement('div');
+                        errorDiv.className = 'validation-error';
+                        errorDiv.textContent = 'Valor deve ser maior que zero';
+
+                        if (!valorInput.parentNode.querySelector('.validation-error')) {
+                            valorInput.parentNode.appendChild(errorDiv);
+                        }
                     }
                 }
-            }
-            
-            if (hasErrors) {
-                e.preventDefault();
-                // Scroll to the first error
-                const firstError = document.querySelector('.form-control--error');
-                if (firstError) {
-                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    firstError.focus();
+
+                if (hasErrors) {
+                    e.preventDefault();
+                    // Scroll to the first error
+                    const firstError = document.querySelector('.form-control--error');
+                    if (firstError) {
+                        firstError.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                        firstError.focus();
+                    }
                 }
-            }
-        });
-    }
-    
-    // Trigger state change on page load to populate dropdowns
-    if (stateSelect && stateSelect.value) {
-        stateSelect.dispatchEvent(new Event('change'));
-    }
-});
+            });
+        }
+
+        // Trigger state change on page load to populate dropdowns
+        if (stateSelect && stateSelect.value) {
+            stateSelect.dispatchEvent(new Event('change'));
+        }
+    });
 </script>
