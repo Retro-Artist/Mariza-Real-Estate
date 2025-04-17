@@ -70,37 +70,6 @@ foreach ($events as $event) {
     }
 }
 
-// Count reminders for today for notification indicator
-$today = date('Y-m-d');
-try {
-    $stmt = $databaseConnection->prepare(
-        "SELECT COUNT(*) as total FROM sistema_avisos 
-         WHERE DATE(data_inicio) <= :today AND DATE(data_fim) >= :today"
-    );
-    $stmt->bindParam(':today', $today);
-    $stmt->execute();
-    $todayRemindersCount = $stmt->fetch()['total'];
-} catch (PDOException $e) {
-    logError("Error counting today's reminders: " . $e->getMessage());
-    $todayRemindersCount = 0;
-}
-
-// Get today's reminders for notification dropdown
-try {
-    $stmt = $databaseConnection->prepare(
-        "SELECT * FROM sistema_avisos 
-         WHERE DATE(data_inicio) <= :today AND DATE(data_fim) >= :today
-         ORDER BY data_inicio ASC 
-         LIMIT 5"
-    );
-    $stmt->bindParam(':today', $today);
-    $stmt->execute();
-    $todayReminders = $stmt->fetchAll();
-} catch (PDOException $e) {
-    logError("Error fetching today's reminders: " . $e->getMessage());
-    $todayReminders = [];
-}
-
 // Get the 6 most recent reminders
 try {
     $stmt = $databaseConnection->prepare(
@@ -419,71 +388,7 @@ if ($nextMonth > 12) {
             </div>
         </div>
     </div>
-
 </main>
-
-
-   <!-- Add notification indicator to the header via JavaScript -->
-   <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                // Get the user element in the topbar
-                const topbarUser = document.querySelector('.admin-topbar__user');
-
-                // Create the notification indicator
-                const notificationIndicator = document.createElement('div');
-                notificationIndicator.classList.add('notification-indicator');
-                notificationIndicator.innerHTML = `
-                <i class="fas fa-bell"></i>
-                <?php if ($todayRemindersCount > 0): ?>
-                <span class="notification-count"><?= $todayRemindersCount ?></span>
-                <?php endif; ?>
-            `;
-
-                // Create the dropdown
-                const notificationDropdown = document.createElement('div');
-                notificationDropdown.classList.add('notification-dropdown');
-                notificationDropdown.innerHTML = `
-                <div class="notification-dropdown__header">
-                    Lembretes de Hoje
-                </div>
-                <?php if (empty($todayReminders)): ?>
-                <div class="notification-dropdown__item">
-                    <p>Nenhum lembrete para hoje.</p>
-                </div>
-                <?php else: ?>
-                    <?php foreach ($todayReminders as $reminder): ?>
-                    <a href="<?= BASE_URL ?>/admin/index.php?page=Calendar_View&id=<?= $reminder['id'] ?>" class="notification-dropdown__item">
-                        <div class="notification-dropdown__title"><?= htmlspecialchars($reminder['titulo']) ?></div>
-                        <div class="notification-dropdown__meta">
-                            <span><?= $reminder['prioridade'] ?></span>
-                            <span><?= (new DateTime($reminder['data_inicio']))->format('H:i') ?></span>
-                        </div>
-                    </a>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            `;
-
-                // Add click event to toggle dropdown
-                notificationIndicator.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    notificationDropdown.classList.toggle('active');
-                });
-
-                // Close dropdown when clicking outside
-                document.addEventListener('click', function() {
-                    notificationDropdown.classList.remove('active');
-                });
-
-                // Prevent dropdown from closing when clicking inside it
-                notificationDropdown.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                });
-
-                // Append elements to the DOM
-                notificationIndicator.appendChild(notificationDropdown);
-                topbarUser.insertAdjacentElement('beforebegin', notificationIndicator);
-            });
-        </script>
 
 <!-- Define BASE_URL for JavaScript -->
 <script>

@@ -1,41 +1,68 @@
 <?php
-
 ob_start();
 
-// Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Include configuration
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/database.php';
 require_once __DIR__ . '/../includes/functions.php';
 
-// Check if user is logged in - if not, include login page and exit
 if (!isset($_SESSION['admin_id'])) {
     include 'Admin_Login.php';
     exit;
 }
 
-// Enforce page-level permissions
+// Handle admin logout - NEW SECTION
+if (isset($_GET['page']) && $_GET['page'] === 'logout') {
+    // Log the logout attempt for debugging (in development mode only)
+    if (defined('MODE') && MODE === 'Development') {
+        error_log('Logout attempt from user ID: ' . ($_SESSION['admin_id'] ?? 'unknown'));
+    }
+
+    // Unset all session variables
+    $_SESSION = array();
+
+    // If a session cookie is used, destroy that too
+    if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000,
+            $params["path"], $params["domain"],
+            $params["secure"], $params["httponly"]
+        );
+    }
+
+    // Destroy the session
+    session_destroy();
+
+    // Start a new session for the message
+    session_start();
+
+    // Set a logout message
+    $_SESSION['alert_message'] = 'Logout realizado com sucesso!';
+    $_SESSION['alert_type'] = 'success';
+
+    // Redirect to login page
+    header('Location: ' . BASE_URL . '/admin/Admin_Login.php');
+    exit;
+}
+// End of logout handler
+
 $admin_only_pages = ['User_Admin', 'User_Create', 'User_Update', 'User_Delete'];
 $current_page = isset($_GET['page']) ? $_GET['page'] : 'Calendar';
 
-// Check if the current page requires admin privileges
 if (in_array($current_page, $admin_only_pages) && (!isset($_SESSION['admin_level']) || $_SESSION['admin_level'] != '1')) {
-    // Redirect non-admin users who try to access admin-only pages
     $_SESSION['alert_message'] = 'Você não tem permissão para acessar esta página.';
     $_SESSION['alert_type'] = 'error';
     header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar');
     exit;
 }
 
-// If logged in, include admin functions
 require_once __DIR__ . '/../includes/admin_functions.php';
 
-// Process quick reminder creation (from modal)
 if (isset($_POST['action']) && $_POST['action'] === 'quick_create_reminder') {
+    // Calendar quick reminder creation code...
     $formData = [
         'titulo' => trim($_POST['titulo'] ?? ''),
         'descricao' => trim($_POST['descricao'] ?? ''),
@@ -48,45 +75,35 @@ if (isset($_POST['action']) && $_POST['action'] === 'quick_create_reminder') {
         'status' => 'Pendente'
     ];
     
-    // Basic validation
     if (!empty($formData['titulo']) && !empty($formData['data_inicio']) && !empty($formData['data_fim'])) {
-        // Create calendar event
         $newEventId = createCalendarEvent($formData);
         
         if ($newEventId) {
-            // Set success message
             $_SESSION['alert_message'] = 'Lembrete adicionado com sucesso!';
             $_SESSION['alert_type'] = 'success';
         } else {
-            // Set error message
             $_SESSION['alert_message'] = 'Ocorreu um erro ao adicionar o lembrete.';
             $_SESSION['alert_type'] = 'error';
         }
     } else {
-        // Set validation error message
         $_SESSION['alert_message'] = 'Por favor, preencha todos os campos obrigatórios.';
         $_SESSION['alert_type'] = 'error';
     }
     
-    // Get the current month/year from the selected date
     $selectedDate = new DateTime($formData['data_inicio']);
     $month = $selectedDate->format('n');
     $year = $selectedDate->format('Y');
     
-    // Redirect back to calendar with appropriate month/year
     header('Location: ' . BASE_URL . '/admin/index.php?page=Calendar&month=' . $month . '&year=' . $year);
     exit;
 }
 
-// Get the requested page from URL or set default to calendar (instead of dashboard)
 $page = isset($_GET['page']) ? $_GET['page'] : 'Calendar';
 
-// Include header
 include 'Admin_Header.php';
 
-// Routing for admin pages
 switch ($page) {
-    // Calendar pages (now primary)
+    // Calendar pages
     case 'Calendar':
         include 'paginas/Calendar_Admin.php';
         break;
@@ -232,5 +249,4 @@ switch ($page) {
         break;
 }
 
-// Include footer
 include 'Admin_Footer.php';
