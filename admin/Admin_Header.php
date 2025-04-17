@@ -159,6 +159,7 @@ $current_page = isset($page) ? $page : 'Calendar';
                     </a>
                 </div>
             </header>
+            
 
             <!-- Content Area -->
             <div class="admin-content">
