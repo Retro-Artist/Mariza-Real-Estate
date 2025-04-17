@@ -143,41 +143,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $debugInfo .= "Result of createProperty(): " . ($newPropertyId ? "Success with ID: $newPropertyId" : "Failed") . "\n";
 
             if ($newPropertyId) {
-                // Handle image uploads
-                if (!empty($_FILES['images']['name'][0])) {
-                    $uploadDir = __DIR__ . '/../../uploads/imoveis/';
-                    if (!is_dir($uploadDir)) {
-                        mkdir($uploadDir, 0755, true);
+                $code = $propertyData['codigo'];
+                $uploadDir = __DIR__ . '/../../uploads/imoveis/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+
+                $uploadedImages = 0;
+                $uploadErrors = [];
+
+                // Process main image first (will be 01.jpg)
+                if (!empty($_FILES['main_image']['name'])) {
+                    $mainImageTmp = $_FILES['main_image']['tmp_name'];
+                    $mainImageName = $_FILES['main_image']['name'];
+
+                    if ($_FILES['main_image']['error'] === UPLOAD_ERR_OK) {
+                        $filename = $code . '01.jpg'; // Always save as 01.jpg
+
+                        // Process the main image
+                        $result = processImageUpload($mainImageTmp, $uploadDir . $filename);
+                        if ($result) {
+                            $uploadedImages++;
+                            $debugInfo .= "Uploaded main image as $filename\n";
+                        } else {
+                            $uploadErrors[] = "Erro ao processar imagem principal: $mainImageName";
+                        }
+                    } else {
+                        $uploadErrors[] = "Erro no upload da imagem principal: " . $_FILES['main_image']['error'];
                     }
+                } else {
+                    $uploadErrors[] = "Imagem principal não selecionada";
+                }
 
-                    $code = $propertyData['codigo'];
-                    $uploadedImages = 0;
-                    $uploadErrors = [];
-
+                // Now process additional images (will start from 02.jpg)
+                if (!empty($_FILES['images']['name'][0])) {
                     foreach ($_FILES['images']['name'] as $i => $origName) {
                         if ($_FILES['images']['error'][$i] === UPLOAD_ERR_OK) {
                             $tmp = $_FILES['images']['tmp_name'][$i];
-                            $ext = 'jpg'; // Forcing jpg extension as per system design
-                            $filename = $code . sprintf('%02d', $i + 1) . '.' . $ext;
+                            $imageNumber = $i + 2; // Start from 02 since 01 is main image
 
-                            // Process the image - resize if needed
-                            $result = processImageUpload($tmp, $uploadDir . $filename);
-                            if ($result) {
-                                $uploadedImages++;
-                            } else {
-                                $uploadErrors[] = "Erro ao processar imagem $i: $filename";
+                            // Only process up to 11 additional images (total 12 with main image)
+                            if ($imageNumber <= 12) {
+                                $filename = $code . sprintf('%02d', $imageNumber) . '.jpg';
+
+                                // Process the additional image
+                                $result = processImageUpload($tmp, $uploadDir . $filename);
+                                if ($result) {
+                                    $uploadedImages++;
+                                } else {
+                                    $uploadErrors[] = "Erro ao processar imagem $imageNumber: $origName";
+                                }
                             }
                         } else {
                             $uploadErrors[] = "Erro no upload da imagem $i: " . $_FILES['images']['error'][$i];
                         }
                     }
-
-                    // Debug - Capture image upload results
-                    $debugInfo .= "Uploaded $uploadedImages images\n";
-                    if (!empty($uploadErrors)) {
-                        $debugInfo .= "Upload Errors: " . implode(", ", $uploadErrors) . "\n";
-                    }
                 }
+
+                // Debug - Capture image upload results
+                $debugInfo .= "Uploaded total of $uploadedImages images\n";
+                if (!empty($uploadErrors)) {
+                    $debugInfo .= "Upload Errors: " . implode(", ", $uploadErrors) . "\n";
+                }
+
 
                 // Set success message
                 $_SESSION['alert_message'] = "Imóvel cadastrado com sucesso!";
@@ -670,23 +698,39 @@ function getFieldValue($field, $default = '')
                     </div>
                 </div>
 
-                <!-- Images Section -->
+                <!-- Inside the Images Section of the form -->
                 <div class="form-section" data-section="images">
                     <h3 class="form-section__title">Fotos do Imóvel</h3>
-                    <p class="form-section__desc">Adicione até 12 fotos do imóvel</p>
+                    <p class="form-section__desc">Adicione fotos do imóvel para apresentação aos clientes</p>
 
+                    <!-- New separate field for main image -->
                     <div class="form-row">
                         <div class="form-group form-group--large">
-                            <label for="images">Selecione as Fotos</label>
+                            <label for="main_image">Imagem Principal <span class="required">*</span></label>
+                            <input type="file" id="main_image" name="main_image" class="form-control-file" accept="image/*">
+                            <div class="form-help">
+                                <p>Esta imagem será usada como miniatura e como primeira imagem na galeria.</p>
+                                <p>Recomendamos uma imagem de boa qualidade, de preferência na horizontal.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main image preview container -->
+                    <div class="main-image-preview" id="mainImagePreview" style="margin-bottom: 20px;"></div>
+
+                    <!-- Existing field for additional images -->
+                    <div class="form-row" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+                        <div class="form-group form-group--large">
+                            <label for="images">Imagens Adicionais</label>
                             <input type="file" id="images" name="images[]" class="form-control-file" multiple accept="image/*">
                             <div class="form-help">
-                                <p>São permitidas até 12 imagens no formato JPG, PNG ou GIF.</p>
-                                <p>A primeira imagem selecionada será a imagem principal do imóvel.</p>
+                                <p>São permitidas até 11 imagens adicionais no formato JPG, PNG ou GIF.</p>
                                 <p>Tamanho máximo por arquivo: 5MB.</p>
                             </div>
                         </div>
                     </div>
 
+                    <!-- Additional images preview container -->
                     <div class="image-preview" id="imagePreview"></div>
                 </div>
             </div>
@@ -885,27 +929,60 @@ function getFieldValue($field, $default = '')
             }
         });
 
-        // Image preview
-        const imageInput = document.getElementById('images');
-        const imagePreview = document.getElementById('imagePreview');
+        // Main image preview functionality
+        const mainImageInput = document.getElementById('main_image');
+        const mainImagePreview = document.getElementById('mainImagePreview');
 
-        if (imageInput) {
-            imageInput.addEventListener('change', function() {
-                imagePreview.innerHTML = '';
+        if (mainImageInput) {
+            mainImageInput.addEventListener('change', function() {
+                mainImagePreview.innerHTML = '';
+
+                if (this.files && this.files[0]) {
+                    const file = this.files[0];
+
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+
+                        reader.onload = function(e) {
+                            const previewContainer = document.createElement('div');
+                            previewContainer.className = 'main-image-container';
+                            previewContainer.innerHTML = `
+                        <h4 class="preview-title">Imagem Principal</h4>
+                        <div class="main-image-preview__item">
+                            <img src="${e.target.result}" alt="Preview da Imagem Principal" class="main-image-preview__img">
+                            <div class="main-image-preview__filename">${file.name}</div>
+                        </div>
+                    `;
+                            mainImagePreview.appendChild(previewContainer);
+                        };
+
+                        reader.readAsDataURL(file);
+                    }
+                }
+            });
+        }
+
+        // Additional images preview (existing functionality, slightly modified)
+        const additionalImagesInput = document.getElementById('images');
+        const additionalImagesPreview = document.getElementById('imagePreview');
+
+        if (additionalImagesInput) {
+            additionalImagesInput.addEventListener('change', function() {
+                additionalImagesPreview.innerHTML = '';
 
                 if (this.files.length > 0) {
                     // Create header
                     const header = document.createElement('div');
                     header.className = 'image-preview__header';
-                    header.innerHTML = `<h4>Preview das Imagens Selecionadas (${Math.min(this.files.length, 12)} de 12 máximo)</h4>`;
-                    imagePreview.appendChild(header);
+                    header.innerHTML = `<h4>Preview das Imagens Adicionais (${Math.min(this.files.length, 11)} de 11 máximo)</h4>`;
+                    additionalImagesPreview.appendChild(header);
 
                     // Create container for images
                     const container = document.createElement('div');
                     container.className = 'image-preview__grid';
-                    imagePreview.appendChild(container);
+                    additionalImagesPreview.appendChild(container);
 
-                    for (let i = 0; i < Math.min(this.files.length, 12); i++) {
+                    for (let i = 0; i < Math.min(this.files.length, 11); i++) {
                         const file = this.files[i];
 
                         if (file.type.startsWith('image/')) {
@@ -915,15 +992,10 @@ function getFieldValue($field, $default = '')
 
                             reader.onload = function(e) {
                                 imgContainer.innerHTML = `
-                                <div class="image-preview__number">${i + 1}</div>
-                                <img src="${e.target.result}" alt="Preview" class="image-preview__img">
-                                <div class="image-preview__filename">${file.name}</div>
-                            `;
-
-                                if (i === 0) {
-                                    imgContainer.classList.add('image-preview__item--primary');
-                                    imgContainer.innerHTML += '<div class="image-preview__primary">Imagem Principal</div>';
-                                }
+                            <div class="image-preview__number">${i + 2}</div>
+                            <img src="${e.target.result}" alt="Preview" class="image-preview__img">
+                            <div class="image-preview__filename">${file.name}</div>
+                        `;
                             };
 
                             reader.readAsDataURL(file);
@@ -933,6 +1005,7 @@ function getFieldValue($field, $default = '')
                 }
             });
         }
+
 
         // Set default value for price input
         const moneyInput = document.querySelector('.money-mask');
@@ -1012,6 +1085,23 @@ function getFieldValue($field, $default = '')
                         message: 'Bairro é obrigatório'
                     } // Add this line
                 ];
+
+                const mainImageInput = document.getElementById('main_image');
+                if (mainImageInput && (!mainImageInput.files || mainImageInput.files.length === 0)) {
+                    hasErrors = true;
+
+                    const errorDiv = mainImageInput.parentNode.querySelector('.validation-error') ||
+                        document.createElement('div');
+                    errorDiv.className = 'validation-error';
+                    errorDiv.textContent = 'É necessário selecionar uma imagem principal';
+
+                    // Add error message if not already there
+                    if (!mainImageInput.parentNode.querySelector('.validation-error')) {
+                        mainImageInput.parentNode.appendChild(errorDiv);
+                    }
+
+                    mainImageInput.parentNode.querySelector('.form-control-file').classList.add('form-control--error');
+                }
 
                 requiredFields.forEach(field => {
                     const element = document.getElementById(field.id);
