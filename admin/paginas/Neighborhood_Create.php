@@ -160,72 +160,75 @@ if (!$need_redirect) {
     </main>
 
     <!-- Script to handle dynamic city dropdown based on state selection -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const stateSelect = document.getElementById('id_estado');
-            const citySelect = document.getElementById('id_cidade');
+<!-- Script to handle dynamic city dropdown based on state selection -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const stateSelect = document.getElementById('id_estado');
+        const citySelect = document.getElementById('id_cidade');
 
-            // Function to load cities for the selected state
-            function loadCities(stateId) {
-                // If no state selected, disable city dropdown
-                if (!stateId) {
-                    citySelect.innerHTML = '<option value="">Selecione uma Cidade</option>';
-                    citySelect.disabled = true;
-                    return;
-                }
-
-                // Enable city dropdown
+        // Function to load cities for the selected state
+        function loadCities(stateId) {
+            // If no state selected, disable city dropdown
+            if (!stateId) {
+                citySelect.innerHTML = '<option value="">Selecione uma Cidade</option>';
                 citySelect.disabled = true;
-
-                // Show loading indicator
-                citySelect.innerHTML = '<option value="">Carregando...</option>';
-
-                // Make AJAX request to get cities for the selected state
-                fetch('<?= BASE_URL ?>/admin/ajax/get_cidades.php?id_estado=' + stateId)
-                    .then(response => response.json())
-                    .then(data => {
-                        // Check if there was an error
-                        if (data.error) {
-                            console.error('Error loading cities:', data.error);
-                            citySelect.innerHTML = '<option value="">Erro ao carregar cidades</option>';
-                            return;
-                        }
-
-                        // Populate city dropdown with the returned cities
-                        let options = '<option value="">Selecione uma Cidade</option>';
-
-                        if (data.cidades && data.cidades.length > 0) {
-                            data.cidades.forEach(city => {
-                                // Check if this city was previously selected
-                                const selected = <?= empty($formData['id_cidade']) ? '0' : $formData['id_cidade'] ?> == city.id ? 'selected' : '';
-                                options += `<option value="${city.id}" ${selected}>${city.nome}</option>`;
-                            });
-
-                            citySelect.innerHTML = options;
-                            citySelect.disabled = false;
-                        } else {
-                            citySelect.innerHTML = '<option value="">Nenhuma cidade encontrada</option>';
-                            citySelect.disabled = true;
-                        }
-                    })
-                    .catch(error => {
-                        console.error('AJAX Error:', error);
-                        citySelect.innerHTML = '<option value="">Erro ao carregar cidades</option>';
-                        citySelect.disabled = true;
-                    });
+                return;
             }
 
-            // Event listener for state selection change
-            stateSelect.addEventListener('change', function() {
-                loadCities(this.value);
-            });
+            // Enable city dropdown
+            citySelect.disabled = true;
 
-            // If a state is already selected on page load, load its cities
-            if (stateSelect.value) {
-                loadCities(stateSelect.value);
+            // Show loading indicator
+            citySelect.innerHTML = '<option value="">Carregando...</option>';
+
+            // Direct filtering approach - get cities from existing data
+            // This is a fallback approach that doesn't require an AJAX endpoint
+            let citiesData = [];
+            
+            <?php
+            // Output all cities as a JavaScript array with their state IDs
+            try {
+                $allCitiesStmt = $databaseConnection->query("SELECT id, nome, id_estado FROM sistema_cidades ORDER BY nome ASC");
+                $allCities = $allCitiesStmt->fetchAll();
+                echo "citiesData = " . json_encode($allCities) . ";";
+            } catch (PDOException $e) {
+                echo "console.error('Error fetching cities: " . addslashes($e->getMessage()) . "');";
+                echo "citiesData = [];";
             }
+            ?>
+            
+            // Filter cities by state ID
+            const filteredCities = citiesData.filter(city => city.id_estado == stateId);
+            
+            // Populate city dropdown with filtered cities
+            let options = '<option value="">Selecione uma Cidade</option>';
+            
+            if (filteredCities && filteredCities.length > 0) {
+                filteredCities.forEach(city => {
+                    // Check if this city was previously selected
+                    const selected = <?= empty($formData['id_cidade']) ? '0' : $formData['id_cidade'] ?> == city.id ? 'selected' : '';
+                    options += `<option value="${city.id}" ${selected}>${city.nome}</option>`;
+                });
+                
+                citySelect.innerHTML = options;
+                citySelect.disabled = false;
+            } else {
+                citySelect.innerHTML = '<option value="">Nenhuma cidade encontrada</option>';
+                citySelect.disabled = true;
+            }
+        }
+
+        // Event listener for state selection change
+        stateSelect.addEventListener('change', function() {
+            loadCities(this.value);
         });
-    </script>
+
+        // If a state is already selected on page load, load its cities
+        if (stateSelect.value) {
+            loadCities(stateSelect.value);
+        }
+    });
+</script>
 <?php endif; ?>
 
 <?php if ($need_redirect): ?>
