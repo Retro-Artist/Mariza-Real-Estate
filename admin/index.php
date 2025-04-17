@@ -1,16 +1,22 @@
 <?php
-// Start session
-session_start();
-
-// Iniciar output buffering - adicione esta linha no topo de index.php
-ob_start();
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Include configuration
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/database.php';
 require_once __DIR__ . '/../includes/functions.php';
-require_once __DIR__ . '/../includes/admin_functions.php';
 
+// Check if admin is logged in - if not, include login page and exit
+if (!isset($_SESSION['admin_id'])) {
+    include 'Admin_Login.php';
+    exit;
+}
+
+// If logged in, include admin functions
+require_once __DIR__ . '/../includes/admin_functions.php';
 
 // Process quick reminder creation (from modal)
 if (isset($_POST['action']) && $_POST['action'] === 'quick_create_reminder') {
@@ -209,8 +215,6 @@ switch ($page) {
         include 'paginas/Calendar_Admin.php';
         break;
 }
+
 // Include footer
 include 'Admin_Footer.php';
-
-// Liberar o output buffer no final do script
-ob_end_flush();
