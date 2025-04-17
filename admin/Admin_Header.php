@@ -18,10 +18,7 @@ $current_page = isset($page) ? $page : 'Calendar';
 
     <!-- Styles -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/styles.css">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/admin/admin.css">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/admin/calendar-modal.css">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/admin/calendar-days.css">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/admin/alert-notification.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/admin.css">
 
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">

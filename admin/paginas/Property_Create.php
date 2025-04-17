@@ -43,8 +43,34 @@ $defaults = [
     'medida_frente' => '', // Added missing fields
     'medida_fundo' => '',
     'medida_laterais' => '',
-    'ref' => '' // Added missing reference field
+    'ref' => 'REF-' . date('YmdHis') . rand(100, 999) // Generate default REF
 ];
+
+// Define limits for numeric fields to prevent DB overflow errors
+$fieldLimits = [
+    'valor' => ['max' => 999999999.99, 'message' => 'O valor máximo permitido é R$ 999.999.999,99'],
+    'area_total' => ['max' => 9999999, 'message' => 'A área total máxima permitida é 9.999.999'],
+    'area_construida' => ['max' => 9999999, 'message' => 'A área construída máxima permitida é 9.999.999'],
+];
+
+// Function to sanitize and validate numeric inputs
+function sanitizeNumericInput($value, $max = null)
+{
+    // Remove all non-numeric characters except decimal point
+    $value = preg_replace('/[^0-9,.]/', '', $value);
+    // Convert comma to dot for decimal
+    $value = str_replace(',', '.', $value);
+    // Ensure it's a valid number
+    if (!is_numeric($value)) {
+        return 0;
+    }
+    $value = (float)$value;
+    // Apply maximum limit if provided
+    if ($max !== null && $value > $max) {
+        return $max;
+    }
+    return $value;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Debug - Capture all POST data
@@ -55,15 +81,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $validationErrors['titulo'] = 'Título é obrigatório';
     }
 
+    // Generate REF if not provided
+    if (empty($_POST['ref'])) {
+        $_POST['ref'] = 'REF-' . date('YmdHis') . rand(100, 999);
+    }
+
+    // Sanitize and validate numeric values
     // Format currency value (remove R$ and convert comma to dot)
     $valorFormatado = $_POST['valor'] ?? '0';
     $valorFormatado = str_replace('R$ ', '', $valorFormatado);
     $valorFormatado = str_replace('.', '', $valorFormatado);
     $valorFormatado = str_replace(',', '.', $valorFormatado);
-    $valorFormatado = (float)$valorFormatado;
+    $valorFormatado = sanitizeNumericInput($valorFormatado, $fieldLimits['valor']['max']);
 
     if ($valorFormatado <= 0) {
         $validationErrors['valor'] = 'Valor deve ser maior que zero';
+    } else if ($valorFormatado >= $fieldLimits['valor']['max']) {
+        $validationErrors['valor'] = $fieldLimits['valor']['message'];
+    }
+
+    // Validate area fields
+    if (!empty($_POST['area_total'])) {
+        $_POST['area_total'] = sanitizeNumericInput($_POST['area_total'], $fieldLimits['area_total']['max']);
+        if ($_POST['area_total'] >= $fieldLimits['area_total']['max']) {
+            $validationErrors['area_total'] = $fieldLimits['area_total']['message'];
+        }
+    }
+
+    if (!empty($_POST['area_construida'])) {
+        $_POST['area_construida'] = sanitizeNumericInput($_POST['area_construida'], $fieldLimits['area_construida']['max']);
+        if ($_POST['area_construida'] >= $fieldLimits['area_construida']['max']) {
+            $validationErrors['area_construida'] = $fieldLimits['area_construida']['message'];
+        }
     }
 
     // Validate other required fields
@@ -79,13 +128,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $validationErrors['id_cidade'] = 'Cidade é obrigatória';
     }
 
-    // Add this validation for neighborhood
     if (empty($_POST['id_bairro'])) {
         $validationErrors['id_bairro'] = 'Bairro é obrigatório';
     }
 
+    // Validate and sanitize phone number
+    if (!empty($_POST['telefone_anunciante'])) {
+        // Remove all non-numeric characters
+        $phone = preg_replace('/[^0-9]/', '', $_POST['telefone_anunciante']);
+        // Validate phone length
+        if (strlen($phone) < 10 || strlen($phone) > 11) {
+            $validationErrors['telefone_anunciante'] = 'Telefone inválido. Use o formato (XX) XXXXX-XXXX';
+        } else {
+            // Reformat phone to standard format
+            $_POST['telefone_anunciante'] = '(' . substr($phone, 0, 2) . ') ' .
+                (strlen($phone) == 11 ?
+                    substr($phone, 2, 5) . '-' . substr($phone, 7) :
+                    substr($phone, 2, 4) . '-' . substr($phone, 6));
+        }
+    }
+
+    // Validate main image is provided
+    if (empty($_FILES['main_image']['name'])) {
+        $validationErrors['main_image'] = 'A imagem principal é obrigatória';
+    } else if ($_FILES['main_image']['error'] !== UPLOAD_ERR_OK) {
+        $validationErrors['main_image'] = 'Erro ao enviar a imagem principal: ' . $_FILES['main_image']['error'];
+    } else {
+        // Check image size (max 5MB)
+        if ($_FILES['main_image']['size'] > 5 * 1024 * 1024) {
+            $validationErrors['main_image'] = 'A imagem principal deve ter no máximo 5MB';
+        }
+
+        // Check image type
+        $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        if (!in_array($_FILES['main_image']['type'], $allowedTypes)) {
+            $validationErrors['main_image'] = 'Tipo de arquivo não permitido. Use apenas JPG, PNG ou GIF';
+        }
+    }
+
     // Generate a unique code for the property
-    $codigo = date('YmdHis') . rand(100, 999); // Use timestamp + random number for more readable code
+    $codigo = date('YmdHis') . rand(100, 999);
 
     // Current date and time
     $currentDate = date('Y-m-d');
@@ -93,41 +175,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Collect form data
     $propertyData = [
-        'titulo'               => $_POST['titulo'] ?? $defaults['titulo'],
-        'para'                 => strtolower($_POST['para'] ?? $defaults['para']), // Ensure lowercase
-        'id_categoria'         => $_POST['id_categoria'] ?? $defaults['id_categoria'],
-        'id_estado'            => $_POST['id_estado'] ?? $defaults['id_estado'],
-        'id_cidade'            => $_POST['id_cidade'] ?? $defaults['id_cidade'],
-        'id_bairro'            => $_POST['id_bairro'] ?? $defaults['id_bairro'],
+        'titulo'               => trim($_POST['titulo'] ?? $defaults['titulo']),
+        'para'                 => strtolower($_POST['para'] ?? $defaults['para']),
+        'id_categoria'         => (int)($_POST['id_categoria'] ?? $defaults['id_categoria']),
+        'id_estado'            => (int)($_POST['id_estado'] ?? $defaults['id_estado']),
+        'id_cidade'            => (int)($_POST['id_cidade'] ?? $defaults['id_cidade']),
+        'id_bairro'            => (int)($_POST['id_bairro'] ?? $defaults['id_bairro']),
         'valor'                => $valorFormatado,
-        'quartos'              => $_POST['quartos'] ?? $defaults['quartos'],
-        'suites'               => $_POST['suites'] ?? $defaults['suites'],
-        'banheiros'            => $_POST['banheiros'] ?? $defaults['banheiros'],
-        'salas'                => $_POST['salas'] ?? $defaults['salas'],
-        'cozinhas'             => $_POST['cozinhas'] ?? $defaults['cozinhas'],
-        'garagem'              => $_POST['garagem'] ?? $defaults['garagem'],
+        'quartos'              => (int)($_POST['quartos'] ?? $defaults['quartos']),
+        'suites'               => (int)($_POST['suites'] ?? $defaults['suites']),
+        'banheiros'            => (int)($_POST['banheiros'] ?? $defaults['banheiros']),
+        'salas'                => (int)($_POST['salas'] ?? $defaults['salas']),
+        'cozinhas'             => (int)($_POST['cozinhas'] ?? $defaults['cozinhas']),
+        'garagem'              => (int)($_POST['garagem'] ?? $defaults['garagem']),
         'area_servico'         => $_POST['area_servico'] ?? $defaults['area_servico'],
-        'area_total'           => $_POST['area_total'] ?? '',
-        'area_construida'      => $_POST['area_construida'] ?? '',
+        'area_total'           => sanitizeNumericInput($_POST['area_total'] ?? 0),
+        'area_construida'      => sanitizeNumericInput($_POST['area_construida'] ?? 0),
         'und_medida'           => $_POST['und_medida'] ?? $defaults['und_medida'],
-        'endereco'             => $_POST['endereco'] ?? '',
-        'descricao'            => $_POST['descricao'] ?? '',
-        'palavras_chaves'      => $_POST['palavras_chaves'] ?? '',
+        'endereco'             => trim($_POST['endereco'] ?? ''),
+        'descricao'            => trim($_POST['descricao'] ?? ''),
+        'palavras_chaves'      => trim($_POST['palavras_chaves'] ?? ''),
         'codigo'               => $codigo,
-        'ref'                  => $_POST['ref'] ?? $codigo,
+        'ref'                  => trim($_POST['ref'] ?? $_POST['ref']),
         'data'                 => $currentDate,
         'hora'                 => $currentTime,
         'id_usuario'           => $_SESSION['admin_id'],
-        'status'               => strtolower($_POST['status'] ?? $defaults['status']), // Ensure lowercase
+        'status'               => strtolower($_POST['status'] ?? $defaults['status']),
         'destaque'             => isset($_POST['destaque']) ? 1 : 0,
         'classificados'        => 'nao', // Default value for required field
-        'quadra_lote'          => $_POST['quadra_lote'] ?? '',
-        'medida_frente'        => $_POST['medida_frente'] ?? '',
-        'medida_fundo'         => $_POST['medida_fundo'] ?? '',
-        'medida_laterais'      => $_POST['medida_laterais'] ?? '',
-        'nome_anunciante'      => $_POST['nome_anunciante'] ?? '',
-        'telefone_anunciante'  => $_POST['telefone_anunciante'] ?? '',
-        'corretor_responsavel' => $_POST['corretor_responsavel'] ?? $defaults['corretor_responsavel']
+        'quadra_lote'          => trim($_POST['quadra_lote'] ?? ''),
+        'medida_frente'        => trim($_POST['medida_frente'] ?? '0'),
+        'medida_fundo'         => trim($_POST['medida_fundo'] ?? '0'),
+        'medida_laterais'      => trim($_POST['medida_laterais'] ?? '0'),
+        'nome_anunciante'      => trim($_POST['nome_anunciante'] ?? ''),
+        'telefone_anunciante'  => trim($_POST['telefone_anunciante'] ?? ''),
+        'corretor_responsavel' => (int)($_POST['corretor_responsavel'] ?? $defaults['corretor_responsavel'])
     ];
 
     // Debug - Capture processed property data
@@ -171,8 +253,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } else {
                         $uploadErrors[] = "Erro no upload da imagem principal: " . $_FILES['main_image']['error'];
                     }
-                } else {
-                    $uploadErrors[] = "Imagem principal não selecionada";
                 }
 
                 // Now process additional images (will start from 02.jpg)
@@ -205,7 +285,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!empty($uploadErrors)) {
                     $debugInfo .= "Upload Errors: " . implode(", ", $uploadErrors) . "\n";
                 }
-
 
                 // Set success message
                 $_SESSION['alert_message'] = "Imóvel cadastrado com sucesso!";
@@ -402,7 +481,7 @@ function getFieldValue($field, $default = '')
 
         <form action="" method="POST" enctype="multipart/form-data" class="property-form">
             <!-- Hidden fields for required values that might be missing -->
-            <input type="hidden" name="ref" value="<?= getFieldValue('ref', 'REF-' . date('YmdHis')) ?>">
+            <input type="hidden" name="ref" value="<?= getFieldValue('ref', 'REF-' . date('YmdHis') . rand(100, 999)) ?>">
             <input type="hidden" name="medida_frente" value="<?= getFieldValue('medida_frente', '0') ?>">
             <input type="hidden" name="medida_fundo" value="<?= getFieldValue('medida_fundo', '0') ?>">
             <input type="hidden" name="medida_laterais" value="<?= getFieldValue('medida_laterais', '0') ?>">
@@ -588,12 +667,14 @@ function getFieldValue($field, $default = '')
                     <div class="form-row">
                         <div class="form-group">
                             <label for="area_total">Área Total</label>
-                            <input type="text" id="area_total" name="area_total" class="form-control" value="<?= getFieldValue('area_total') ?>">
+                            <input type="text" id="area_total" name="area_total" class="form-control numeric-only<?= errorClass('area_total') ?>" value="<?= getFieldValue('area_total') ?>">
+                            <?= showValidationError('area_total') ?>
                         </div>
 
                         <div class="form-group">
                             <label for="area_construida">Área Construída</label>
-                            <input type="text" id="area_construida" name="area_construida" class="form-control" value="<?= getFieldValue('area_construida') ?>">
+                            <input type="text" id="area_construida" name="area_construida" class="form-control numeric-only<?= errorClass('area_construida') ?>" value="<?= getFieldValue('area_construida') ?>">
+                            <?= showValidationError('area_construida') ?>
                         </div>
                     </div>
 
@@ -679,7 +760,8 @@ function getFieldValue($field, $default = '')
 
                         <div class="form-group">
                             <label for="telefone_anunciante">Telefone do Anunciante</label>
-                            <input type="text" id="telefone_anunciante" name="telefone_anunciante" class="form-control phone-mask" value="<?= getFieldValue('telefone_anunciante') ?>">
+                            <input type="text" id="telefone_anunciante" name="telefone_anunciante" class="form-control phone-mask<?= errorClass('telefone_anunciante') ?>" value="<?= getFieldValue('telefone_anunciante') ?>">
+                            <?= showValidationError('telefone_anunciante') ?>
                         </div>
                     </div>
 
@@ -698,7 +780,7 @@ function getFieldValue($field, $default = '')
                     </div>
                 </div>
 
-                <!-- Inside the Images Section of the form -->
+                <!-- Images Section -->
                 <div class="form-section" data-section="images">
                     <h3 class="form-section__title">Fotos do Imóvel</h3>
                     <p class="form-section__desc">Adicione fotos do imóvel para apresentação aos clientes</p>
@@ -707,10 +789,12 @@ function getFieldValue($field, $default = '')
                     <div class="form-row">
                         <div class="form-group form-group--large">
                             <label for="main_image">Imagem Principal <span class="required">*</span></label>
-                            <input type="file" id="main_image" name="main_image" class="form-control-file" accept="image/*">
+                            <input type="file" id="main_image" name="main_image" class="form-control-file<?= errorClass('main_image') ?>" accept="image/*">
+                            <?= showValidationError('main_image') ?>
                             <div class="form-help">
                                 <p>Esta imagem será usada como miniatura e como primeira imagem na galeria.</p>
                                 <p>Recomendamos uma imagem de boa qualidade, de preferência na horizontal.</p>
+                                <p>Tamanho máximo: 5MB.</p>
                             </div>
                         </div>
                     </div>
@@ -753,6 +837,107 @@ function getFieldValue($field, $default = '')
         const tabs = document.querySelectorAll('.form-tab');
         const sections = document.querySelectorAll('.form-section');
 
+        // Field validation functions
+        const validators = {
+            // Validate currency value
+            valor: function(value) {
+                // Remove formatting
+                let numericValue = value.replace(/[^\d,]/g, '').replace(',', '.');
+                if (parseFloat(numericValue) <= 0) {
+                    return 'Valor deve ser maior que zero';
+                }
+                if (parseFloat(numericValue) > 999999999.99) {
+                    return 'O valor máximo permitido é R$ 999.999.999,99';
+                }
+                return null;
+            },
+
+            // Validate numeric area fields
+            area_total: function(value) {
+                if (value !== '' && isNaN(value.replace(',', '.')) || parseFloat(value.replace(',', '.')) < 0) {
+                    return 'Por favor, informe um valor numérico válido';
+                }
+                if (parseFloat(value.replace(',', '.')) > 9999999) {
+                    return 'A área máxima permitida é 9.999.999';
+                }
+                return null;
+            },
+
+            area_construida: function(value) {
+                if (value !== '' && (isNaN(value.replace(',', '.')) || parseFloat(value.replace(',', '.')) < 0)) {
+                    return 'Por favor, informe um valor numérico válido';
+                }
+                if (parseFloat(value.replace(',', '.')) > 9999999) {
+                    return 'A área máxima permitida é 9.999.999';
+                }
+                return null;
+            },
+
+            // Validate phone number
+            telefone_anunciante: function(value) {
+                if (value === '') return null;
+
+                // Remove all non-numeric characters
+                const phone = value.replace(/\D/g, '');
+                if (phone.length < 10 || phone.length > 11) {
+                    return 'Telefone inválido. Use o formato (XX) XXXXX-XXXX';
+                }
+                return null;
+            }
+        };
+
+        // Apply validation to form fields
+        // Fields to validate on input
+        const fieldsToValidate = [
+            'valor', 'area_total', 'area_construida', 'telefone_anunciante'
+        ];
+
+        fieldsToValidate.forEach(field => {
+            const element = document.getElementById(field);
+            if (element) {
+                element.addEventListener('input', function() {
+                    validateField(field, this.value);
+                });
+
+                // Also validate on blur for good measure
+                element.addEventListener('blur', function() {
+                    validateField(field, this.value);
+                });
+            }
+        });
+
+        // Function to validate a field and show/hide error message
+        function validateField(fieldName, value) {
+            const element = document.getElementById(fieldName);
+            if (!element) return;
+
+            // Validate using appropriate validator
+            if (validators[fieldName]) {
+                const errorMessage = validators[fieldName](value);
+
+                // Get or create error element
+                let errorElement = element.parentNode.querySelector('.validation-error');
+                if (!errorElement && errorMessage) {
+                    errorElement = document.createElement('div');
+                    errorElement.className = 'validation-error';
+                    element.parentNode.appendChild(errorElement);
+                }
+
+                // Show or hide error
+                if (errorMessage) {
+                    element.classList.add('form-control--error');
+                    if (errorElement) {
+                        errorElement.textContent = errorMessage;
+                    }
+                } else {
+                    element.classList.remove('form-control--error');
+                    if (errorElement) {
+                        errorElement.remove();
+                    }
+                }
+            }
+        }
+
         // Check for validation errors and show appropriate tab
         const hasValidationErrors = <?= !empty($validationErrors) ? 'true' : 'false' ?>;
         const validationErrorFields = <?= json_encode(array_keys($validationErrors ?? [])) ?>;
@@ -767,7 +952,11 @@ function getFieldValue($field, $default = '')
                 'id_estado': 'location',
                 'id_cidade': 'location',
                 'id_bairro': 'location',
-                'corretor_responsavel': 'attributes'
+                'area_total': 'details',
+                'area_construida': 'details',
+                'telefone_anunciante': 'attributes',
+                'corretor_responsavel': 'attributes',
+                'main_image': 'images'
             };
 
             // Get the first error field
@@ -947,12 +1136,12 @@ function getFieldValue($field, $default = '')
                             const previewContainer = document.createElement('div');
                             previewContainer.className = 'main-image-container';
                             previewContainer.innerHTML = `
-                        <h4 class="preview-title">Imagem Principal</h4>
-                        <div class="main-image-preview__item">
-                            <img src="${e.target.result}" alt="Preview da Imagem Principal" class="main-image-preview__img">
-                            <div class="main-image-preview__filename">${file.name}</div>
-                        </div>
-                    `;
+        <h4 class="preview-title">Imagem Principal</h4>
+        <div class="main-image-preview__item">
+            <img src="${e.target.result}" alt="Preview da Imagem Principal" class="main-image-preview__img">
+            <div class="main-image-preview__filename">${file.name}</div>
+        </div>
+    `;
                             mainImagePreview.appendChild(previewContainer);
                         };
 
@@ -962,7 +1151,7 @@ function getFieldValue($field, $default = '')
             });
         }
 
-        // Additional images preview (existing functionality, slightly modified)
+        // Additional images preview
         const additionalImagesInput = document.getElementById('images');
         const additionalImagesPreview = document.getElementById('imagePreview');
 
@@ -992,10 +1181,10 @@ function getFieldValue($field, $default = '')
 
                             reader.onload = function(e) {
                                 imgContainer.innerHTML = `
-                            <div class="image-preview__number">${i + 2}</div>
-                            <img src="${e.target.result}" alt="Preview" class="image-preview__img">
-                            <div class="image-preview__filename">${file.name}</div>
-                        `;
+            <div class="image-preview__number">${i + 2}</div>
+            <img src="${e.target.result}" alt="Preview" class="image-preview__img">
+            <div class="image-preview__filename">${file.name}</div>
+        `;
                             };
 
                             reader.readAsDataURL(file);
@@ -1006,17 +1195,22 @@ function getFieldValue($field, $default = '')
             });
         }
 
-
         // Set default value for price input
         const moneyInput = document.querySelector('.money-mask');
         if (moneyInput && !moneyInput.value) {
             moneyInput.value = 'R$ 0,00';
         }
 
-        // Money mask for price input
+        // Enhanced money mask for price input
         if (moneyInput) {
             moneyInput.addEventListener('input', function(e) {
                 let value = this.value.replace(/\D/g, '');
+
+                // Prevent exceeding maximum value
+                if (value.length > 11) { // 999,999,999.99 has 11 digits
+                    value = value.substring(0, 11);
+                }
+
                 if (value === '') value = '0';
                 value = (parseInt(value) / 100).toFixed(2);
                 value = value.replace('.', ',');
@@ -1056,12 +1250,59 @@ function getFieldValue($field, $default = '')
             });
         }
 
+        // Add numeric fields validation
+        const numericInputs = document.querySelectorAll('.numeric-only');
+        if (numericInputs.length > 0) {
+            numericInputs.forEach(input => {
+                input.addEventListener('input', function(e) {
+                    // Allow only numbers and comma
+                    this.value = this.value.replace(/[^0-9,]/g, '');
+
+                    // Ensure only one comma
+                    const commaCount = (this.value.match(/,/g) || []).length;
+                    if (commaCount > 1) {
+                        this.value = this.value.replace(/,/g, function(match, index, string) {
+                            return index === string.indexOf(',') ? ',' : '';
+                        });
+                    }
+
+                    // Validate the field
+                    if (this.id && validators[this.id]) {
+                        validateField(this.id, this.value);
+                    }
+                });
+            });
+        }
+
+
+
         // Form Validation
         const form = document.querySelector('.property-form');
         if (form) {
             form.addEventListener('submit', function(e) {
                 let hasErrors = false;
 
+                // Validate all fields that have validators
+                Object.keys(validators).forEach(fieldName => {
+                    const element = document.getElementById(fieldName);
+                    if (element) {
+                        const errorMessage = validators[fieldName](element.value);
+                        if (errorMessage) {
+                            hasErrors = true;
+                            element.classList.add('form-control--error');
+
+                            // Get or create error element
+                            let errorElement = element.parentNode.querySelector('.validation-error');
+                            if (!errorElement) {
+                                errorElement = document.createElement('div');
+                                errorElement.className = 'validation-error';
+                                element.parentNode.appendChild(errorElement);
+                            }
+
+                            errorElement.textContent = errorMessage;
+                        }
+                    }
+                });
 
                 // Validate required fields
                 const requiredFields = [{
@@ -1083,80 +1324,114 @@ function getFieldValue($field, $default = '')
                     {
                         id: 'id_bairro',
                         message: 'Bairro é obrigatório'
-                    } // Add this line
-                ];
-
-                const mainImageInput = document.getElementById('main_image');
-                if (mainImageInput && (!mainImageInput.files || mainImageInput.files.length === 0)) {
-                    hasErrors = true;
-
-                    const errorDiv = mainImageInput.parentNode.querySelector('.validation-error') ||
-                        document.createElement('div');
-                    errorDiv.className = 'validation-error';
-                    errorDiv.textContent = 'É necessário selecionar uma imagem principal';
-
-                    // Add error message if not already there
-                    if (!mainImageInput.parentNode.querySelector('.validation-error')) {
-                        mainImageInput.parentNode.appendChild(errorDiv);
                     }
-
-                    mainImageInput.parentNode.querySelector('.form-control-file').classList.add('form-control--error');
-                }
+                ];
 
                 requiredFields.forEach(field => {
                     const element = document.getElementById(field.id);
-                    const errorDiv = element.parentNode.querySelector('.validation-error') ||
-                        document.createElement('div');
-                    errorDiv.className = 'validation-error';
-
-                    if (!element.value) {
+                    if (element && !element.value) {
                         hasErrors = true;
                         element.classList.add('form-control--error');
-                        errorDiv.textContent = field.message;
 
-                        // Add error message if not already there
-                        if (!element.parentNode.querySelector('.validation-error')) {
-                            element.parentNode.appendChild(errorDiv);
+                        // Get or create error element
+                        let errorElement = element.parentNode.querySelector('.validation-error');
+                        if (!errorElement) {
+                            errorElement = document.createElement('div');
+                            errorElement.className = 'validation-error';
+                            element.parentNode.appendChild(errorElement);
                         }
-                    } else {
-                        element.classList.remove('form-control--error');
-                        if (element.parentNode.contains(errorDiv)) {
-                            element.parentNode.removeChild(errorDiv);
-                        }
+
+                        errorElement.textContent = field.message;
                     }
                 });
 
-                // Validate valor is greater than zero
-                const valorInput = document.getElementById('valor');
-                if (valorInput) {
-                    let valorValue = valorInput.value.replace(/\D/g, '');
-                    valorValue = parseInt(valorValue);
+                // Validate main image
+                const mainImageInput = document.getElementById('main_image');
+                if (mainImageInput && (!mainImageInput.files || mainImageInput.files.length === 0)) {
+                    hasErrors = true;
+                    mainImageInput.classList.add('form-control--error');
 
-                    if (valorValue <= 0) {
+                    // Get or create error element
+                    let errorElement = mainImageInput.parentNode.querySelector('.validation-error');
+                    if (!errorElement) {
+                        errorElement = document.createElement('div');
+                        errorElement.className = 'validation-error';
+                        mainImageInput.parentNode.appendChild(errorElement);
+                    }
+
+                    errorElement.textContent = 'A imagem principal é obrigatória';
+                } else if (mainImageInput && mainImageInput.files.length > 0) {
+                    // Validate image size and type
+                    const file = mainImageInput.files[0];
+                    if (file.size > 5 * 1024 * 1024) { // 5MB
                         hasErrors = true;
-                        valorInput.classList.add('form-control--error');
 
-                        const errorDiv = valorInput.parentNode.querySelector('.validation-error') ||
-                            document.createElement('div');
-                        errorDiv.className = 'validation-error';
-                        errorDiv.textContent = 'Valor deve ser maior que zero';
-
-                        if (!valorInput.parentNode.querySelector('.validation-error')) {
-                            valorInput.parentNode.appendChild(errorDiv);
+                        let errorElement = mainImageInput.parentNode.querySelector('.validation-error');
+                        if (!errorElement) {
+                            errorElement = document.createElement('div');
+                            errorElement.className = 'validation-error';
+                            mainImageInput.parentNode.appendChild(errorElement);
                         }
+
+                        errorElement.textContent = 'A imagem principal deve ter no máximo 5MB';
+                    }
+
+                    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                    if (!allowedTypes.includes(file.type)) {
+                        hasErrors = true;
+
+                        let errorElement = mainImageInput.parentNode.querySelector('.validation-error');
+                        if (!errorElement) {
+                            errorElement = document.createElement('div');
+                            errorElement.className = 'validation-error';
+                            mainImageInput.parentNode.appendChild(errorElement);
+                        }
+
+                        errorElement.textContent = 'Tipo de arquivo não permitido. Use apenas JPG, PNG ou GIF';
                     }
                 }
 
                 if (hasErrors) {
                     e.preventDefault();
+
+                    // Show alert message at the top of the form
+                    const alertMessage = document.createElement('div');
+                    alertMessage.className = 'alert-message alert-message--error';
+                    alertMessage.textContent = 'Por favor, corrija os erros no formulário antes de continuar.';
+
+                    // Insert at the top of the form
+                    const firstElement = form.firstChild;
+                    form.insertBefore(alertMessage, firstElement);
+
+                    // Scroll to the top of the form
+                    alertMessage.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+
+                    // Remove the alert after 5 seconds
+                    setTimeout(() => {
+                        alertMessage.remove();
+                    }, 5000);
+
                     // Scroll to the first error
                     const firstError = document.querySelector('.form-control--error');
                     if (firstError) {
-                        firstError.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'center'
-                        });
-                        firstError.focus();
+                        // Find which tab contains the error
+                        let section = firstError.closest('.form-section');
+                        if (section) {
+                            let tabId = section.getAttribute('data-section');
+                            activateTab(tabId);
+
+                            // Wait a bit for tab to activate then scroll to error
+                            setTimeout(() => {
+                                firstError.scrollIntoView({
+                                    behavior: 'smooth',
+                                    block: 'center'
+                                });
+                                firstError.focus();
+                            }, 100);
+                        }
                     }
                 }
             });
