@@ -166,8 +166,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label for="nivel">Nível de Acesso <span class="required">*</span></label>
                         <select id="nivel" name="nivel" class="form-control" required
                             <?= ($userId === $_SESSION['admin_id'] && ($user['nivel'] === 'Administrador' || $user['nivel'] == '1')) ? 'disabled' : '' ?>>
-                            <option value="0" <?= $formData['nivel'] === '0' || $formData['nivel'] === 'Editor' ? 'selected' : '' ?>>Editor</option>
-                            <option value="1" <?= $formData['nivel'] === '1' || $formData['nivel'] === 'Administrador' ? 'selected' : '' ?>>Administrador</option>
+                            <option value="2" <?= $formData['nivel'] === '2' || $formData['nivel'] === '2' ? 'selected' : '' ?>>Editor</option>
+                            <option value="1" <?= $formData['nivel'] === '1' || $formData['nivel'] === '1' ? 'selected' : '' ?>>Administrador</option>
                         </select>
 
                         <?php if ($userId === $_SESSION['admin_id'] && ($user['nivel'] === 'Administrador' || $user['nivel'] == '1')): ?>

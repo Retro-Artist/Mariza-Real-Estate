@@ -130,8 +130,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="form-group">
                         <label for="nivel">Nível de Acesso <span class="required">*</span></label>
                         <select id="nivel" name="nivel" class="form-control" required>
-                            <option value="Editor" <?= $formData['nivel'] === 'Editor' ? 'selected' : '' ?>>Editor</option>
-                            <option value="Administrador" <?= $formData['nivel'] === 'Administrador' ? 'selected' : '' ?>>Administrador</option>
+                            <option value="2" <?= $formData['nivel'] === '2' ? 'selected' : '' ?>>Editor</option>
+                            <option value="1" <?= $formData['nivel'] === '1' ? 'selected' : '' ?>>Administrador</option>
                         </select>
                         <div class="form-text">
                             <strong>Editor:</strong> Acesso limitado ao gerenciamento de imóveis, clientes e calendário.<br>

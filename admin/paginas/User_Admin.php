@@ -52,8 +52,8 @@ $totalPages = $usersData['totalPages'];
                     <label for="nivel">Nível de Acesso</label>
                     <select id="nivel" name="nivel" class="form-control">
                         <option value="">Todos</option>
-                        <option value="Administrador" <?= $nivelFilter === 'Administrador' ? 'selected' : '' ?>>Administrador</option>
-                        <option value="Editor" <?= $nivelFilter === 'Editor' ? 'selected' : '' ?>>Editor</option>
+                        <option value="1" <?= $nivelFilter === '1' ? 'selected' : '' ?>>Administrador</option>
+                        <option value="2" <?= $nivelFilter === '2' ? 'selected' : '' ?>>Editor</option>
                     </select>
                 </div>
 
@@ -87,7 +87,7 @@ $totalPages = $usersData['totalPages'];
                                 <td>
                                     <?php if ($user['nivel'] === '1'): ?>
                                         <span class="badge badge--blue">Administrador</span>
-                                    <?php elseif ($user['nivel'] === '0'): ?>
+                                    <?php elseif ($user['nivel'] === '2'): ?>
                                         <span class="badge badge--green">Editor</span>
                                     <?php else: ?>
                                         <?= htmlspecialchars($user['nivel']) ?>
