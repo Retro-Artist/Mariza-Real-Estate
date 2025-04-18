@@ -6,8 +6,12 @@ RewriteCond %{REQUEST_URI} ^/admin(/.*)?$ [NC]
 RewriteRule ^admin(/.*)?$ admin/index.php [L,QSA]
 
 # Se o arquivo ou diretório não existir, continuar com as regras
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
 
 # Redirecionar todas as solicitações para index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php [L,QSA]
+RewriteCond %{HTTP_HOST} ^imobiliariacasadebarro\.com\.br$ [OR]
+RewriteCond %{HTTP_HOST} ^www\.imobiliariacasadebarro\.com\.br$
+RewriteRule ^/?$ "https\:\/\/marizamarquezanimoveis\.com\/" [R=301,L]
+

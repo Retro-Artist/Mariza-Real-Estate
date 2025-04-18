@@ -15,9 +15,7 @@ function connectDatabase() {
         );
         return $pdo;
     } catch (PDOException $e) {
-        // Log error
-        logError("Database connection failed: " . $e->getMessage());
-        
+
         // For development, you might want to see the actual error
         if (MODE === 'Development') {
             echo "Connection failed: " . $e->getMessage();

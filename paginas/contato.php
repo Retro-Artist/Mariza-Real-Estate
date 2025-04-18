@@ -1,21 +1,23 @@
 <?php
+// Include security functions
+require_once __DIR__ . '/../includes/security_functions.php';
+
 // Processar o formulário de contato
 $message = '';
 $messageClass = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nome = trim($_POST['nome'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $telefone = trim($_POST['telefone'] ?? '');
-    $mensagem = trim($_POST['mensagem'] ?? '');
+    // Process form with security checks
+    $formResult = processSecureForm($_POST, 'contato');
     
-    if (empty($nome) || empty($email) || empty($mensagem)) {
-        $message = 'Por favor, preencha todos os campos obrigatórios.';
-        $messageClass = 'error';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $message = 'Por favor, informe um email válido.';
-        $messageClass = 'error';
-    } else {
+    if ($formResult['success']) {
+        // Get sanitized data
+        $sanitizedData = $formResult['data'];
+        $nome = $sanitizedData['nome'];
+        $email = $sanitizedData['email'];
+        $telefone = $sanitizedData['telefone'] ?? '';
+        $mensagem = $sanitizedData['mensagem'] ?? '';
+        
         try {
             // Inserir o contato na tabela sistema_interacao
             $data = date('Y-m-d');
@@ -48,15 +50,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = 'Obrigado pelo seu contato! Retornaremos em breve.';
             $messageClass = 'success';
             
+            // Log successful submission
+            logSecurityEvent('CONTACT', 'Successful contact form submission', [
+                'email' => $email,
+                'name' => $nome
+            ]);
+            
             // Reset form fields after successful submission
             $nome = $email = $telefone = $mensagem = '';
         } catch (PDOException $e) {
             logError("Error saving contact form: " . $e->getMessage());
+            logSecurityEvent('ERROR', 'Database error on contact form', [
+                'error' => $e->getMessage()
+            ]);
             $message = 'Ocorreu um erro ao enviar sua mensagem. Por favor, tente novamente.';
             $messageClass = 'error';
         }
+    } else {
+        // Display error message from security validation
+        $message = $formResult['message'];
+        $messageClass = 'error';
     }
 }
+
+// Generate CSRF token for the form
+$csrfToken = generateCSRFToken();
 ?>
 
 <!-------------------Contato Section-------------------->
@@ -135,29 +153,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <!-- Formulário -->
             <div class="contato-section__form-container">
                 <form action="<?= BASE_URL ?>/contato" method="POST" class="contato-section__form">
+                    <!-- CSRF Protection -->
+                    <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                    
                     <div class="form-row">
                         <div class="form-group">
                             <label for="nome">Seu Nome <span class="required">*</span></label>
                             <input type="text" id="nome" name="nome" required class="form-control" 
-                                   value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>">
+                                   value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>" maxlength="100">
                         </div>
                         
                         <div class="form-group">
                             <label for="email">Seu Email <span class="required">*</span></label>
                             <input type="email" id="email" name="email" required class="form-control" 
-                                   value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+                                   value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" maxlength="100">
                         </div>
                     </div>
                     
                     <div class="form-group">
                         <label for="telefone">Seu Telefone</label>
                         <input type="tel" id="telefone" name="telefone" class="form-control" 
-                               value="<?= htmlspecialchars($_POST['telefone'] ?? '') ?>">
+                               value="<?= htmlspecialchars($_POST['telefone'] ?? '') ?>" maxlength="20">
                     </div>
                     
                     <div class="form-group">
                         <label for="mensagem">Sua Mensagem <span class="required">*</span></label>
-                        <textarea id="mensagem" name="mensagem" required class="form-control" rows="5"><?= htmlspecialchars($_POST['mensagem'] ?? '') ?></textarea>
+                        <textarea id="mensagem" name="mensagem" required class="form-control" rows="5" maxlength="1000"><?= htmlspecialchars($_POST['mensagem'] ?? '') ?></textarea>
                     </div>
                     
                     <div class="form-group">
