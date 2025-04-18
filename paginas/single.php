@@ -1,7 +1,4 @@
 <?php
-// Include security functions (if not already included)
-require_once __DIR__ . '/../includes/security_functions.php';
-
 // Obter o ID do imóvel da URL
 $imovel_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
@@ -38,21 +35,19 @@ $mensagem_padrao = "Olá, gostaria de saber mais informações sobre o imóvel: 
 $message = '';
 $messageClass = '';
 
-// Generate CSRF token for the form
-$csrfToken = generateCSRFToken();
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Process form with security checks
-    $formResult = processSecureForm($_POST, 'property_contact');
+    $nome = trim($_POST['nome'] ?? '');
+    $telefone = trim($_POST['telefone'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $mensagem = trim($_POST['mensagem'] ?? '');
     
-    if ($formResult['success']) {
-        // Get sanitized data
-        $sanitizedData = $formResult['data'];
-        $nome = $sanitizedData['nome'];
-        $telefone = $sanitizedData['telefone'] ?? '';
-        $email = $sanitizedData['email'];
-        $mensagem = $sanitizedData['mensagem'] ?? $mensagem_padrao;
-        
+    if (empty($nome) || empty($telefone) || empty($email)) {
+        $message = 'Por favor, preencha todos os campos obrigatórios.';
+        $messageClass = 'error';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $message = 'Por favor, informe um email válido.';
+        $messageClass = 'error';
+    } else {
         try {
             // Inserir o contato na tabela sistema_interacao
             $data = date('Y-m-d');
@@ -84,13 +79,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $stmt->execute();
             
-            // Log successful submission
-            logSecurityEvent('PROPERTY_CONTACT', 'Successful property contact form submission', [
-                'property_id' => $imovel_id,
-                'email' => $email,
-                'name' => $nome
-            ]);
-            
             // Mostrar mensagem de sucesso
             $message = 'Obrigado pelo seu contato! Retornaremos em breve.';
             $messageClass = 'success';
@@ -100,17 +88,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $mensagem = $mensagem_padrao;
         } catch (PDOException $e) {
             logError("Error saving property contact form: " . $e->getMessage());
-            logSecurityEvent('ERROR', 'Database error on property contact form', [
-                'property_id' => $imovel_id,
-                'error' => $e->getMessage()
-            ]);
             $message = 'Ocorreu um erro ao enviar sua mensagem. Por favor, tente novamente.';
             $messageClass = 'error';
         }
-    } else {
-        // Display error message from security validation
-        $message = $formResult['message'];
-        $messageClass = 'error';
     }
 }
 ?>
@@ -181,7 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 
                 <div class="property-info__ref">
-                    <p>Referência do Imóvel - <?= htmlspecialchars($imovel['ref'] ?? '') ?></p>
+                    <p>REF: <?= $imovel_id ?></p>
                 </div>
                 
                 <!-- Características -->
@@ -257,58 +237,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
         
-       <div class="property-sidebar">
-    <!-- Informações do Imóvel (Sidebar) -->
-    <div class="property-sidebar__info">
-        <h2>Informações do Imóvel</h2>
-        <p>Quer receber mais informações deste imóvel? Entre em contato agora mesmo!</p>
-        
-        <?php if ($message): ?>
-            <div class="message <?= $messageClass ?>">
-                <?= htmlspecialchars($message) ?>
+        <!-- Sidebar -->
+        <div class="property-sidebar">
+            <!-- Informações do Imóvel (Sidebar) -->
+            <div class="property-sidebar__info">
+                <h2>Informações do Imóvel</h2>
+                <p>Quer receber mais informações deste imóvel? Entre em contato agora mesmo!</p>
+                
+                <?php if ($message): ?>
+                    <div class="message <?= $messageClass ?>">
+                        <?= htmlspecialchars($message) ?>
+                    </div>
+                <?php endif; ?>
+                
+                <!-- Formulário de Contato -->
+                <form action="" method="POST" class="property-contact-form">
+                    <div class="form-group">
+                        <input type="text" name="nome" placeholder="Seu Nome" required class="form-control"
+                               value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>">
+                    </div>
+                    
+                    <div class="form-group">
+                        <input type="tel" name="telefone" placeholder="Seu Telefone" required class="form-control"
+                               value="<?= htmlspecialchars($_POST['telefone'] ?? '') ?>">
+                    </div>
+                    
+                    <div class="form-group">
+                        <input type="email" name="email" placeholder="Seu Email" required class="form-control"
+                               value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+                    </div>
+                    
+                    <div class="form-group">
+                        <textarea name="mensagem" placeholder="Sua Mensagem" class="form-control" rows="5"><?= htmlspecialchars($_POST['mensagem'] ?? $mensagem_padrao) ?></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="primary-button property-contact-form__submit">ENVIAR</button>
+                    </div>
+                </form>
+                
+                <!-- Contato WhatsApp -->
+                <div class="property-whatsapp">
+                    <h3>Consultar Disponibilidade</h3>
+                    <a href="https://api.whatsapp.com/send?phone=<?= WHATSAPP_NUMBER ?>&text=<?= urlencode($mensagem_padrao) ?>" 
+                       class="whatsapp-button" target="_blank">
+                        <i class="fab fa-whatsapp"></i> CONTATO VIA WHATSAPP
+                    </a>
+                </div>
             </div>
-        <?php endif; ?>
-        
-        <!-- Formulário de Contato -->
-        <form action="" method="POST" class="property-contact-form">
-            <!-- CSRF Protection -->
-            <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
-            
-            <div class="form-group">
-                <input type="text" name="nome" placeholder="Seu Nome" required class="form-control"
-                       value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>" maxlength="100">
-            </div>
-            
-            <div class="form-group">
-                <input type="tel" name="telefone" placeholder="Seu Telefone" required class="form-control"
-                       value="<?= htmlspecialchars($_POST['telefone'] ?? '') ?>" maxlength="20">
-            </div>
-            
-            <div class="form-group">
-                <input type="email" name="email" placeholder="Seu Email" required class="form-control"
-                       value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" maxlength="100">
-            </div>
-            
-            <div class="form-group">
-                <textarea name="mensagem" placeholder="Sua Mensagem" class="form-control" rows="5" maxlength="1000"><?= htmlspecialchars($_POST['mensagem'] ?? $mensagem_padrao) ?></textarea>
-            </div>
-            
-            <div class="form-group">
-                <button type="submit" class="primary-button property-contact-form__submit">ENVIAR</button>
-            </div>
-        </form>
-        
-        <!-- Contato WhatsApp -->
-        <div class="property-whatsapp">
-            <h3>Consultar Disponibilidade</h3>
-            <a href="https://api.whatsapp.com/send?phone=<?= WHATSAPP_NUMBER ?>&text=<?= urlencode($mensagem_padrao) ?>" 
-               class="whatsapp-button" target="_blank">
-                <i class="fab fa-whatsapp"></i> CONTATO VIA WHATSAPP
-            </a>
         </div>
-    </div>
-</div>
-        
     </div>
 </section>
 
