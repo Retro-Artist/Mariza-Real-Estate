@@ -316,7 +316,7 @@ function updateProperty(int $propertyId, array $propertyData): bool
             $propertyData['palavras_chaves'] = $propertyData['titulo'] . ' ' . $propertyData['descricao'];
         }
 
-        // Update property
+        // Update property - only include fields that actually exist in the table
         $sql = "UPDATE sistema_imoveis SET
                     titulo = :titulo,
                     para = :para,
@@ -337,15 +337,10 @@ function updateProperty(int $propertyId, array $propertyData): bool
                     und_medida = :und_medida,
                     endereco = :endereco,
                     descricao = :descricao,
-                    ref = :ref,
                     codigo = :codigo,
                     status = :status,
                     destaque = :destaque,
-                    classificados = :classificados,
                     quadra_lote = :quadra_lote,
-                    medida_frente = :medida_frente,
-                    medida_fundo = :medida_fundo,
-                    medida_laterais = :medida_laterais,
                     corretor_responsavel = :corretor_responsavel,
                     nome_anunciante = :nome_anunciante,
                     telefone_anunciante = :telefone_anunciante,
@@ -357,10 +352,10 @@ function updateProperty(int $propertyId, array $propertyData): bool
         // Bind all parameters
         $stmt->bindParam(':titulo', $propertyData['titulo']);
         $stmt->bindParam(':para', $propertyData['para']);
-        $stmt->bindParam(':id_categoria', $propertyData['id_categoria']);
-        $stmt->bindParam(':id_estado', $propertyData['id_estado']);
-        $stmt->bindParam(':id_cidade', $propertyData['id_cidade']);
-        $stmt->bindParam(':id_bairro', $propertyData['id_bairro']);
+        $stmt->bindParam(':id_categoria', $propertyData['id_categoria'], PDO::PARAM_INT);
+        $stmt->bindParam(':id_estado', $propertyData['id_estado'], PDO::PARAM_INT);
+        $stmt->bindParam(':id_cidade', $propertyData['id_cidade'], PDO::PARAM_INT);
+        $stmt->bindParam(':id_bairro', $propertyData['id_bairro'], PDO::PARAM_INT);
         $stmt->bindParam(':valor', $propertyData['valor']);
         $stmt->bindParam(':quartos', $propertyData['quartos']);
         $stmt->bindParam(':suites', $propertyData['suites']);
@@ -374,24 +369,27 @@ function updateProperty(int $propertyId, array $propertyData): bool
         $stmt->bindParam(':und_medida', $propertyData['und_medida']);
         $stmt->bindParam(':endereco', $propertyData['endereco']);
         $stmt->bindParam(':descricao', $propertyData['descricao']);
-        $stmt->bindParam(':ref', $propertyData['ref']);
         $stmt->bindParam(':codigo', $propertyData['codigo']);
         $stmt->bindParam(':status', $propertyData['status']);
-        $stmt->bindParam(':destaque', $propertyData['destaque']);
-        $stmt->bindParam(':classificados', $propertyData['classificados']);
+        $stmt->bindParam(':destaque', $propertyData['destaque'], PDO::PARAM_INT);
         $stmt->bindParam(':quadra_lote', $propertyData['quadra_lote']);
-        $stmt->bindParam(':medida_frente', $propertyData['medida_frente']);
-        $stmt->bindParam(':medida_fundo', $propertyData['medida_fundo']);
-        $stmt->bindParam(':medida_laterais', $propertyData['medida_laterais']);
-        $stmt->bindParam(':corretor_responsavel', $propertyData['corretor_responsavel']);
+        $stmt->bindParam(':corretor_responsavel', $propertyData['corretor_responsavel'], PDO::PARAM_INT);
         $stmt->bindParam(':nome_anunciante', $propertyData['nome_anunciante']);
         $stmt->bindParam(':telefone_anunciante', $propertyData['telefone_anunciante']);
         $stmt->bindParam(':palavras_chaves', $propertyData['palavras_chaves']);
-        $stmt->bindParam(':id', $propertyId);
+        $stmt->bindParam(':id', $propertyId, PDO::PARAM_INT);
 
-        return $stmt->execute();
+        $result = $stmt->execute();
+        
+        if (!$result) {
+            // Log the error details
+            $errorInfo = $stmt->errorInfo();
+            logError("SQL Error updating property: " . print_r($errorInfo, true));
+        }
+        
+        return $result;
     } catch (PDOException $e) {
-        logError("Error updating property: " . $e->getMessage());
+        logError("Exception updating property: " . $e->getMessage() . "\nData: " . print_r($propertyData, true));
         return false;
     }
 }

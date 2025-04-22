@@ -28,53 +28,60 @@ if (!$property) {
 }
 
 // Fetch data for selects
-$categories        = getAdminCategories();
-$statesStmt        = $databaseConnection->query("SELECT * FROM sistema_estados ORDER BY nome");
-$states            = $statesStmt->fetchAll();
-$cities            = getAllCities();
-$neighborhoods     = getAllBairros();
-$usersResult       = getAdminUsers([], 1, PHP_INT_MAX);
-$users             = $usersResult['users'];
+$categories = getAdminCategories();
+$statesStmt = $databaseConnection->query("SELECT * FROM sistema_estados ORDER BY nome");
+$states = $statesStmt->fetchAll();
+$cities = getAllCities();
+$neighborhoods = getAllBairros();
+$usersResult = getAdminUsers([], 1, PHP_INT_MAX);
+$users = $usersResult['users'];
 
 $error = null;
 $success = null;
 $validationErrors = [];
 $debugInfo = ''; // For capturing debug information
 
-// Default values from the property data
+// Default values from the property data - ensure all required fields have values
 $defaults = [
-    'titulo' => $property['titulo'],
-    'para' => $property['para'],
-    'id_categoria' => $property['id_categoria'],
-    'id_estado' => $property['id_estado'],
-    'id_cidade' => $property['id_cidade'],
-    'id_bairro' => $property['id_bairro'],
-    'valor' => number_format($property['valor'], 2, ',', '.'),
-    'quartos' => $property['quartos'],
-    'suites' => $property['suites'],
-    'banheiros' => $property['banheiros'],
-    'salas' => $property['salas'],
-    'cozinhas' => $property['cozinhas'],
-    'garagem' => $property['garagem'],
-    'area_servico' => $property['area_servico'],
-    'und_medida' => $property['und_medida'],
-    'status' => $property['status'],
-    'corretor_responsavel' => $property['corretor_responsavel'],
-    'area_total' => $property['area_total'],
-    'area_construida' => $property['area_construida'],
-    'endereco' => $property['endereco'],
-    'descricao' => $property['descricao'],
-    'palavras_chaves' => $property['palavras_chaves'],
+    'titulo' => $property['titulo'] ?? '',
+    'para' => $property['para'] ?? 'venda',
+    'id_categoria' => (int)($property['id_categoria'] ?? 1),
+    'id_estado' => (int)($property['id_estado'] ?? 1),
+    'id_cidade' => (int)($property['id_cidade'] ?? 1),
+    'id_bairro' => (int)($property['id_bairro'] ?? 1),
+    'valor' => number_format((float)($property['valor'] ?? 0), 2, ',', '.'),
+    'quartos' => (int)($property['quartos'] ?? 0),
+    'suites' => (int)($property['suites'] ?? 0),
+    'banheiros' => (int)($property['banheiros'] ?? 0),
+    'salas' => (int)($property['salas'] ?? 0),
+    'cozinhas' => (int)($property['cozinhas'] ?? 0),
+    'garagem' => (int)($property['garagem'] ?? 0),
+    'area_servico' => $property['area_servico'] ?? 'Não',
+    'und_medida' => $property['und_medida'] ?? 'M²',
+    'status' => $property['status'] ?? 'ativo',
+    'corretor_responsavel' => (int)($property['corretor_responsavel'] ?? $_SESSION['admin_id'] ?? 1),
+    'area_total' => (float)($property['area_total'] ?? 0),
+    'area_construida' => (float)($property['area_construida'] ?? 0),
+    'endereco' => $property['endereco'] ?? '',
+    'descricao' => $property['descricao'] ?? '',
+    'palavras_chaves' => $property['palavras_chaves'] ?? '',
     'ref' => $property['ref'] ?? ('REF-' . $property_id . date('YmdHis') . rand(100, 999)),
+    'codigo' => $property['codigo'] ?? '',
     'classificados' => $property['classificados'] ?? 'nao',
-    'medida_frente' => $property['medida_frente'] ?? '',
-    'medida_fundo' => $property['medida_fundo'] ?? '',
-    'medida_laterais' => $property['medida_laterais'] ?? '',
-    'nome_anunciante' => $property['nome_anunciante'],
-    'telefone_anunciante' => $property['telefone_anunciante'],
-    'destaque' => $property['destaque'],
-    'quadra_lote' => $property['quadra_lote']
+    'medida_frente' => $property['medida_frente'] ?? '0',
+    'medida_fundo' => $property['medida_fundo'] ?? '0',
+    'medida_laterais' => $property['medida_laterais'] ?? '0',
+    'nome_anunciante' => $property['nome_anunciante'] ?? '',
+    'telefone_anunciante' => $property['telefone_anunciante'] ?? '',
+    'destaque' => (int)($property['destaque'] ?? 0),
+    'quadra_lote' => $property['quadra_lote'] ?? ''
 ];
+
+// Debug - Log property data from database
+if (MODE === 'Development') {
+    $debugInfo .= "Property data from database: " . print_r($property, true) . "\n";
+    $debugInfo .= "Defaults array: " . print_r($defaults, true) . "\n";
+}
 
 // Define limits for numeric fields to prevent DB overflow errors
 $fieldLimits = [
@@ -210,7 +217,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ];
 
     // Debug - Capture processed property data
-    $debugInfo .= "Property Data: " . print_r($propertyData, true) . "\n";
+    $debugInfo .= "Property Data for Update: " . print_r($propertyData, true) . "\n";
 
     // If there are no validation errors, proceed with updating
     if (empty($validationErrors)) {
@@ -224,6 +231,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($updateResult) {
                 $code = $property['codigo']; // Use existing property code
                 $uploadDir = __DIR__ . '/../../uploads/imoveis/';
+                
+                // Make sure upload directory exists
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
 
                 // Process image uploads if provided
                 $uploadedImages = 0;
@@ -252,19 +264,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Now process additional images if provided
                 if (!empty($_FILES['images']['name'][0])) {
+                    // Get the highest existing image number to continue from there
+                    $highestImageNum = 1; // start after the main image
+                    
+                    for ($i = 2; $i <= 12; $i++) {
+                        $imgNum = str_pad($i, 2, '0', STR_PAD_LEFT);
+                        $existingImgPath = $uploadDir . $code . $imgNum . '.jpg';
+                        if (file_exists($existingImgPath)) {
+                            $highestImageNum = $i;
+                        }
+                    }
+                    
                     foreach ($_FILES['images']['name'] as $i => $origName) {
                         if ($_FILES['images']['error'][$i] === UPLOAD_ERR_OK) {
                             $tmp = $_FILES['images']['tmp_name'][$i];
-                            $imageNumber = $i + 2; // Start from 02 since 01 is main image
-
-                            // Only process up to 11 additional images (total 12 with main image)
-                            if ($imageNumber <= 12) {
+                            $highestImageNum++;
+                            
+                            // Only process up to 12 total images (including main image)
+                            if ($highestImageNum <= 12) {
+                                $imageNumber = $highestImageNum;
                                 $filename = $code . sprintf('%02d', $imageNumber) . '.jpg';
 
                                 // Process the additional image
                                 $result = processImageUpload($tmp, $uploadDir . $filename);
                                 if ($result) {
                                     $uploadedImages++;
+                                    $debugInfo .= "Added new image as $filename\n";
                                 } else {
                                     $uploadErrors[] = "Erro ao processar imagem $imageNumber: $origName";
                                 }
@@ -285,8 +310,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['alert_message'] = "Imóvel atualizado com sucesso!";
                 $_SESSION['alert_type'] = "success";
 
-                // Log debug info if there was any
-                if (!empty($debugInfo)) {
+                // Log debug info if there was any and we're in development mode
+                if (!empty($debugInfo) && MODE === 'Development') {
                     logError("Property Update Debug Info: $debugInfo", 'DEBUG');
                 }
 
@@ -1198,6 +1223,20 @@ $existingImages = getExistingImages($property['codigo']);
                     this.value = `(${value}`;
                 }
             });
+            
+            // Format on load if we have a phone number
+            if (phoneInput.value && !phoneInput.value.startsWith('(')) {
+                const digits = phoneInput.value.replace(/\D/g, '');
+                if (digits.length > 0) {
+                    if (digits.length > 6) {
+                        phoneInput.value = `(${digits.substring(0, 2)}) ${digits.substring(2, 7)}-${digits.substring(7)}`;
+                    } else if (digits.length > 2) {
+                        phoneInput.value = `(${digits.substring(0, 2)}) ${digits.substring(2)}`;
+                    } else {
+                        phoneInput.value = `(${digits}`;
+                    }
+                }
+            }
         }
 
         // Add numeric fields validation
@@ -1339,66 +1378,123 @@ $existingImages = getExistingImages($property['codigo']);
             });
         }
 
-        // Filter cities based on selected state
+        // Store original options to avoid losing data
         const stateSelect = document.getElementById('id_estado');
         const citySelect = document.getElementById('id_cidade');
         const bairroSelect = document.getElementById('id_bairro');
+        
+        const originalCities = Array.from(citySelect.options);
+        const originalBairros = Array.from(bairroSelect.options);
 
         stateSelect.addEventListener('change', function() {
-            const selectedState = this.value;
-
-            // Filter cities
-            Array.from(citySelect.options).forEach(option => {
-                if (option.value === '' || option.dataset.state === selectedState) {
-                    option.style.display = '';
-                } else {
-                    option.style.display = 'none';
-                }
-            });
-
-            // Find first visible city option
-            const firstVisibleCity = Array.from(citySelect.options).find(option =>
-                option.style.display !== 'none' && option.value !== '');
-
-            // Select first visible city
-            if (firstVisibleCity) {
-                citySelect.value = firstVisibleCity.value;
-            } else {
-                citySelect.value = '';
-            }
-
-            // Trigger city change to update neighborhoods
-            citySelect.dispatchEvent(new Event('change'));
+            filterCitiesByState();
         });
 
-        // Filter neighborhoods based on selected city
         citySelect.addEventListener('change', function() {
-            const selectedCity = this.value;
-
-            // Filter neighborhoods
-            Array.from(bairroSelect.options).forEach(option => {
-                if (option.value === '' || option.dataset.city === selectedCity) {
-                    option.style.display = '';
-                } else {
-                    option.style.display = 'none';
-                }
-            });
-
-            // Find first visible neighborhood option
-            const firstVisibleBairro = Array.from(bairroSelect.options).find(option =>
-                option.style.display !== 'none' && option.value !== '');
-
-            // Select first visible neighborhood
-            if (firstVisibleBairro) {
-                bairroSelect.value = firstVisibleBairro.value;
-            } else {
-                bairroSelect.value = '';
-            }
+            filterBairrosByCity();
         });
 
-        // Trigger state change on page load to populate dropdowns
-        if (stateSelect && stateSelect.value) {
-            stateSelect.dispatchEvent(new Event('change'));
+        // Function to filter cities by selected state
+        function filterCitiesByState() {
+            const selectedState = stateSelect.value;
+            console.log('Selected state:', selectedState);
+            
+            // Reset cities to original options first
+            while (citySelect.options.length > 0) {
+                citySelect.remove(0);
+            }
+            
+            // Add empty option first
+            const emptyOption = document.createElement('option');
+            emptyOption.value = '';
+            emptyOption.text = 'Selecione a Cidade';
+            citySelect.add(emptyOption);
+            
+            // Add filtered options
+            originalCities.forEach(option => {
+                if (option.value === '' || option.dataset.state === selectedState) {
+                    citySelect.add(option.cloneNode(true));
+                }
+            });
+            
+            // Try to restore previously selected city
+            const previousCityId = <?= json_encode($property['id_cidade']) ?>;
+            let cityFound = false;
+            
+            for (let i = 0; i < citySelect.options.length; i++) {
+                if (citySelect.options[i].value == previousCityId) {
+                    citySelect.selectedIndex = i;
+                    cityFound = true;
+                    break;
+                }
+            }
+            
+            // If no match, select first city
+            if (!cityFound && citySelect.options.length > 1) {
+                citySelect.selectedIndex = 1;
+            }
+            
+            // Trigger city change to update neighborhoods
+            filterBairrosByCity();
         }
+
+        // Function to filter neighborhoods by selected city
+        function filterBairrosByCity() {
+            const selectedCity = citySelect.value;
+            console.log('Selected city:', selectedCity);
+            
+            // Reset bairros to original options first
+            while (bairroSelect.options.length > 0) {
+                bairroSelect.remove(0);
+            }
+            
+            // Add empty option first
+            const emptyOption = document.createElement('option');
+            emptyOption.value = '';
+            emptyOption.text = 'Selecione o Bairro';
+            bairroSelect.add(emptyOption);
+            
+            // Add filtered options
+            originalBairros.forEach(option => {
+                if (option.value === '' || option.dataset.city === selectedCity) {
+                    bairroSelect.add(option.cloneNode(true));
+                }
+            });
+            
+            // Try to restore previously selected bairro
+            const previousBairroId = <?= json_encode($property['id_bairro']) ?>;
+            let bairroFound = false;
+            
+            for (let i = 0; i < bairroSelect.options.length; i++) {
+                if (bairroSelect.options[i].value == previousBairroId) {
+                    bairroSelect.selectedIndex = i;
+                    bairroFound = true;
+                    break;
+                }
+            }
+            
+            // If no match, select first neighborhood 
+            if (!bairroFound && bairroSelect.options.length > 1) {
+                bairroSelect.selectedIndex = 1;
+            }
+        }
+
+        // Initialize location dropdowns when page loads
+        console.log('Initial values:', {
+            state: <?= json_encode($property['id_estado']) ?>,
+            city: <?= json_encode($property['id_cidade']) ?>,
+            bairro: <?= json_encode($property['id_bairro']) ?>
+        });
+        
+        // Select initial state
+        for (let i = 0; i < stateSelect.options.length; i++) {
+            if (stateSelect.options[i].value == <?= json_encode($property['id_estado']) ?>) {
+                stateSelect.selectedIndex = i;
+                break;
+            }
+        }
+        
+        // Trigger filtering
+        filterCitiesByState();
     });
 </script>
