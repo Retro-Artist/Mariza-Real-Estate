@@ -780,43 +780,44 @@ function getFieldValue($field, $default = '')
                         </div>
                     </div>
 
-                    <!-- Images Section -->
                     <div class="form-section" data-section="images">
-                        <h3 class="form-section__title">Fotos do Imóvel</h3>
-                        <p class="form-section__desc">Adicione fotos do imóvel para apresentação aos clientes</p>
+    <h3 class="form-section__title">Fotos do Imóvel</h3>
+    <p class="form-section__desc">Adicione fotos do imóvel para apresentação aos clientes</p>
 
-                        <!-- New separate field for main image -->
-                        <div class="form-row">
-                            <div class="form-group form-group--large">
-                                <label for="main_image">Imagem Principal <span class="required">*</span></label>
-                                <input type="file" id="main_image" name="main_image" class="form-control-file<?= errorClass('main_image') ?>" accept="image/*">
-                                <?= showValidationError('main_image') ?>
-                                <div class="form-help">
-                                    <p>Esta imagem será usada como miniatura e como primeira imagem na galeria.</p>
-                                    <p>Recomendamos uma imagem de boa qualidade, de preferência na horizontal.</p>
-                                    <p>Tamanho máximo: 5MB.</p>
-                                </div>
-                            </div>
-                        </div>
+    <!-- New separate field for main image (unchanged) -->
+    <div class="form-row">
+        <div class="form-group form-group--large">
+            <label for="main_image">Imagem Principal <span class="required">*</span></label>
+            <input type="file" id="main_image" name="main_image" class="form-control-file<?= errorClass('main_image') ?>" accept="image/jpeg,image/jpg,image/png,image/gif">
+            <?= showValidationError('main_image') ?>
+            <div class="form-help">
+                <p>Esta imagem será usada como miniatura e como primeira imagem na galeria.</p>
+                <p>Recomendamos uma imagem de boa qualidade, de preferência na horizontal.</p>
+                <p>Tamanho máximo: 5MB. Formatos aceitos: JPG, PNG, GIF</p>
+            </div>
+        </div>
+    </div>
 
-                        <!-- Main image preview container -->
-                        <div class="main-image-preview" id="mainImagePreview" style="margin-bottom: 20px;"></div>
+    <!-- The original main image preview container - unchanged -->
+    <div class="main-image-preview" id="mainImagePreview" style="margin-bottom: 20px;"></div>
 
-                        <!-- Existing field for additional images -->
-                        <div class="form-row" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
-                            <div class="form-group form-group--large">
-                                <label for="images">Imagens Adicionais</label>
-                                <input type="file" id="images" name="images[]" class="form-control-file" multiple accept="image/*">
-                                <div class="form-help">
-                                    <p>São permitidas até 11 imagens adicionais no formato JPG, PNG ou GIF.</p>
-                                    <p>Tamanho máximo por arquivo: 5MB.</p>
-                                </div>
-                            </div>
-                        </div>
+    <!-- Enhanced field for additional images with multiple image management -->
+    <div class="form-row" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+        <div class="form-group form-group--large">
+            <label for="images">Imagens Adicionais</label>
+            <input type="file" id="images" name="images[]" class="form-control-file" multiple accept="image/jpeg,image/jpg,image/png,image/gif">
+            <div class="form-help">
+                <p>São permitidas até 11 imagens adicionais no formato JPG, PNG ou GIF.</p>
+                <p>Tamanho máximo por arquivo: 5MB.</p>
+                <p><strong>Selecione suas imagens, visualize abaixo e remova as que não quiser antes de enviar.</strong></p>
+                <p>Você pode adicionar mais imagens em momentos diferentes - elas serão acumuladas até o envio do formulário.</p>
+            </div>
+        </div>
+    </div>
 
-                        <!-- Additional images preview container -->
-                        <div class="image-preview" id="imagePreview"></div>
-                    </div>
+    <!-- Enhanced additional images preview container with remove buttons -->
+    <div class="image-preview" id="imagePreview"></div>
+</div>
                 </div>
 
                 <div class="form-actions">

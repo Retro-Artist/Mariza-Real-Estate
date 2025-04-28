@@ -17,6 +17,7 @@
 <!-- Scripts -->
 <script src="<?= BASE_URL ?>/assets/scripts/alert-notification.js"></script>
 <script src="<?= BASE_URL ?>/assets/scripts/admin-sidebar.js"></script>
+<script src="<?= BASE_URL ?>/assets/scripts/image-manager.js"></script>
 <script src="<?= BASE_URL ?>/assets/scripts/script_loader.js"></script>
 </body>
 </html>

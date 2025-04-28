@@ -112,6 +112,115 @@ function sanitizeNumericInput($value, $max = null)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Debug - Capture all POST data
     $debugInfo .= "POST Data: " . print_r($_POST, true) . "\n";
+    
+    // Processar imagens para exclusão
+    if (isset($_POST['delete_images']) && !empty($_POST['delete_images'])) {
+        $imagesToDelete = explode(',', $_POST['delete_images']);
+        
+        // Sanitize e valide os números das imagens
+        $imagesToDelete = array_filter($imagesToDelete, function($number) {
+            return is_numeric($number) && $number > 1; // Garantir que não exclua a imagem principal
+        });
+        
+        if (!empty($imagesToDelete)) {
+            // Loop através das imagens a serem excluídas
+            foreach ($imagesToDelete as $imageNumber) {
+                $imageNumber = (int)$imageNumber;
+                $filename = $property['codigo'] . sprintf('%02d', $imageNumber) . '.jpg';
+                $filepath = __DIR__ . '/../../uploads/imoveis/' . $filename;
+                
+                // Verificar se o arquivo existe e então excluí-lo
+                if (file_exists($filepath)) {
+                    unlink($filepath);
+                    // Log da exclusão se estiver em modo de desenvolvimento
+                    if (MODE === 'Development') {
+                        logError("Deleted image: $filepath", 'DEBUG');
+                    }
+                }
+            }
+            
+            // Reorganizar as imagens restantes em sequência
+            $reorganizeImages = false; // Flag para verificar se é necessário reorganizar
+            
+            // Primeiro colete todas as imagens existentes (exceto a principal)
+            $existingImagePaths = [];
+            for ($i = 2; $i <= 12; $i++) {
+                $number = sprintf('%02d', $i);
+                $filename = $property['codigo'] . $number . '.jpg';
+                $filepath = __DIR__ . '/../../uploads/imoveis/' . $filename;
+                
+                if (file_exists($filepath) && !in_array($i, $imagesToDelete)) {
+                    $existingImagePaths[] = [
+                        'number' => $i,
+                        'path' => $filepath
+                    ];
+                    
+                    // Se encontrarmos um gap (um número faltando na sequência), precisamos reorganizar
+                    if ($i > 2 && !in_array($i - 1, array_column($existingImagePaths, 'number')) 
+                        && !in_array($i - 1, $imagesToDelete)) {
+                        $reorganizeImages = true;
+                    }
+                }
+            }
+            
+            // Se há imagens excluídas no meio da sequência, reorganize
+            if ($reorganizeImages && count($existingImagePaths) > 0) {
+                // Criar diretório temporário para imagens
+                $tempDir = __DIR__ . '/../../uploads/imoveis/temp/';
+                if (!is_dir($tempDir)) {
+                    mkdir($tempDir, 0755, true);
+                }
+                
+                // Mover todas as imagens para o diretório temporário com nomes temporários
+                foreach ($existingImagePaths as $index => $image) {
+                    $tempPath = $tempDir . 'temp_' . ($index + 2) . '.jpg';
+                    copy($image['path'], $tempPath);
+                    
+                    // Log em modo de desenvolvimento
+                    if (MODE === 'Development') {
+                        logError("Copied image: {$image['path']} to $tempPath", 'DEBUG');
+                    }
+                }
+                
+                // Agora mova-as de volta com os nomes corretos em sequência
+                foreach ($existingImagePaths as $index => $image) {
+                    $tempPath = $tempDir . 'temp_' . ($index + 2) . '.jpg';
+                    $newNumber = $index + 2; // Começando do 02
+                    $newFilename = $property['codigo'] . sprintf('%02d', $newNumber) . '.jpg';
+                    $newFilepath = __DIR__ . '/../../uploads/imoveis/' . $newFilename;
+                    
+                    // Se o arquivo de origem for diferente do destino, mova-o
+                    if ($image['path'] !== $newFilepath) {
+                        // Remova o arquivo de destino se ele existir
+                        if (file_exists($newFilepath)) {
+                            unlink($newFilepath);
+                        }
+                        
+                        // Copie do temporário para o destino final
+                        copy($tempPath, $newFilepath);
+                        
+                        // Remova o arquivo original apenas se ele não for o mesmo que o destino
+                        if (file_exists($image['path']) && $image['path'] !== $newFilepath) {
+                            unlink($image['path']);
+                        }
+                        
+                        // Log em modo de desenvolvimento
+                        if (MODE === 'Development') {
+                            logError("Reorganized image: from {$image['path']} to $newFilepath", 'DEBUG');
+                        }
+                    }
+                }
+                
+                // Limpe o diretório temporário
+                foreach (glob($tempDir . 'temp_*.jpg') as $tempFile) {
+                    unlink($tempFile);
+                }
+                
+                // Tente remover o diretório temporário
+                @rmdir($tempDir);
+            }
+        }
+    }
 
     // Validate required fields
     if (empty($_POST['titulo'])) {
@@ -530,6 +639,8 @@ $existingImages = getExistingImages($property['codigo']);
                 <input type="hidden" name="medida_fundo" value="<?= getFieldValue('medida_fundo', '0') ?>">
                 <input type="hidden" name="medida_laterais" value="<?= getFieldValue('medida_laterais', '0') ?>">
                 <input type="hidden" name="classificados" value="<?= getFieldValue('classificados', 'nao') ?>">
+                <!-- Hidden field for storing image numbers to delete -->
+                <input type="hidden" name="delete_images" id="delete_images" value="">
 
                 <!-- Tabs for better form navigation -->
                 <div class="form-tabs">
@@ -828,19 +939,27 @@ $existingImages = getExistingImages($property['codigo']);
                     <!-- Images Section -->
                     <div class="form-section" data-section="images">
                         <h3 class="form-section__title">Fotos do Imóvel</h3>
-                        <p class="form-section__desc">Substitua ou adicione fotos ao imóvel</p>
+                        <p class="form-section__desc">Gerencie as imagens do imóvel</p>
 
-                        <!-- Display existing images section -->
+                        <!-- Display existing images section with removal functionality -->
                         <?php if (!empty($existingImages)): ?>
                             <div class="current-images">
                                 <h4>Imagens Atuais do Imóvel</h4>
-                                <p class="form-help">Para substituir uma imagem, utilize os campos abaixo para enviar novas imagens.</p>
+                                <div class="image-gallery-help">
+                                    <strong>Instruções:</strong> Para remover uma imagem, clique no <strong>X vermelho</strong> sobre ela.
+                                    As imagens marcadas para remoção aparecerão com um efeito de transparência e listras.
+                                    Você pode desfazer a marcação de remoção clicando no botão com seta circular.
+                                    <br><strong>Importante:</strong> As imagens só serão removidas quando você salvar o formulário.
+                                </div>
 
                                 <div class="image-gallery">
                                     <?php foreach ($existingImages as $image): ?>
                                         <div class="image-preview<?= $image['isPrimary'] ? ' image-preview--primary' : '' ?>">
                                             <img src="<?= $image['url'] ?>" alt="Imagem <?= $image['number'] ?> do imóvel">
                                             <div class="image-number"><?= $image['number'] ?></div>
+                                            <?php if (!$image['isPrimary']): ?>
+                                                <!-- Delete buttons will be added by JavaScript -->
+                                            <?php endif; ?>
                                         </div>
                                     <?php endforeach; ?>
                                 </div>
@@ -851,37 +970,39 @@ $existingImages = getExistingImages($property['codigo']);
                             </div>
                         <?php endif; ?>
 
-                        <!-- New separate field for main image -->
+                        <!-- Main image field (keep original behavior) -->
                         <div class="form-row" style="margin-top: 20px;">
                             <div class="form-group form-group--large">
                                 <label for="main_image">Substituir Imagem Principal</label>
-                                <input type="file" id="main_image" name="main_image" class="form-control-file<?= errorClass('main_image') ?>" accept="image/*">
+                                <input type="file" id="main_image" name="main_image" class="form-control-file<?= errorClass('main_image') ?>" accept="image/jpeg,image/jpg,image/png,image/gif">
                                 <?= showValidationError('main_image') ?>
                                 <div class="form-help">
                                     <p>Esta imagem será usada como miniatura e como primeira imagem na galeria.</p>
                                     <p>Recomendamos uma imagem de boa qualidade, de preferência na horizontal.</p>
-                                    <p>Tamanho máximo: 5MB.</p>
+                                    <p>Tamanho máximo: 5MB. Formatos aceitos: JPG, PNG, GIF</p>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Main image preview container -->
+                        <!-- Original main image preview container -->
                         <div class="main-image-preview" id="mainImagePreview" style="margin-bottom: 20px;"></div>
 
-                        <!-- Existing field for additional images -->
+                        <!-- Enhanced field for additional images with multiple image management -->
                         <div class="form-row" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
                             <div class="form-group form-group--large">
-                                <label for="images">Adicionar/Substituir Imagens Adicionais</label>
-                                <input type="file" id="images" name="images[]" class="form-control-file" multiple accept="image/*">
+                                <label for="images">Adicionar Novas Imagens</label>
+                                <input type="file" id="images" name="images[]" class="form-control-file" multiple accept="image/jpeg,image/jpg,image/png,image/gif">
                                 <div class="form-help">
                                     <p>São permitidas até 11 imagens adicionais no formato JPG, PNG ou GIF.</p>
-                                    <p>As novas imagens serão adicionadas em sequência após as existentes.</p>
+                                    <p>As novas imagens serão adicionadas em sequência após as existentes não removidas.</p>
+                                    <p><strong>Selecione suas imagens, visualize abaixo e remova as que não quiser antes de enviar.</strong></p>
+                                    <p>Você pode adicionar mais imagens em momentos diferentes - elas serão acumuladas até o envio do formulário.</p>
                                     <p>Tamanho máximo por arquivo: 5MB.</p>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Additional images preview container -->
+                        <!-- Enhanced additional images preview container with remove buttons -->
                         <div class="image-preview" id="imagePreview"></div>
                     </div>
                 </div>
@@ -1223,7 +1344,7 @@ $existingImages = getExistingImages($property['codigo']);
                     this.value = `(${value}`;
                 }
             });
-            
+
             // Format on load if we have a phone number
             if (phoneInput.value && !phoneInput.value.startsWith('(')) {
                 const digits = phoneInput.value.replace(/\D/g, '');
@@ -1382,7 +1503,7 @@ $existingImages = getExistingImages($property['codigo']);
         const stateSelect = document.getElementById('id_estado');
         const citySelect = document.getElementById('id_cidade');
         const bairroSelect = document.getElementById('id_bairro');
-        
+
         const originalCities = Array.from(citySelect.options);
         const originalBairros = Array.from(bairroSelect.options);
 
@@ -1398,29 +1519,29 @@ $existingImages = getExistingImages($property['codigo']);
         function filterCitiesByState() {
             const selectedState = stateSelect.value;
             console.log('Selected state:', selectedState);
-            
+
             // Reset cities to original options first
             while (citySelect.options.length > 0) {
                 citySelect.remove(0);
             }
-            
+
             // Add empty option first
             const emptyOption = document.createElement('option');
             emptyOption.value = '';
             emptyOption.text = 'Selecione a Cidade';
             citySelect.add(emptyOption);
-            
+
             // Add filtered options
             originalCities.forEach(option => {
                 if (option.value === '' || option.dataset.state === selectedState) {
                     citySelect.add(option.cloneNode(true));
                 }
             });
-            
+
             // Try to restore previously selected city
             const previousCityId = <?= json_encode($property['id_cidade']) ?>;
             let cityFound = false;
-            
+
             for (let i = 0; i < citySelect.options.length; i++) {
                 if (citySelect.options[i].value == previousCityId) {
                     citySelect.selectedIndex = i;
@@ -1428,12 +1549,12 @@ $existingImages = getExistingImages($property['codigo']);
                     break;
                 }
             }
-            
+
             // If no match, select first city
             if (!cityFound && citySelect.options.length > 1) {
                 citySelect.selectedIndex = 1;
             }
-            
+
             // Trigger city change to update neighborhoods
             filterBairrosByCity();
         }
@@ -1442,29 +1563,29 @@ $existingImages = getExistingImages($property['codigo']);
         function filterBairrosByCity() {
             const selectedCity = citySelect.value;
             console.log('Selected city:', selectedCity);
-            
+
             // Reset bairros to original options first
             while (bairroSelect.options.length > 0) {
                 bairroSelect.remove(0);
             }
-            
+
             // Add empty option first
             const emptyOption = document.createElement('option');
             emptyOption.value = '';
             emptyOption.text = 'Selecione o Bairro';
             bairroSelect.add(emptyOption);
-            
+
             // Add filtered options
             originalBairros.forEach(option => {
                 if (option.value === '' || option.dataset.city === selectedCity) {
                     bairroSelect.add(option.cloneNode(true));
                 }
             });
-            
+
             // Try to restore previously selected bairro
             const previousBairroId = <?= json_encode($property['id_bairro']) ?>;
             let bairroFound = false;
-            
+
             for (let i = 0; i < bairroSelect.options.length; i++) {
                 if (bairroSelect.options[i].value == previousBairroId) {
                     bairroSelect.selectedIndex = i;
@@ -1472,7 +1593,7 @@ $existingImages = getExistingImages($property['codigo']);
                     break;
                 }
             }
-            
+
             // If no match, select first neighborhood 
             if (!bairroFound && bairroSelect.options.length > 1) {
                 bairroSelect.selectedIndex = 1;
@@ -1485,7 +1606,7 @@ $existingImages = getExistingImages($property['codigo']);
             city: <?= json_encode($property['id_cidade']) ?>,
             bairro: <?= json_encode($property['id_bairro']) ?>
         });
-        
+
         // Select initial state
         for (let i = 0; i < stateSelect.options.length; i++) {
             if (stateSelect.options[i].value == <?= json_encode($property['id_estado']) ?>) {
@@ -1493,7 +1614,7 @@ $existingImages = getExistingImages($property['codigo']);
                 break;
             }
         }
-        
+
         // Trigger filtering
         filterCitiesByState();
     });
