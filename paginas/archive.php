@@ -171,10 +171,7 @@ $total_paginas = ceil($total_imoveis / $itens_por_pagina);
                     <label for="valor">Valor R$:</label>
                     <select name="valor" class="form-control">
                         <option value="" <?= (!isset($_GET['valor']) || $_GET['valor'] == "") ? "selected" : "" ?>>Qualquer</option>
-                        <option value="500" <?= (isset($_GET['valor']) && $_GET['valor'] == 500) ? "selected" : "" ?>>Até R$ 500</option>
-                        <option value="700" <?= (isset($_GET['valor']) && $_GET['valor'] == 700) ? "selected" : "" ?>>Até R$ 700</option>
                         <option value="800" <?= (isset($_GET['valor']) && $_GET['valor'] == 800) ? "selected" : "" ?>>Até R$ 800</option>
-                        <option value="900" <?= (isset($_GET['valor']) && $_GET['valor'] == 900) ? "selected" : "" ?>>Até R$ 900</option>
                         <option value="1000" <?= (isset($_GET['valor']) && $_GET['valor'] == 1000) ? "selected" : "" ?>>Até R$ 1.000</option>
                         <option value="1500" <?= (isset($_GET['valor']) && $_GET['valor'] == 1500) ? "selected" : "" ?>>Até R$ 1.500</option>
                         <option value="2000" <?= (isset($_GET['valor']) && $_GET['valor'] == 2000) ? "selected" : "" ?>>Até R$ 2.000</option>
