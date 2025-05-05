@@ -45,14 +45,24 @@
     
     <!-- WhatsApp Floating Button -->
     <?php
-    // Verificar se estamos na página de detalhe de imóvel
-    $is_property_page = isset($imovel) && !empty($imovel);
+    // Check if we're on a property detail page by checking the URL pattern
+    $current_url = $_SERVER['REQUEST_URI'];
+    $base_path = parse_url(BASE_URL, PHP_URL_PATH) ?: '';
+    $base_path = rtrim($base_path, '/');
     
-    // Preparar mensagem contextual para página de imóvel
-    $whatsapp_message = "Olá! Gostaria de mais informações sobre os imóveis.";
+    // Remove base path from current URL
+    if (!empty($base_path) && strpos($current_url, $base_path) === 0) {
+        $current_url = substr($current_url, strlen($base_path));
+    }
+    
+    // Check if URL matches property detail pattern (e.g., /imovel/123)
+    $is_property_page = preg_match('/^\/imovel\/\d+/', $current_url) && isset($imovel) && !empty($imovel);
+    
+    // Default message for all non-property pages
+    $whatsapp_message = "Olá, vim pelo site, gostaria de conversar!";
     
     if ($is_property_page) {
-        // Construir mensagem com informações do imóvel
+        // Construct message with property details
         $property_url = BASE_URL . "/imovel/" . $imovel['id'];
         $property_type = $imovel['para'] === 'venda' ? 'Casa à Venda' : 'Casa para Aluguel';
         $property_neighborhood = htmlspecialchars($imovel['bairro'] ?? 'Não informado');
@@ -74,7 +84,6 @@
     </div>
     
     <!-- Scripts -->
-
     <script src="<?= BASE_URL ?>/assets/scripts/script_loader.js"></script>
     <script src="<?= BASE_URL ?>/assets/scripts/counter-animation.js"></script>
 </body>
